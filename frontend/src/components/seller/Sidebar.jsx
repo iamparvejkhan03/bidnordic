@@ -22,7 +22,7 @@ const navigation = [
     { name: 'Create Auction', path: '/seller/auctions/create', icon: <Plus size={20} /> },
     { name: 'Sold Auctions', path: '/seller/auctions/sold', icon: <Award size={20} /> },
     { name: 'Bid History', path: '/seller/bids/history', icon: <TrendingUp size={20} /> },
-    { name: 'Billing', path: '/seller/billing', icon: <CreditCard size={20} /> },
+    // { name: 'Billing', path: '/seller/billing', icon: <CreditCard size={20} /> },
     // { name: 'Notifications', path: '/seller/notifications', icon: <Bell size={20} /> },
     { name: 'Profile', path: '/seller/profile', icon: <User size={20} /> },
 ];
@@ -83,14 +83,14 @@ function Sidebar() {
 
             {/* Sidebar */}
             <aside className={`
-        fixed md:relative w-64 bg-gradient-to-b from-black to-black/90 text-white h-screen md:h-auto md:min-h-screen overflow-y-auto p-4 flex flex-col z-50
+        fixed md:relative w-64 bg-slate-900 text-white h-screen md:h-auto md:min-h-screen overflow-y-auto p-4 flex flex-col z-50
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
                 {/* Logo/Brand */}
                 <div className="px-4 mb-8 flex items-center justify-between pb-2">
                     <Link to={'/'}>
-                        <img src={logo} className="h-10" alt="logo" />
+                        <img src={logo} className="h-10 md:h-12" alt="logo" />
                     </Link>
                     <button
                         onClick={() => setIsOpen(false)}
@@ -110,8 +110,8 @@ function Sidebar() {
                                     onClick={() => isMobile && setIsOpen(false)}
                                     className={({ isActive }) =>
                                         `flex items-center p-3 rounded-lg transition-all duration-200 ${isActive
-                                            ? 'bg-white text-black shadow-lg'
-                                            : 'text-white hover:bg-white hover:text-black'
+                                            ? 'bg-orange-500 text-white shadow-lg'
+                                            : 'text-white hover:bg-orange-600 hover:text-white'
                                         }`
                                     }
                                 >

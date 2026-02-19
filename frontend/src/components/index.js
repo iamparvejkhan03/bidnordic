@@ -30,6 +30,9 @@ import StatCard from "./StatCard";
 import RecentActivity from "./seller/RecentActivity";
 import QuickActions from "./seller/QuickActions";
 import TopPerformers from "./seller/TopPerformers";
+import BrokerHeader from "./broker/Header";
+import BrokerContainer from "./broker/Container";
+import BrokerSidebar from "./broker/Sidebar";
 import RTE from "./RTE";
 import BidderContainer from "./bidder/Container";
 import BidderSidebar from "./bidder/Sidebar";
@@ -54,6 +57,9 @@ import CategoryIconsSection from "./CategoryIconsSection";
 import AccountInactiveBanner from "./bidder/AccountInactiveBanner";
 import AuctionListItem from "./AuctionListItem";
 import VehicleLookupModal from "./VehicleLookupModal";
+import CategoryCarousel from "./CategoryCarousel";
+import HowItWorks from "./HowItWorks";
+import TestimonialSection from "./TestimonialSection";
 
 export {
     Container,
@@ -88,6 +94,9 @@ export {
     RecentActivity,
     QuickActions,
     TopPerformers,
+    BrokerHeader,
+    BrokerContainer,
+    BrokerSidebar,
     RTE,
     BidderContainer,
     BidderHeader,
@@ -112,4 +121,7 @@ export {
     AccountInactiveBanner,
     AuctionListItem,
     VehicleLookupModal,
+    CategoryCarousel,
+    HowItWorks,
+    TestimonialSection,
 }

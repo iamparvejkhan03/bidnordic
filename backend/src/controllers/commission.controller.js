@@ -1,85 +1,86 @@
 import Commission from '../models/commission.model.js';
 
-// Get all commission rates
+// Get commission settings
 export const getCommissions = async (req, res) => {
     try {
-        const commissions = await Commission.find().sort({ category: 1 });
+        let commission = await Commission.findOne();
         
-        // Ensure all categories exist
-        const categories = ['Aircraft', 'Engines & Parts', 'Memorabilia'];
-        const existingCategories = commissions.map(c => c.category);
-        
-        const missingCategories = categories.filter(cat => !existingCategories.includes(cat));
-        
-        if (missingCategories.length > 0) {
-            // Create default commissions for missing categories
-            const defaultCommissions = missingCategories.map(category => ({
-                category,
-                commissionAmount: category === 'Aircraft' ? 5 : 
-                               category === 'Engines & Parts' ? 8 : 10,
-                updatedBy: req.user._id
-            }));
-            
-            await Commission.insertMany(defaultCommissions);
-            
-            // Fetch all commissions again
-            const updatedCommissions = await Commission.find().sort({ category: 1 });
-            return res.status(200).json({
-                success: true,
-                data: { commissions: updatedCommissions }
+        // If no commission exists, create default
+        if (!commission) {
+            commission = await Commission.create({
+                commissionType: 'percentage',
+                commissionValue: 5,
+                updatedBy: req.user?._id
             });
         }
 
         res.status(200).json({
             success: true,
-            data: { commissions }
+            data: { commission }
         });
 
     } catch (error) {
-        console.error('Get commissions error:', error);
+        console.error('Get commission error:', error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error while fetching commission rates'
+            message: 'Internal server error while fetching commission settings'
         });
     }
 };
 
-// Update commission rates
-export const updateCommissions = async (req, res) => {
+// Update commission settings
+export const updateCommission = async (req, res) => {
     try {
-        const { commissions } = req.body;
+        const { commissionType, commissionValue } = req.body;
 
-        if (!commissions || !Array.isArray(commissions)) {
+        if (!commissionType || !['fixed', 'percentage'].includes(commissionType)) {
             return res.status(400).json({
                 success: false,
-                message: 'Commissions data is required'
+                message: 'Invalid commission type. Must be either "fixed" or "percentage"'
             });
         }
 
-        const updatePromises = commissions.map(commission =>
-            Commission.findOneAndUpdate(
-                { category: commission.category },
-                { 
-                    commissionAmount: commission.commissionAmount,
-                    updatedBy: req.user._id
-                },
-                { new: true, upsert: true, runValidators: true }
-            )
-        );
+        if (commissionValue === undefined || commissionValue < 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Valid commission value is required'
+            });
+        }
 
-        const updatedCommissions = await Promise.all(updatePromises);
+        if (commissionType === 'percentage' && commissionValue > 100) {
+            return res.status(400).json({
+                success: false,
+                message: 'Percentage commission cannot exceed 100%'
+            });
+        }
+
+        // Find and update the commission (should be only one)
+        let commission = await Commission.findOne();
+        
+        if (commission) {
+            commission.commissionType = commissionType;
+            commission.commissionValue = commissionValue;
+            commission.updatedBy = req.user._id;
+            await commission.save();
+        } else {
+            commission = await Commission.create({
+                commissionType,
+                commissionValue,
+                updatedBy: req.user._id
+            });
+        }
 
         res.status(200).json({
             success: true,
-            message: 'Commission rates updated successfully',
-            data: { commissions: updatedCommissions }
+            message: 'Commission settings updated successfully',
+            data: { commission }
         });
 
     } catch (error) {
-        console.error('Update commissions error:', error);
+        console.error('Update commission error:', error);
         res.status(500).json({
             success: false,
-            message: 'Internal server error while updating commission rates'
+            message: 'Internal server error while updating commission settings'
         });
     }
 };

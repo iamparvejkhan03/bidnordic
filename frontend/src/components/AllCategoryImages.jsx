@@ -1,22 +1,22 @@
 import { Link } from "react-router-dom";
-import { airCrafts, memorabilia, parts } from "../assets";
+import { Skania } from "../assets";
 import { CategoryImg } from "./";
 import { ArrowUp, X } from "lucide-react";
 
 const categoryImg = [
     {
         title: 'Aircrafts',
-        image: airCrafts,
+        image: Skania,
         link: '/category/aircraft'
     },
     {
         title: 'Parts & Engines',
-        image: parts,
+        image: Skania,
         link: '/category/parts'
     },
     {
         title: 'Memorabilia',
-        image: memorabilia,
+        image: Skania,
         link: '/category/memorabilia'
     }
 ];

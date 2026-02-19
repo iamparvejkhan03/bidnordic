@@ -1,4 +1,4 @@
-import { Gavel, Heart, MapPin, Eye, Users, Shield, Clock, Zap, File, Gauge, Settings } from "lucide-react";
+import { Gavel, Heart, MapPin, Eye, Users, Shield, Clock, Zap, File, Gauge, Settings, ShoppingCart, HandHelping, HandGrab } from "lucide-react";
 import { heroImg } from "../assets";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -56,6 +56,22 @@ function AuctionCard({ auction }) {
                 label: 'No Reserve',
                 icon: Shield,
                 color: 'bg-green-100 text-green-700 border-green-200'
+            });
+        }
+
+        if (auction.auctionType === 'buy_now') {
+            badges.push({
+                label: 'Buy Now',
+                icon: ShoppingCart,
+                color: 'bg-blue-100 text-blue-700 border-blue-200'
+            });
+        }
+
+        if (auction.auctionType === 'giveaway') {
+            badges.push({
+                label: 'Giveaway',
+                icon: HandHelping,
+                color: 'bg-blue-100 text-blue-700 border-blue-200'
             });
         }
 
@@ -149,28 +165,30 @@ function AuctionCard({ auction }) {
                 </div>
 
                 {/* Countdown Timer */}
-                <div className="bg-white/90 absolute bottom-3 left-3 right-3 py-2 px-4 rounded-lg flex items-center justify-center gap-1 text-sm">
-                    {!auctionTime.completed ? (
-                        <>
-                            <Clock size={14} />
-                            {!auctionTime.completed ? (
-                                <>
-                                    <span>{auctionTime.days}D</span>
-                                    <span>:</span>
-                                    <span>{auctionTime.hours}H</span>
-                                    <span>:</span>
-                                    <span>{auctionTime.minutes}M</span>
-                                    <span>:</span>
-                                    <span>{auctionTime.seconds}S</span>
-                                </>
-                            ) : (
-                                <span>Auction Ended!</span>
-                            )}
-                        </>
-                    ) : (
-                        <span className="font-medium text-red-600">Auction Ended</span>
-                    )}
-                </div>
+                {auction.auctionType !== 'buy_now' && auction.auctionType !== 'giveaway' && (
+                    <div className="bg-white/90 absolute bottom-3 left-3 right-3 py-2 px-4 rounded-lg flex items-center justify-center gap-1 text-sm">
+                        {!auctionTime.completed ? (
+                            <>
+                                <Clock size={14} />
+                                {!auctionTime.completed ? (
+                                    <>
+                                        <span>{auctionTime.days}D</span>
+                                        <span>:</span>
+                                        <span>{auctionTime.hours}H</span>
+                                        <span>:</span>
+                                        <span>{auctionTime.minutes}M</span>
+                                        <span>:</span>
+                                        <span>{auctionTime.seconds}S</span>
+                                    </>
+                                ) : (
+                                    <span>Auction Ended!</span>
+                                )}
+                            </>
+                        ) : (
+                            <span className="font-medium text-red-600">Auction Ended</span>
+                        )}
+                    </div>
+                )}
 
                 {/* Views Counter */}
                 <div className="absolute top-3 right-3 bg-black/70 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
@@ -190,22 +208,10 @@ function AuctionCard({ auction }) {
                     {auction.title}
                 </Link>
 
-                {/* Registration */}
+                {/* Location */}
                 <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
-                    <span className="flex items-center gap-1"><File size={14} /> Registration:</span>
-                    <span className="truncate">{auction?.specifications?.registration}</span>
-                </div>
-
-                {/* Mileage */}
-                <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
-                    <span className="flex items-center gap-1"><Gauge size={14} /> Mileage:</span>
-                    <span className="truncate">{auction?.specifications?.miles || auction?.specifications?.mileage || ''}</span>
-                </div>
-
-                {/* Transmission */}
-                <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
-                    <span className="flex items-center gap-1"><Settings size={14} /> Transmission:</span>
-                    <span className="truncate">{auction?.specifications?.transmission}</span>
+                    <MapPin size={14} />
+                    <span className="truncate">{auction.location}</span>
                 </div>
 
                 {/* Auction Info Grid */}
@@ -238,13 +244,24 @@ function AuctionCard({ auction }) {
                         )
                     }
 
-                    {
+                    {/* {
                         (auction.auctionType === 'buy_now' && auction?.allowOffers) && (
                             <div className="text-center p-2 bg-gray-50 rounded-lg">
                                 <div className="text-xs text-gray-600 mb-1">Offers</div>
                                 <div className="font-bold text-lg text-primary flex items-center justify-center gap-1">
                                     <Users size={16} />
                                     {auction?.offers?.filter(o => o.status === 'pending').length || 0}
+                                </div>
+                            </div>
+                        )
+                    } */}
+
+                    {
+                        (auction.auctionType === 'buy_now') && (
+                            <div className="text-center p-2 bg-gray-50 rounded-lg">
+                                <div className="text-xs text-gray-600 mb-1">Buy Now</div>
+                                <div className="font-bold text-lg text-primary flex items-center justify-center gap-1">
+                                    £{auction?.buyNowPrice?.toLocaleString()}
                                 </div>
                             </div>
                         )
@@ -266,17 +283,16 @@ function AuctionCard({ auction }) {
                 )} */}
 
                 {/* Bid Increment */}
-                {/* <div className="text-xs text-gray-500 text-center flex items-center justify-around">
-                    <div>
-                        Bid increment: ${auction.bidIncrement?.toLocaleString()}
-                    </div>
-                    {auction.watchlistCount > 0 && (
-                        <div className="text-xs text-gray-500 text-center">
-                            {auction.watchlistCount} user{auction.watchlistCount !== 1 ? 's' : ''} watching
-                        </div>)}
-                </div> */}
-
                 <div className="text-xs text-gray-500 text-center flex items-center justify-around">
+                    <div>
+                        Bid increment: £{auction.bidIncrement?.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-gray-500 text-center">
+                        {auction.watchlistCount || 0} user{auction.watchlistCount !== 1 ? 's' : ''} watching
+                    </div>
+                </div>
+
+                {/* <div className="text-xs text-gray-500 text-center flex items-center justify-around">
                     {
                         auction.auctionType === 'buy_now' && (
                             <div>
@@ -284,11 +300,10 @@ function AuctionCard({ auction }) {
                             </div>
                         )
                     }
-                    {auction.watchlistCount > 0 && (
-                        <div className="text-xs text-gray-500 text-center">
-                            {auction.watchlistCount} user{auction.watchlistCount !== 1 ? 's' : ''} watching
-                        </div>)}
-                </div>
+                    <div className="text-xs text-gray-500 text-center">
+                        {auction.watchlistCount || 0} user{auction.watchlistCount !== 1 ? 's' : ''} watching
+                    </div>
+                </div> */}
             </div>
 
             {/* Button Section */}
@@ -300,13 +315,15 @@ function AuctionCard({ auction }) {
                         navigate(`/auction/${auction._id}`);
                     }}
                     className={`flex-1 py-3 px-4 cursor-pointer text-white rounded-lg flex gap-2 items-center justify-center transition-all ${isAuctionActive
-                        ? 'bg-[#edcd1f] hover:bg-[#edcd1f]/90 shadow-md hover:shadow-lg'
-                        : 'bg-[#edcd1f] hover:bg-[#edcd1f]/90 shadow-md hover:shadow-lg'
+                        ? 'bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:bg-amber-500/90 shadow-md hover:shadow-lg'
+                        : 'bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:via-amber-600 hover:to-amber-700 shadow-md hover:shadow-lg'
                         }`}
                 >
-                    <Gavel size={18} className="text-black" />
-                    <span className="font-medium text-black">
-                        {!isAuctionActive ? 'View Auction' : 'Place Bid'}
+                    {
+                        auction.auctionType === 'buy_now' ? <ShoppingCart size={18} className="text-white" /> : auction.auctionType === 'giveaway' ? <HandGrab size={18} className="text-white flex-shrink-0" /> : <Gavel size={18} className="text-white" />
+                    }
+                    <span className="font-medium text-white">
+                        {!isAuctionActive ? 'View Auction' : auction?.auctionType === 'buy_now' ? 'Buy Now' : auction?.auctionType === 'giveaway' ? 'Claim Now' : 'Place Bid'}
                     </span>
                 </button>
 

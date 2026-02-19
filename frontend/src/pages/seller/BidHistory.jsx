@@ -103,28 +103,28 @@ function BidHistory() {
         });
     };
 
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
-
     const formatTime = (dateString) => {
-        return new Date(dateString).toLocaleTimeString('en-US', {
+        return new Date(dateString).toLocaleTimeString('nb-NO', {
             hour: '2-digit',
             minute: '2-digit'
         });
     };
 
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('nb-NO', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'NOK',
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         }).format(amount);
+    };
+
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('nb-NO', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
     };
 
     const getCategoryIcon = (category) => {
@@ -201,7 +201,7 @@ function BidHistory() {
                             <p className="text-gray-600 mb-4">{error}</p>
                             <button
                                 onClick={fetchSellerAuctions}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                                className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600"
                             >
                                 Try Again
                             </button>
@@ -438,7 +438,7 @@ function BidHistory() {
                                             setSearchTerm("");
                                             setDateRange({ start: "", end: "" });
                                         }}
-                                        className="text-blue-600 hover:text-blue-800 mt-2"
+                                        className="text-orange-500 hover:text-orange-600 mt-2"
                                     >
                                         Clear all filters
                                     </button>

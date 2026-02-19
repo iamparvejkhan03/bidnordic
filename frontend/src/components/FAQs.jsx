@@ -1,7 +1,7 @@
 import { Gavel, MessageCircleQuestion, Store } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { faqImg } from "../assets";
+import { heroImg } from "../assets";
 
 const FAQs = ({ faqs }) => {
     const [openIndex, setOpenIndex] = useState(null);
@@ -11,7 +11,7 @@ const FAQs = ({ faqs }) => {
             <div className="w-full grid grid-cols-1 gap-10 md:grid-cols-7 lg:gap-10 xl:gap-16 items-stretch md:px-0">
                 <img
                     className="w-full object-cover rounded-xl h-[350px] sm:h-[500px] md:h-[625px] lg:h-[575px] md:col-span-3"
-                    src={faqImg}
+                    src={heroImg}
                     alt="FAQs"
                     loading="lazy"
                 />

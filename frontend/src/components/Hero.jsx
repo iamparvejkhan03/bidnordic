@@ -1,223 +1,193 @@
-import { Car, Clock, Search, Shield, Sparkles } from "lucide-react";
-import { Container } from "../components";
-import { useForm } from "react-hook-form";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { heroImg } from "../assets";
-import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import {
+    Tractor,
+    Search,
+    ArrowRight,
+    Truck,
+    Cog,
+    Mountain,
+    Waves,
+} from "lucide-react";
+import { Container } from "../components";
 import axiosInstance from "../utils/axiosInstance";
-import { useState } from "react";
+import { heroImg } from "../assets";
 
 function Hero() {
-    const searchForm = useForm();
     const navigate = useNavigate();
+    const searchForm = useForm();
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [activeEquipment, setActiveEquipment] = useState(0);
 
-    // Fetch categories on component mount
-    useEffect(() => {
-        fetchCategories();
-    }, []);
+    // Equipment showcase rotation
+    const equipmentTypes = [
+        { icon: Tractor, name: "Tractors", desc: "Agricultural" },
+        { icon: Mountain, name: "Excavators", desc: "Heavy Duty" },
+        { icon: Truck, name: "Dump Trucks", desc: "Articulated" },
+        { icon: Cog, name: "Dozers", desc: "Crawler" },
+        { icon: Waves, name: "Cranes", desc: "Mobile" },
+    ];
 
-    const fetchCategories = async () => {
-        try {
-            setLoading(true);
-            const response = await axiosInstance.get('/api/v1/admin/categories/public/active');
-
-            if (response.data.success) {
-                // Filter out "Explore" category and get active categories
-                const apiCategories = response.data.data.filter(cat =>
-                    !cat.isExplore && cat.isActive !== false
-                );
-
-                setCategories(apiCategories);
-            } else {
-                // Fallback to static categories
-                setCategories([
-                    { name: 'Sports', slug: 'sports' },
-                    { name: 'Convertible', slug: 'Convertible' },
-                    { name: 'Luxury', slug: 'luxury' },
-                ]);
-            }
-        } catch (err) {
-            console.error('Error fetching categories:', err);
-            setError('Failed to load categories');
-            // Fallback to static categories
-            setCategories([
-                { name: 'Sports', slug: 'sports' },
-                { name: 'Convertible', slug: 'Convertible' },
-                { name: 'Luxury', slug: 'luxury' },
-            ]);
-        } finally {
-            setLoading(false);
-        }
+    const handleSearch = (data) => {
+        const params = new URLSearchParams();
+        if (data.search) params.append('search', data.search);
+        if (data.category) params.append('category', data.category);
+        navigate(`/auctions?${params.toString()}`);
     };
 
-    const handleSearchForm = (searchData) => {
-        try {
-            const params = new URLSearchParams();
-
-            if (searchData.search) {
-                params.append('search', searchData.search);
-            }
-
-            if (searchData.category) {
-                params.append('category', searchData.category);
-            }
-
-            // Navigate to auctions page with query parameters
-            navigate(`/auctions?${params.toString()}`);
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
     return (
-        <section
-            className="min-h-screen max-w-screen py-20 md:py-32 flex items-center bg-center bg-no-repeat bg-cover relative overflow-hidden"
-            style={{ backgroundImage: `url(${heroImg})` }}
-        >
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/50" />
+        <section className="relative min-h-screen bg-slate-900 overflow-hidden">
+        {/* <section className="relative min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden"> */}
+            {/* Industrial Background Pattern */}
+            <div className="absolute inset-0 opacity-10">
+                <div className="absolute inset-0" style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                }} />
+            </div>
 
-            {/* Decorative Elements */}
-            <div className="absolute top-0 left-0 w-64 h-64 bg-[#edcd1f]/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-            <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3" />
+            {/* Dynamic Gradient Orbs */}
+            <div className="absolute top-20 left-10 w-96 h-96 bg-amber-500/20 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-20 right-10 w-80 h-80 bg-orange-600/20 rounded-full blur-3xl animate-pulse delay-1000" />
+
+            {/* Industrial Mesh Lines */}
+            <div className="absolute inset-0 opacity-20">
+                <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid)" />
+                </svg>
+            </div>
 
             <Container>
-                <div className="relative z-10">
-                    <div className="max-w-4xl px-2 flex flex-col items-start gap-6 mt-5 lg:mt-10">
-                        {/* Badge */}
-                        <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-full text-sm font-medium mb-2">
-                            <Sparkles size={18} className="text-[#edcd1f]" />
-                            <Car size={20} className="text-[#edcd1f]" />
-                            <span className="font-semibold">Exclusive Cars. Exceptional Deals.</span>
-                        </div>
-
-                        {/* Main Heading */}
-                        <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-5xl font-bold text-white leading-tight">
-                            Wholesale Vehicles for the Motor Trade
-                            <span className="block">
-                                <span className="text-[#edcd1f] relative">
-                                    Remarketing & Auctions
-                                    <span className="absolute -bottom-2 left-0 w-full h-1 bg-[#edcd1f]/50 rounded-full"></span>
+                <div className="relative z-10 pt-32 pb-20 lg:pt-40 lg:pb-32">
+                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                        {/* Left Column - Main Content */}
+                        <div className="space-y-8">
+                            {/* Premium Badge */}
+                            <div className="inline-flex items-center gap-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
+                                <div className="flex -space-x-2">
+                                    {[Tractor, Truck].map((Icon, i) => (
+                                        <div key={i} className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
+                                            <Icon size={14} className="text-amber-400" />
+                                        </div>
+                                    ))}
+                                </div>
+                                <span className="text-sm font-medium text-white/90">
+                                    The Marketplace for Heavy Machinery
                                 </span>
-                            </span>
-                        </h1>
+                            </div>
 
-                        {/* Description */}
-                        <p className="text-lg md:text-xl text-white/90 leading-relaxed max-w-4xl mt-3">
-                            Connecting motor traders with nearly new vehicles at wholesale prices.
-                            Partnering with leasing, finance, fleet, and insurance companies to deliver reliable trade stock through a secure remarketing platform.
-                        </p>
+                            {/* Dynamic Headline */}
+                            <div className="space-y-4">
+                                <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight">
+                                    <span className="block">Your Next</span>
+                                    <span className="relative inline-block mt-2">
+                                        <span className="relative z-10 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 text-transparent bg-clip-text">
+                                            Heavy Machine
+                                        </span>
+                                        <span className="absolute -bottom-2 left-0 w-full h-3 bg-amber-500/30 blur-md" />
+                                    </span>
+                                    <span className="block mt-2">Is Here</span>
+                                </h1>
 
-                        {/* Search Form */}
-                        <form onSubmit={searchForm.handleSubmit(handleSearchForm)} className="my-2 w-full max-w-3xl">
-                            <div className="bg-white/95 backdrop-blur-sm rounded-lg p-1.5 shadow-2xl border border-white/20">
-                                <div className="flex flex-col sm:flex-row gap-2 p-5">
-                                    {/* Search Input */}
-                                    <div className="flex-1">
-                                        <div className="relative">
-                                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                                {/* Description */}
+                                <p className="text-lg text-white/80 leading-relaxed max-w-xl">
+                                    Bid on verified equipment from one of the world's best digital auction house. From excavators to cranes, find machinery from leading manufacturers—all in one place.
+                                </p>
+                            </div>
+
+                            {/* Advanced Search Form */}
+                            <form onSubmit={searchForm.handleSubmit(handleSearch)} className="space-y-4">
+                                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-2">
+                                    <div className="flex flex-col lg:flex-row gap-2">
+                                        {/* Search Input */}
+                                        <div className="flex-1 relative group">
+                                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 w-5 h-5 group-focus-within:text-amber-400 transition-colors" />
                                             <input
                                                 type="text"
-                                                id="search"
-                                                placeholder="Search by keyword..."
-                                                className="w-full bg-gray-50/80 text-gray-900 py-3.5 pl-12 pr-4 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#edcd1f] focus:border-transparent"
-                                                {...searchForm.register('search', { required: false })}
+                                                placeholder="Search by make, model, or keyword..."
+                                                className="w-full bg-white/5 text-white placeholder-white/40 py-4 pl-12 pr-4 rounded-xl border border-white/10 focus:border-amber-500/50 focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
+                                                {...searchForm.register('search')}
                                             />
                                         </div>
-                                    </div>
 
-                                    {/* Category Select */}
-                                    <div className="sm:w-64">
-                                        <div className="relative">
-                                            <select
-                                                id="category"
-                                                className="w-full bg-gray-50/80 text-gray-900 py-3.5 px-4 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#edcd1f] focus:border-transparent appearance-none"
-                                                {...searchForm.register('category')}
-                                                disabled={loading}
-                                            >
-                                                <option value="">All Categories</option>
-                                                {loading ? (
-                                                    <option value="" disabled>Loading categories...</option>
-                                                ) : error ? (
-                                                    <option value="" disabled>Error loading categories</option>
-                                                ) : (
-                                                    categories
-                                                        .filter(category =>
-                                                            category.name.toLowerCase() !== 'explore' &&
-                                                            !category.isExplore
-                                                        )
-                                                        .map((category) => (
-                                                            <option key={category.slug || category.name} value={category.slug || category.name}>
-                                                                {category.name}
-                                                            </option>
-                                                        ))
-                                                )}
-                                            </select>
-                                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                                                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Submit Button */}
-                                    <div className="sm:w-auto">
+                                        {/* Search Button */}
                                         <button
                                             type="submit"
-                                            className="w-full sm:w-auto flex justify-center items-center gap-3 py-3.5 px-8 rounded-lg bg-[#edcd1f] text-gray-900 font-semibold hover:bg-[#d4b41a] transition-all duration-300 hover:shadow-lg active:translate-y-0"
+                                            className="group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 text-white px-8 py-4 rounded-xl font-semibold hover:shadow-lg hover:shadow-amber-500/25 transition-all duration-300"
                                         >
-                                            <Search size={20} />
-                                            <span>Search Now</span>
+                                            <span className="relative z-10 flex items-center gap-2 justify-center">
+                                                Search
+                                                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                                            </span>
+                                            <div className="absolute inset-0 bg-gradient-to-r from-amber-600 to-orange-700 opacity-0 group-hover:opacity-100 transition-opacity" />
                                         </button>
                                     </div>
                                 </div>
-                            </div>
-                            {error && (
-                                <p className="text-red-300 text-sm mt-2">{error}</p>
-                            )}
-                        </form>
 
-                        {/* Features */}
-                        <div className="flex flex-wrap gap-6 md:gap-10 mt-1">
-                            <div className="flex items-center gap-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3">
-                                <div className="p-2 bg-[#edcd1f]/20 rounded-lg">
-                                    <Clock size={20} className="text-[#edcd1f]" />
+                                {/* Quick Filters */}
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <span className="text-white/60 text-sm">Popular:</span>
+                                    {['Excavators', 'Wheel Loaders', 'Dump Trucks', 'Cranes'].map((filter) => (
+                                        <button
+                                            key={filter}
+                                            onClick={() => navigate(`/auctions?category=${filter.toLowerCase()}`)}
+                                            className="text-sm px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/80 hover:bg-amber-500/20 hover:border-amber-500/30 hover:text-white transition-all"
+                                        >
+                                            {filter}
+                                        </button>
+                                    ))}
                                 </div>
-                                <div>
-                                    <h4 className="text-white font-medium">Real-Time Offers</h4>
-                                    <p className="text-white/70 text-sm">Live auction updates</p>
-                                </div>
-                            </div>
+                            </form>
 
-                            <div className="flex items-center gap-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3">
-                                <div className="p-2 bg-[#edcd1f]/20 rounded-lg">
-                                    <Car size={20} className="text-[#edcd1f]" />
-                                </div>
-                                <div>
-                                    <h4 className="text-white font-medium">Trade-Only Platform</h4>
-                                    <p className="text-white/70 text-sm">Verified motor traders only</p>
-                                </div>
-                            </div>
+                        </div>
 
-                            <div className="flex items-center gap-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-3">
-                                <div className="p-2 bg-[#edcd1f]/20 rounded-lg">
-                                    <Shield size={20} className="text-[#edcd1f]" />
+                        {/* Right Column - Visual Showcase */}
+                        <div className="relative hidden lg:block">
+                            {/* Main Equipment Image Placeholder */}
+                            <div className="relative aspect-square rounded-3xl overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-orange-600/20" />
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <img src={heroImg} className="brightness-75" alt="" />
                                 </div>
-                                <div>
-                                    <h4 className="text-white font-medium">Regular Stock Flow</h4>
-                                    <p className="text-white/70 text-sm">Ongoing vehicle listings</p>
+
+                                {/* Floating Stats Cards */}
+                                <div className="absolute top-10 left-5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-4 animate-float">
+                                    <div className="text-white font-bold">99%</div>
+                                    <div className="text-white/70 text-sm">User Satisfaction</div>
+                                </div>
+
+                                <div className="absolute bottom-10 right-5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-4 animate-float-delayed">
+                                    <div className="text-white font-bold">24/7</div>
+                                    <div className="text-white/70 text-sm">Online Bidding</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </Container>
+
+            <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
+        }
+        .animate-float-delayed {
+          animation: float 6s ease-in-out infinite;
+          animation-delay: 2s;
+        }
+      `}</style>
         </section>
-    )
+    );
 }
 
 export default Hero;

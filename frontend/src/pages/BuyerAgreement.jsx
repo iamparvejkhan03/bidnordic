@@ -1,9 +1,12 @@
 import { Link } from "react-router";
 import { Container } from "../components";
+import { otherData } from "../assets";
+
+const { phone, email, address } = otherData;
 
 const BuyerAgreement = () => {
     const currentDate = new Date();
-    const formattedDate = currentDate.toLocaleDateString('en-GB', {
+    const formattedDate = currentDate.toLocaleDateString('nb-NO', {
         day: 'numeric',
         month: 'long',
         year: 'numeric'
@@ -15,13 +18,13 @@ const BuyerAgreement = () => {
                 {/* Header */}
                 <div className="max-w-full mx-auto mb-10">
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">Buyer Agreement</h1>
-                    <p className="text-gray-600 mb-6">SpeedWays Auto Limited | Last Updated: {formattedDate}</p>
+                    <p className="text-gray-600 mb-6">BidNordic | Last Updated: {formattedDate}</p>
                     
-                    <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
-                        <p className="text-red-800 font-semibold mb-2">TRADE-ONLY PLATFORM</p>
-                        <p className="text-red-700 text-sm">
-                            This agreement applies exclusively to motor trade buyers based in the UK or Ireland. 
-                            By using SpeedWays Auto, you confirm you are acting in the course of business.
+                    <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                        <p className="text-blue-800 font-semibold mb-2">IMPORTANT – PLEASE READ CAREFULLY</p>
+                        <p className="text-blue-700 text-sm">
+                            This Buyer Agreement governs all purchases made through BidNordic. 
+                            By placing a bid, making an offer, or using Buy Now, you agree to be bound by this Agreement.
                         </p>
                     </div>
                 </div>
@@ -32,143 +35,171 @@ const BuyerAgreement = () => {
                         {/* Introduction */}
                         <div className="mb-8">
                             <p className="text-gray-700 mb-4">
-                                <strong>SpeedWays Auto Limited</strong> ("we", "our", "us") and you, the motor trade buyer 
-                                ("Buyer"), enter into this Buyer Agreement governing all purchases made through our platform.
+                                <strong>BidNordic</strong> ("we", "our", "us") and you, the buyer ("Buyer"), 
+                                enter into this Buyer Agreement governing all purchases made through our platform.
                             </p>
                             <p className="text-gray-700">
                                 By placing a bid, making an offer, or using Buy Now, you agree to be bound by this Agreement.
                             </p>
                         </div>
 
-                        {/* Section 1 */}
+                        {/* Section 1 - Eligibility */}
                         <div className="border-t pt-6">
                             <h2 className="text-xl font-bold text-gray-900 mb-3">1. Eligibility</h2>
                             <ul className="text-gray-700 space-y-2 list-disc pl-5">
-                                <li>This agreement applies only to motor trade buyers based in the UK or Ireland</li>
-                                <li>Only verified trade accounts may purchase vehicles</li>
-                                <li>Consumer use is strictly prohibited</li>
+                                <li>BidNordic is open to both trade professionals and private buyers</li>
+                                <li>All buyers must register and maintain accurate account information</li>
+                                <li>We reserve the right to verify identity and eligibility</li>
+                                <li>Buyers must be at least 18 years of age</li>
                             </ul>
                         </div>
 
-                        {/* Section 2 */}
+                        {/* Section 2 - Binding Contract */}
                         <div className="border-t pt-6">
                             <h2 className="text-xl font-bold text-gray-900 mb-3">2. Binding Contract</h2>
-                            <p className="text-gray-700 mb-3">A binding contract is formed when:</p>
+                            <p className="text-gray-700 mb-3">A legally binding contract is formed when:</p>
                             <ul className="text-gray-700 space-y-2 list-disc pl-5 mb-3">
-                                <li>A bid is accepted</li>
-                                <li>An offer is accepted</li>
-                                <li>Buy Now is used</li>
+                                <li>You win an auction (highest bid at closing)</li>
+                                <li>Your offer is accepted by the seller</li>
+                                <li>You complete a Buy Now purchase</li>
                             </ul>
                             <div className="bg-gray-50 p-4 rounded">
                                 <p className="text-red-600 font-semibold text-sm">
-                                    All actions are legally binding. No retractions or cancellations permitted.
+                                    All bids, offers, and Buy Now actions are legally binding. Bid retractions are not permitted.
                                 </p>
                             </div>
                         </div>
 
-                        {/* Section 3 */}
+                        {/* Section 3 - Buyer Fees */}
                         <div className="border-t pt-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-3">3. Vehicle Condition</h2>
-                            <p className="text-gray-700 mb-3">Vehicles are sold:</p>
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">3. Buyer Fees</h2>
+                            <p className="text-gray-700">
+                                A minimal buyer fee applies to successful purchases. The fee amount is clearly displayed 
+                                before you bid, make an offer, or complete a Buy Now purchase. All fees are in NOK and 
+                                are non-refundable except as required by applicable law.
+                            </p>
+                        </div>
+
+                        {/* Section 4 - Equipment Condition */}
+                        <div className="border-t pt-6">
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">4. Equipment Condition</h2>
+                            <p className="text-gray-700 mb-3">All equipment is sold:</p>
                             <ul className="text-gray-700 space-y-2 list-disc pl-5 mb-3">
-                                <li>Trade sale (B2B only)</li>
-                                <li>As seen</li>
-                                <li>Without warranty</li>
-                                <li>Without consumer rights</li>
+                                <li>As seen / "i befintligt skick"</li>
+                                <li>Without any warranty, express or implied</li>
+                                <li>Without consumer protection rights (for trade buyers)</li>
                             </ul>
                             <p className="text-gray-600 text-sm">
-                                Descriptions, photographs, and specifications are provided for guidance only.
+                                Descriptions, photographs, and specifications are provided for guidance only and do not 
+                                form part of any contractual warranty.
                             </p>
                         </div>
 
-                        {/* Section 4 */}
+                        {/* Section 5 - Inspections */}
                         <div className="border-t pt-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-3">4. Inspection</h2>
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">5. Inspections</h2>
                             <ul className="text-gray-700 space-y-2 list-disc pl-5">
-                                <li>Buyers are encouraged to inspect and test drive vehicles before payment</li>
-                                <li>Failure to inspect is at the buyer's sole risk</li>
-                                <li>No claims can be made for issues visible upon inspection</li>
+                                <li>On-site inspections are not available before bidding</li>
+                                <li>If you have questions about a listing, please contact us before bidding</li>
+                                <li>We are happy to provide additional information or photos upon request</li>
+                                <li>Failure to ask questions before bidding is at the buyer's sole risk</li>
                             </ul>
                         </div>
 
-                        {/* Section 5 */}
+                        {/* Section 6 - Concerns After Purchase */}
                         <div className="border-t pt-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-3">5. No Returns or Claims</h2>
-                            <div className="bg-red-50 border border-red-200 p-4 rounded mb-3">
-                                <p className="text-red-700 font-bold text-center mb-2">ABSOLUTE FINAL SALE</p>
-                                <div className="text-center space-y-1">
-                                    <p className="text-red-600">No claims once vehicle leaves our premises</p>
-                                    <p className="text-red-600">No refunds under any circumstances</p>
-                                    <p className="text-red-600">No disputes accepted after collection/delivery</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Section 6 */}
-                        <div className="border-t pt-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-3">6. Payment</h2>
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">6. Concerns After Purchase</h2>
+                            <p className="text-gray-700 mb-3">
+                                If you have concerns after winning an auction or completing a purchase:
+                            </p>
                             <ul className="text-gray-700 space-y-2 list-disc pl-5">
-                                <li>Bank transfer only (no cash, cards, or third-party payments)</li>
-                                <li>Full payment due within 3 working days of contract formation</li>
-                                <li>Vehicles will not be released until payment clears</li>
+                                <li>Contact us immediately at {email}</li>
+                                <li>We will review your concerns on a case-by-case basis</li>
+                                <li>Returns are not automatic but may be considered in exceptional circumstances</li>
+                                <li>All decisions are made in good faith and are final</li>
                             </ul>
                         </div>
 
-                        {/* Section 7 */}
+                        {/* Section 7 - Payment */}
                         <div className="border-t pt-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-3">7. Collection & Delivery</h2>
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">7. Payment</h2>
                             <ul className="text-gray-700 space-y-2 list-disc pl-5">
-                                <li>Collection by appointment only</li>
-                                <li>Minimum one hour notice required for collection</li>
-                                <li>Delivery available at buyer's cost (quoted in advance)</li>
-                                <li>Release codes required for third-party collection</li>
+                                <li>Bank transfer is the primary payment method</li>
+                                <li>Payment terms vary by listing – check each auction or sale for specific deadlines</li>
+                                <li>All payments must be made in NOK</li>
+                                <li>Equipment will not be released until full payment clears</li>
+                                <li>Title and ownership pass only after full payment is received</li>
                             </ul>
                         </div>
 
-                        {/* Section 8 */}
+                        {/* Section 8 - Collection & Delivery */}
                         <div className="border-t pt-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-3">8. Default</h2>
-                            <p className="text-gray-700 mb-2">If payment is not completed, we may:</p>
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">8. Collection & Delivery</h2>
                             <ul className="text-gray-700 space-y-2 list-disc pl-5">
-                                <li>Cancel the sale</li>
-                                <li>Resell the vehicle</li>
-                                <li>Recover losses and costs</li>
-                                <li>Suspend or terminate the account</li>
+                                <li>Collection is available by appointment only – please contact us at least 24 hours in advance</li>
+                                <li>Delivery can be arranged across Sweden at the buyer's expense</li>
+                                <li>Delivery quotes are provided before dispatch</li>
+                                <li>Risk of loss or damage transfers to the buyer upon collection or delivery</li>
+                                <li>Buyers are responsible for insurance from the moment of collection/delivery</li>
                             </ul>
                         </div>
 
-                        {/* Section 9 */}
+                        {/* Section 9 - Default & Enforcement */}
                         <div className="border-t pt-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-3">9. Limitation of Liability</h2>
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">9. Default & Enforcement</h2>
+                            <p className="text-gray-700 mb-2">If payment is not completed within the required timeframe, we may:</p>
+                            <ul className="text-gray-700 space-y-2 list-disc pl-5">
+                                <li>Cancel the sale and relist the equipment</li>
+                                <li>Seek recovery of any losses or costs incurred</li>
+                                <li>Suspend or permanently terminate the buyer's account</li>
+                                <li>Report to relevant authorities if fraud is suspected</li>
+                            </ul>
+                        </div>
+
+                        {/* Section 10 - Limitation of Liability */}
+                        <div className="border-t pt-6">
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">10. Limitation of Liability</h2>
                             <p className="text-gray-700">
-                                Our liability is limited to the purchase price of the vehicle, except where 
-                                excluded by law (e.g., death or personal injury caused by negligence).
+                                To the extent permitted by Swedish law, BidNordic's total liability is limited to the 
+                                purchase price of the equipment in question. We are not liable for indirect or consequential 
+                                losses including but not limited to lost profits or business interruption. 
+                                This does not limit liability for fraud, death, or personal injury caused by negligence.
                             </p>
                         </div>
 
-                        {/* Section 10 */}
+                        {/* Section 11 - Governing Law */}
                         <div className="border-t pt-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-3">10. Governing Law</h2>
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">11. Governing Law & Disputes</h2>
                             <ul className="text-gray-700 space-y-2 list-disc pl-5">
-                                <li>This agreement is governed by England and Wales law</li>
-                                <li>English courts have exclusive jurisdiction</li>
+                                <li>This Agreement is governed by the laws of Sweden</li>
+                                <li>Any disputes shall be resolved by the courts of Sweden</li>
+                                <li>BidNordic is located in {address}</li>
                             </ul>
+                        </div>
+
+                        {/* Section 12 - Entire Agreement */}
+                        <div className="border-t pt-6">
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">12. Entire Agreement</h2>
+                            <p className="text-gray-700">
+                                This Buyer Agreement, together with our Terms of Use and Privacy Policy, constitutes the 
+                                entire agreement between you and BidNordic regarding your purchases on our platform.
+                            </p>
                         </div>
 
                         {/* Acceptance & Contact */}
                         <div className="border-t pt-6">
                             <h2 className="text-xl font-bold text-gray-900 mb-4">Acceptance & Contact</h2>
                             <p className="text-gray-700 mb-4">
-                                By using SpeedWays Auto, you acknowledge you have read and agree to this Buyer Agreement.
+                                By using BidNordic, you acknowledge that you have read, understood, and agree to this Buyer Agreement.
                             </p>
                             <div className="bg-gray-50 p-4 rounded">
-                                <p className="font-semibold text-gray-900 mb-2">SpeedWays Auto Limited</p>
-                                <p className="text-gray-700 text-sm mb-1">Wilmslow Rd, Heald Green, Cheadle SK8 3PW, UK</p>
+                                <p className="font-semibold text-gray-900 mb-2">BidNordic</p>
+                                <p className="text-gray-700 text-sm mb-1">{address}</p>
                                 <p className="text-gray-700 text-sm mb-1">
-                                    Email: <a href="mailto:admin@speedways.uk" className="text-blue-600 hover:underline">admin@speedways.uk</a>
+                                    Email: <a href={`mailto:${email}`} className="text-blue-600 hover:underline">{email}</a>
                                 </p>
                                 <p className="text-gray-700 text-sm">
-                                    Phone: <a href="tel:+441618832737" className="text-blue-600 hover:underline">+44 (0)161 883 2737</a>
+                                    Phone: <a href={`tel:${phone}`} className="text-blue-600 hover:underline">{phone}</a>
                                 </p>
                             </div>
                         </div>
@@ -177,7 +208,7 @@ const BuyerAgreement = () => {
                         <div className="border-t pt-6 mt-8">
                             <p className="text-gray-500 text-sm">
                                 This Buyer Agreement was last updated on {formattedDate}. It forms an integral part of 
-                                the contract for every vehicle purchased through SpeedWays Auto.
+                the contract for every equipment purchase made through BidNordic.
                             </p>
                         </div>
                     </div>

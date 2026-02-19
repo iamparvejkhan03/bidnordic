@@ -19,15 +19,41 @@ const useAuctionCountdown = (auction) => {
     }
 
     const calculateTimeLeft = () => {
-      const now = new Date(); // Client time
-      const startDate = new Date(auction.startDate); // UTC from server
-      const endDate = new Date(auction.endDate); // UTC from server
+      const now = new Date();
+      const startDate = new Date(auction.startDate);
+      const endDate = new Date(auction.endDate);
 
-      // Use dates directly - no timezone conversion needed
-      // JavaScript Date comparisons work correctly with UTC
+      // ===== ALWAYS AVAILABLE AUCTIONS (Buy Now & Giveaway) =====
+      if (auction.auctionType === 'buy_now' || auction.auctionType === 'giveaway') {
+        // If already has a winner
+        if (auction.winner) {
+          return {
+            days: '00', hours: '00', minutes: '00', seconds: '00',
+            status: auction.auctionType === 'buy_now' ? 'purchased' : 'claimed'
+          };
+        }
+        
+        // Active and available
+        return {
+          days: '00', hours: '00', minutes: '00', seconds: '00',
+          status: 'always-available'
+        };
+      }
 
-      // Handle all auction statuses
+      // ===== TIMED AUCTIONS (Standard & Reserve) =====
+      
       if (auction.status === 'approved') {
+        if (now >= startDate) {
+          const timeUntilEnd = endDate - now;
+          return {
+            days: Math.floor(timeUntilEnd / (1000 * 60 * 60 * 24)).toString().padStart(2, '0'),
+            hours: Math.floor((timeUntilEnd / (1000 * 60 * 60)) % 24).toString().padStart(2, '0'),
+            minutes: Math.floor((timeUntilEnd / 1000 / 60) % 60).toString().padStart(2, '0'),
+            seconds: Math.floor((timeUntilEnd / 1000) % 60).toString().padStart(2, '0'),
+            status: 'counting-down'
+          };
+        }
+        
         const timeUntilStart = startDate - now;
         return {
           days: Math.floor(timeUntilStart / (1000 * 60 * 60 * 24)).toString().padStart(2, '0'),
@@ -38,7 +64,7 @@ const useAuctionCountdown = (auction) => {
         };
       }
 
-      if (auction.status === 'draft' || auction.status === 'approved') {
+      if (auction.status === 'draft') {
         return {
           days: '00', hours: '00', minutes: '00', seconds: '00',
           status: 'draft'
@@ -52,37 +78,34 @@ const useAuctionCountdown = (auction) => {
         };
       }
 
-      // Auction hasn't started yet
-      if (now < startDate) {
-        const timeUntilStart = startDate - now;
+      if (auction.status === 'active') {
+        if (now >= endDate) {
+          return {
+            days: '00', hours: '00', minutes: '00', seconds: '00',
+            status: 'ended'
+          };
+        }
+
+        const timeUntilEnd = endDate - now;
         return {
-          days: Math.floor(timeUntilStart / (1000 * 60 * 60 * 24)).toString().padStart(2, '0'),
-          hours: Math.floor((timeUntilStart / (1000 * 60 * 60)) % 24).toString().padStart(2, '0'),
-          minutes: Math.floor((timeUntilStart / 1000 / 60) % 60).toString().padStart(2, '0'),
-          seconds: Math.floor((timeUntilStart / 1000) % 60).toString().padStart(2, '0'),
-          status: 'approved'
+          days: Math.floor(timeUntilEnd / (1000 * 60 * 60 * 24)).toString().padStart(2, '0'),
+          hours: Math.floor((timeUntilEnd / (1000 * 60 * 60)) % 24).toString().padStart(2, '0'),
+          minutes: Math.floor((timeUntilEnd / 1000 / 60) % 60).toString().padStart(2, '0'),
+          seconds: Math.floor((timeUntilEnd / 1000) % 60).toString().padStart(2, '0'),
+          status: 'counting-down'
         };
       }
 
-      // Auction has ended (check both time and status)
-      if (now >= endDate ||
-        auction.status === 'ended' ||
-        auction.status === 'reserve_not_met' ||
-        auction.status === 'sold') {
+      if (['ended', 'reserve_not_met', 'sold', 'sold_buy_now'].includes(auction.status)) {
         return {
           days: '00', hours: '00', minutes: '00', seconds: '00',
           status: 'ended'
         };
       }
 
-      // Auction is live - count down to end
-      const timeUntilEnd = endDate - now;
       return {
-        days: Math.floor(timeUntilEnd / (1000 * 60 * 60 * 24)).toString().padStart(2, '0'),
-        hours: Math.floor((timeUntilEnd / (1000 * 60 * 60)) % 24).toString().padStart(2, '0'),
-        minutes: Math.floor((timeUntilEnd / 1000 / 60) % 60).toString().padStart(2, '0'),
-        seconds: Math.floor((timeUntilEnd / 1000) % 60).toString().padStart(2, '0'),
-        status: 'counting-down'
+        days: '00', hours: '00', minutes: '00', seconds: '00',
+        status: auction.status || 'unknown'
       };
     };
 

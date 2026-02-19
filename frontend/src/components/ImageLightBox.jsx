@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, ChevronLeft, ChevronRight, LayoutGrid, Shield, Clock } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, LayoutGrid, Shield, Clock, ShoppingCart, ShieldBanIcon, HelpingHand } from 'lucide-react';
 
 const ImageLightBox = ({ images = [], captions = [], auctionType = '', isReserveMet = '', type = 'photos' }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -58,8 +58,24 @@ const ImageLightBox = ({ images = [], captions = [], auctionType = '', isReserve
         if (auctionType === 'standard') {
             badges.push({
                 label: 'No Reserve',
-                icon: Shield,
+                icon: ShieldBanIcon,
                 color: 'bg-green-100 text-green-700 border-green-200'
+            });
+        }
+
+        if (auctionType === 'buy_now') {
+            badges.push({
+                label: 'Buy Now Available',
+                icon: ShoppingCart,
+                color: 'bg-blue-100 text-blue-700 border-blue-200'
+            });
+        }
+
+        if (auctionType === 'giveaway') {
+            badges.push({
+                label: 'Free Giveaway',
+                icon: HelpingHand,
+                color: 'bg-blue-100 text-blue-700 border-blue-200'
             });
         }
 

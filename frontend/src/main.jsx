@@ -25,14 +25,26 @@ const FAQs = lazy(() => import('./pages/FAQs'));
 {/* Seller Pages */ }
 const SellerLayout = lazy(() => import('./pages/seller/Layout'));
 const SellerDashboard = lazy(() => import('./pages/seller/Dashboard'));
-const CreateAuction = lazy(() => import('./pages/seller/CreateAuction'));
-const EditAuction = lazy(() => import('./pages/seller/EditAuction'));
+const CreateAuctionSeller = lazy(() => import('./pages/seller/CreateAuction'));
+const EditAuctionSeller = lazy(() => import('./pages/seller/EditAuction'));
 const SellerAllAuctions = lazy(() => import('./pages/seller/AllAuctions'));
-const SoldAuctions = lazy(() => import('./pages/seller/SoldAuctions'));
-const BidHistory = lazy(() => import('./pages/seller/BidHistory'));
+const SoldAuctionsSeller = lazy(() => import('./pages/seller/SoldAuctions'));
+const BidHistorySeller = lazy(() => import('./pages/seller/BidHistory'));
 const SellerProfile = lazy(() => import('./pages/seller/Profile'));
 const SellerNotifications = lazy(() => import('./pages/seller/Notifications'));
 const SellerBilling = lazy(() => import('./pages/seller/Billing'));
+
+{/* Broker Pages */ }
+const BrokerLayout = lazy(() => import('./pages/broker/Layout'));
+const BrokerDashboard = lazy(() => import('./pages/broker/Dashboard'));
+const CreateAuctionBroker = lazy(() => import('./pages/broker/CreateAuction'));
+const EditAuctionBroker = lazy(() => import('./pages/broker/EditAuction'));
+const BrokerAllAuctions = lazy(() => import('./pages/broker/AllAuctions'));
+const SoldAuctionsBroker = lazy(() => import('./pages/broker/SoldAuctions'));
+const BidHistoryBroker = lazy(() => import('./pages/broker/BidHistory'));
+const BrokerProfile = lazy(() => import('./pages/broker/Profile'));
+const BrokerNotifications = lazy(() => import('./pages/broker/Notifications'));
+const BrokerBilling = lazy(() => import('./pages/broker/Billing'));
 
 {/* Bidder Pages */ }
 const BidderLayout = lazy(() => import('./pages/bidder/Layout'));
@@ -92,7 +104,7 @@ createRoot(document.getElementById('root')).render(
 
                             <Route path='/payment-refund-policy' index={true} element={<Suspense fallback={<LoadingSpinner height={'725px'} />}><PaymentRefundPolicy /></Suspense>} />
 
-                            {/* <Route path='/seller-agreement' index={true} element={<Suspense fallback={<LoadingSpinner height={'725px'} />}><SellerAgreement /></Suspense>} /> */}
+                            <Route path='/seller-agreement' index={true} element={<Suspense fallback={<LoadingSpinner height={'725px'} />}><SellerAgreement /></Suspense>} />
 
                             <Route path='/buyer-agreement' index={true} element={<Suspense fallback={<LoadingSpinner height={'725px'} />}><BuyerAgreement /></Suspense>} />
 
@@ -116,7 +128,7 @@ createRoot(document.getElementById('root')).render(
                                 path='/seller/auctions/create'
                                 element={
                                     <Suspense fallback={<LoadingSpinner height={'750px'} />}>
-                                        <CreateAuction />
+                                        <CreateAuctionSeller />
                                     </Suspense>
                                 }
                             />
@@ -125,7 +137,7 @@ createRoot(document.getElementById('root')).render(
                                 path='/seller/auctions/edit/:auctionId'
                                 element={
                                     <Suspense fallback={<LoadingSpinner height={'750px'} />}>
-                                        <EditAuction />
+                                        <EditAuctionSeller />
                                     </Suspense>
                                 }
                             />
@@ -143,7 +155,7 @@ createRoot(document.getElementById('root')).render(
                                 path='/seller/auctions/sold'
                                 element={
                                     <Suspense fallback={<LoadingSpinner height={'750px'} />}>
-                                        <SoldAuctions />
+                                        <SoldAuctionsSeller />
                                     </Suspense>
                                 }
                             />
@@ -152,7 +164,7 @@ createRoot(document.getElementById('root')).render(
                                 path='/seller/bids/history'
                                 element={
                                     <Suspense fallback={<LoadingSpinner height={'750px'} />}>
-                                        <BidHistory />
+                                        <BidHistorySeller />
                                     </Suspense>
                                 }
                             />
@@ -176,14 +188,101 @@ createRoot(document.getElementById('root')).render(
                             /> */}
 
                             {/* Seller Billing */}
-                            <Route
+                            {/* <Route
                                 path='/seller/billing'
                                 element={
                                     <Suspense fallback={<LoadingSpinner height={'750px'} />}>
                                         <SellerBilling />
                                     </Suspense>
                                 }
+                            /> */}
+                        </Route>
+
+                        {/* Broker Layout */}
+                        <Route path='/broker' element={<Protected authetication={true} userType='broker'><BrokerLayout /></Protected>}>
+                            {/* Broker Dashboard */}
+                            <Route
+                                path='/broker/dashboard'
+                                index={true}
+                                element={
+                                    <Suspense fallback={<LoadingSpinner height={'750px'} />}>
+                                        <BrokerDashboard />
+                                    </Suspense>
+                                }
                             />
+                            {/* Broker Create Auction */}
+                            <Route
+                                path='/broker/auctions/create'
+                                element={
+                                    <Suspense fallback={<LoadingSpinner height={'750px'} />}>
+                                        <CreateAuctionBroker />
+                                    </Suspense>
+                                }
+                            />
+                            {/* Broker Edit Auction */}
+                            <Route
+                                path='/broker/auctions/edit/:auctionId'
+                                element={
+                                    <Suspense fallback={<LoadingSpinner height={'750px'} />}>
+                                        <EditAuctionBroker />
+                                    </Suspense>
+                                }
+                            />
+                            {/* Broker Live Auctions */}
+                            <Route
+                                path='/broker/auctions/all'
+                                element={
+                                    <Suspense fallback={<LoadingSpinner height={'750px'} />}>
+                                        <BrokerAllAuctions />
+                                    </Suspense>
+                                }
+                            />
+                            {/* Broker Won Auctions */}
+                            <Route
+                                path='/broker/auctions/sold'
+                                element={
+                                    <Suspense fallback={<LoadingSpinner height={'750px'} />}>
+                                        <SoldAuctionsBroker />
+                                    </Suspense>
+                                }
+                            />
+                            {/* Broker Auctions Bid History */}
+                            <Route
+                                path='/broker/bids/history'
+                                element={
+                                    <Suspense fallback={<LoadingSpinner height={'750px'} />}>
+                                        <BidHistoryBroker />
+                                    </Suspense>
+                                }
+                            />
+                            {/* Broker Profile */}
+                            <Route
+                                path='/broker/profile'
+                                element={
+                                    <Suspense fallback={<LoadingSpinner height={'750px'} />}>
+                                        <BrokerProfile />
+                                    </Suspense>
+                                }
+                            />
+                            {/* Broker Notifications */}
+                            {/* <Route
+                                path='/broker/notifications'
+                                element={
+                                    <Suspense fallback={<LoadingSpinner height={'750px'} />}>
+                                        <BrokerNotifications />
+                                    </Suspense>
+                                }
+                            /> */}
+
+                            {/* Broker Billing */}
+                            {/* <Route
+                                path='/broker/billing'
+                                element={
+                                    <Suspense fallback={<LoadingSpinner height={'750px'} />}>
+                                        <BrokerBilling />
+                                    </Suspense>
+                                }
+                            /> */}
                         </Route>
 
                         {/* Bidder Layout */}
@@ -383,14 +482,14 @@ createRoot(document.getElementById('root')).render(
                             />
 
                             {/* Admin Commissions */}
-                            {/* <Route
+                            <Route
                                 path='/admin/commissions'
                                 element={
                                     <Suspense fallback={<LoadingSpinner height={'750px'} />}>
                                         <Commissions />
                                     </Suspense>
                                 }
-                            /> */}
+                            />
 
                             {/* Admin Bids */}
                             <Route

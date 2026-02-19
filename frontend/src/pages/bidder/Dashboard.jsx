@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { LoadingSpinner, StatCard, BidderContainer, BidderHeader, BidderSidebar, AccountInactiveBanner } from "../../components";
 import { useState } from "react";
-import { TrendingUp, Gavel, Award, PoundSterling, Bookmark, Hand } from "lucide-react";
+import { TrendingUp, Gavel, Award, Banknote, Bookmark, Hand } from "lucide-react";
 import { Link } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
 
@@ -31,42 +31,42 @@ function Dashboard() {
     const statsData = [
         // {
         //     title: "Currently Winning Auctions",
-        //     value: stats?.currentlyWinning?.toLocaleString(),
+        //     value: stats?.currentlyWinning?.toLocaleString('nb-NO'),
         //     change: "Leading In Auctions",
         //     icon: <Hand size={24} />,
         //     trend: "up"
         // },
         {
             title: "Active Bids",
-            value: stats?.activeBids?.toLocaleString(),
+            value: stats?.activeBids?.toLocaleString('nb-NO'),
             change: "On Live Auctions",
             icon: <Gavel size={24} />,
             trend: "up"
         },
         // {
         //     title: "Total Offers",
-        //     value: stats?.totalOffers?.toLocaleString(),
+        //     value: stats?.totalOffers?.toLocaleString('nb-NO'),
         //     change: "On Live Auctions",
         //     icon: <Hand size={24} />,
         //     trend: "up"
         // },
         {
             title: "Active Offers",
-            value: stats?.activeOffers?.toLocaleString(),
+            value: stats?.activeOffers?.toLocaleString('nb-NO'),
             change: "On Live Auctions",
             icon: <Hand size={24} />,
             trend: "up"
         },
         {
-            title: "Total Participated Auctions",
-            value: stats?.totalParticipatedAuctions?.toLocaleString(),
+            title: "Total Auctions",
+            value: stats?.totalParticipatedAuctions?.toLocaleString('nb-NO'),
             change: "All Time",
             icon: <Hand size={24} />,
             trend: "up"
         },
         {
             title: "Auctions Won",
-            value: stats?.wonAuctions?.toLocaleString(),
+            value: stats?.wonAuctions?.toLocaleString('nb-NO'),
             change: "No. of Won Auctions",
             icon: <Award size={24} />,
             trend: "up"
@@ -81,31 +81,31 @@ function Dashboard() {
         // }, 
         // {
         //     title: "Total Spent",
-        //     value: stats?.totalSpent?.toLocaleString(),
+        //     value: stats?.totalSpent?.toLocaleString('nb-NO'),
         //     change: "Used To Purchase",
-        //     icon: <PoundSterling size={24} />,
+        //     icon: <Banknote size={24} />,
         //     trend: "up",
-        //     currency: "£"
+        //     currency: " kr"
         // },
         // {
         //     title: "Average Bid Amount",
-        //     value: stats?.avgBidAmount?.toLocaleString(),
+        //     value: stats?.avgBidAmount?.toLocaleString('nb-NO'),
         //     change: "Bid Amount / No. of Bids",
-        //     icon: <PoundSterling size={24} />,
+        //     icon: <Banknote size={24} />,
         //     trend: "up",
-        //     currency: "£"
+        //     currency: " kr"
         // },
         // {
         //     title: "Avg. Offer £",
-        //     value: stats?.avgOfferAmount?.toLocaleString(),
+        //     value: stats?.avgOfferAmount?.toLocaleString('nb-NO'),
         //     change: "Bid Amount / No. of Bids",
-        //     icon: <PoundSterling size={24} />,
+        //     icon: <Banknote size={24} />,
         //     trend: "up",
-        //     currency: "£"
+        //     currency: " kr"
         // },
         {
             title: "Watchlist Items",
-            value: stats?.watchlistCount?.toLocaleString(),
+            value: stats?.watchlistCount?.toLocaleString('nb-NO'),
             change: "Saved For Later",
             icon: <Bookmark size={24} />,
             trend: "up"

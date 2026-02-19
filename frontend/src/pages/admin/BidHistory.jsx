@@ -1,6 +1,6 @@
 // components/BidHistory.jsx
 import { useState, useEffect, useMemo } from "react";
-import { Search, Filter, Calendar, Download, BarChart3, User, Gavel, Award, Clock, PoundSterling, Users, TrendingUp, Package } from "lucide-react";
+import { Search, Filter, Calendar, Download, BarChart3, User, Gavel, Award, Clock, Banknote, Users, TrendingUp, Package } from "lucide-react";
 import axiosInstance from "../../utils/axiosInstance.js";
 import { toast } from "react-hot-toast";
 import { AdminContainer, AdminHeader, AdminSidebar } from "../../components/index.js";
@@ -61,12 +61,12 @@ function BidHistory() {
             // Search filter
             if (filters.search) {
                 const searchTerm = filters.search.toLowerCase();
-                filtered = filtered.filter(auction => 
+                filtered = filtered.filter(auction =>
                     auction.title?.toLowerCase().includes(searchTerm) ||
                     auction.description?.toLowerCase().includes(searchTerm) ||
                     auction.seller?.name?.toLowerCase().includes(searchTerm) ||
                     auction.seller?.username?.toLowerCase().includes(searchTerm) ||
-                    auction.bids.some(bid => 
+                    auction.bids.some(bid =>
                         bid.bidder.name?.toLowerCase().includes(searchTerm) ||
                         bid.bidder.username?.toLowerCase().includes(searchTerm) ||
                         bid.bidder.email?.toLowerCase().includes(searchTerm)
@@ -91,7 +91,7 @@ function BidHistory() {
 
             // Apply sorting
             filtered.sort((a, b) => {
-                switch(filters.sortBy) {
+                switch (filters.sortBy) {
                     case "recent":
                         return new Date(b.createdAt) - new Date(a.createdAt);
                     case "ending_soon":
@@ -116,7 +116,7 @@ function BidHistory() {
         if (allAuctions.length > 0) {
             const filtered = applyFilters();
             setFilteredAuctions(filtered);
-            
+
             // Update selected auction if it's no longer in filtered list
             if (selectedAuction && !filtered.find(a => a.id === selectedAuction.id)) {
                 setSelectedAuction(filtered.length > 0 ? filtered[0] : null);
@@ -150,29 +150,28 @@ function BidHistory() {
         }
     };
 
-    // Helper functions remain the same
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
-
     const formatTime = (dateString) => {
-        return new Date(dateString).toLocaleTimeString('en-US', {
+        return new Date(dateString).toLocaleTimeString('nb-NO', {
             hour: '2-digit',
             minute: '2-digit'
         });
     };
 
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('nb-NO', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'NOK',
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         }).format(amount);
+    };
+
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('nb-NO', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
     };
 
     const getStatusBadge = (status) => {
@@ -208,14 +207,14 @@ function BidHistory() {
     const statCards = [
         {
             title: "Total Bids",
-            value: stats.totalBids?.toString() || "0",
+            value: stats.totalBids?.toLocaleString('nb-NO') || "0",
             change: "All Time",
             icon: <Gavel size={24} />,
             color: "blue"
         },
         {
             title: "Recent Bids",
-            value: stats.recentBids?.toString() || "0",
+            value: stats.recentBids?.toLocaleString('nb-NO') || "0",
             change: "Last 7 Days",
             icon: <TrendingUp size={24} />,
             color: "green"
@@ -224,12 +223,12 @@ function BidHistory() {
         //     title: "Total Revenue",
         //     value: formatCurrency(stats.totalRevenue || 0),
         //     change: "From Commissions",
-        //     icon: <PoundSterling size={24} />,
+        //     icon: <Banknote size={24} />,
         //     color: "purple"
         // },
         {
             title: "Active Bidders",
-            value: stats.activeBidders?.toString() || "0",
+            value: stats.activeBidders?.toLocaleString('nb-NO') || "0",
             change: "Last 30 Days",
             icon: <Users size={24} />,
             color: "orange"
@@ -300,7 +299,7 @@ function BidHistory() {
                             </div>
 
                             {/* Category Filter */}
-                            <div>
+                            {/* <div>
                                 <select
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     value={filters.category}
@@ -311,7 +310,7 @@ function BidHistory() {
                                         <option key={category} value={category}>{category}</option>
                                     ))}
                                 </select>
-                            </div>
+                            </div> */}
 
                             {/* Sort By */}
                             <div>

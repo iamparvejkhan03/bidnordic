@@ -1,4 +1,4 @@
-import { CalendarDays, CheckSquare, Clock, Download, File, Fuel, Gauge, Gavel, Heart, Loader, MapPin, MessageCircle, PaintBucket, Plane, ShieldCheck, Tag, User, Users, Weight, Zap, PoundSterling } from "lucide-react";
+import { CalendarDays, CheckSquare, Clock, Download, File, Fuel, Gauge, Gavel, Heart, Loader, MapPin, MessageCircle, PaintBucket, Plane, ShieldCheck, Tag, User, Users, Weight, Zap, Banknote, MessageSquare } from "lucide-react";
 import { BidConfirmationModal, BuyNowModal, Container, LoadingSpinner, MobileBidStickyBar, SpecificationsSection, TabSection, TimerDisplay, WatchlistButton } from "../components";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { lazy, Suspense, useRef, useState, useEffect } from "react";
@@ -26,6 +26,7 @@ function SingleAuction() {
     const [isMakeOfferModalOpen, setIsMakeOfferModalOpen] = useState(false);
     const bidSectionRef = useRef(null);
     const commentSectionRef = useRef(null);
+    const offerSectionRef = useRef(null);
     const auctionTime = useAuctionCountdown(auction);
     const countdown = useAuctionCountdown(auction);
     const [activeTab, setActiveTab] = useState('description');
@@ -37,6 +38,7 @@ function SingleAuction() {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [showBuyNowModal, setShowBuyNowModal] = useState(false);
+    const [claiming, setClaiming] = useState(false);
 
     const updateAuctionState = (updatedAuction) => {
         setAuction(updatedAuction);
@@ -106,9 +108,16 @@ function SingleAuction() {
         });
     };
 
+    const scrollToOfferSection = () => {
+        offerSectionRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    };
+
     const handleTabClick = (tabId) => {
         setActiveTab(tabId);
-        if (tabId === 'comments' || tabId === 'bids') {
+        if (tabId === 'comments' || tabId === 'bids' || tabId === 'offers') {
             scrollToCommentSection();
         }
     };
@@ -172,18 +181,10 @@ function SingleAuction() {
             return;
         }
 
-        if (countdown.status !== 'counting-down') {
+        if (countdown.status !== 'always-available') {
             toast.error('Auction is not active.');
             return;
         }
-
-        // const userConfirmed = window.confirm(
-        //     `Are you sure you want to buy this item for £${auction.buyNowPrice.toLocaleString()}? This will end the auction immediately and you will be the winner.`
-        // );
-
-        // if (!userConfirmed) {
-        //     return;
-        // }
 
         try {
             setBuying(true);
@@ -203,6 +204,42 @@ function SingleAuction() {
             console.error('Buy Now error:', error);
         } finally {
             setBuying(false);
+        }
+    };
+
+    const handleClaimNow = async () => {
+        if (!user) {
+            toast.error('You must login to claim this item.');
+            navigate('/login');
+            return;
+        }
+
+        if (user._id?.toString() === auction?.seller?._id?.toString()) {
+            toast.error(`You can't claim your own giveaway.`);
+            return;
+        }
+
+        if (auction.winner) {
+            toast.error('This item has already been claimed.');
+            return;
+        }
+
+        try {
+            setClaiming(true);
+
+            const { data } = await axiosInstance.post(`/api/v1/buy-now/${id}`);
+
+            if (data.success) {
+                setAuction(data.data.auction);
+                toast.success('🎉 Congratulations! You have claimed this item for free!');
+                setShowBuyNowModal(false);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        } catch (error) {
+            toast.error(error?.response?.data?.message || 'Failed to claim item');
+            console.error('Claim error:', error);
+        } finally {
+            setClaiming(false);
         }
     };
 
@@ -286,16 +323,19 @@ function SingleAuction() {
     const youtubeVideoId = getYouTubeId(auction?.videoLink);
     const minBidAmount = auction?.bidCount > 0 ? auction?.currentPrice + auction?.bidIncrement : auction?.currentPrice;
 
-    // Check if Buy Now is available
+    // Check if Buy Now is available - remove timer check for buy_now
     const isBuyNowAvailable = auction?.buyNowPrice &&
         auction?.auctionType === 'buy_now' &&
-        countdown?.status === 'counting-down' &&
-        !auction?.winner;
+        !auction?.winner &&
+        auction?.status === 'active'; // Only check status, not timer
 
-    // Check if Make Offer is available
+    // Check if Make Offer is available - updated for all auction types
     const isMakeOfferAvailable = auction?.allowOffers &&
-        countdown?.status === 'counting-down' &&
-        !auction?.winner;
+        !auction?.winner &&
+        auction?.status === 'active' && // Check status instead of countdown
+        (auction.auctionType === 'standard' ||
+            auction.auctionType === 'reserve' ||
+            auction.auctionType === 'buy_now'); // Include buy_now
 
     if (loading) {
         return (
@@ -310,7 +350,7 @@ function SingleAuction() {
             <Container className="py-32 min-h-[70vh] flex items-center justify-center">
                 <div className="text-center">
                     <h2 className="text-2xl font-semibold text-gray-600">Auction not found</h2>
-                    <Link to="/auctions" className="text-[#edcd1f] hover:underline mt-4 inline-block">
+                    <Link to="/auctions" className="text-orange-500 hover:underline mt-4 inline-block">
                         Back to Auctions
                     </Link>
                 </div>
@@ -344,11 +384,11 @@ function SingleAuction() {
                             <span>{watchlistCount || auction?.watchlistCount || 0}</span>
                         </p>
 
-                        {/* <p onClick={() => handleTabClick('comments')}
+                        <p onClick={() => handleTabClick('comments')}
                             className="flex items-center gap-2 border border-gray-200 py-1 px-3 rounded-full cursor-pointer hover:bg-gray-100">
-                            <MessageCircle size={18} />
+                            <MessageSquare size={18} />
                             <span>{pagination?.totalComments || 0}</span>
-                        </p> */}
+                        </p>
 
                         {
                             (auction.auctionType === 'standard' || auction.auctionType === 'reserve') && (
@@ -364,7 +404,7 @@ function SingleAuction() {
                         {auction?.allowOffers && (
                             <p onClick={() => handleTabClick('offers')}
                                 className="flex items-center gap-2 border border-gray-200 py-1 px-3 rounded-full cursor-pointer hover:bg-gray-100">
-                                <PoundSterling size={18} />
+                                <Banknote size={18} />
                                 {/* <span>{auction.offers.filter(o => o.status === 'pending').length}</span> */}
                                 <span>{auction.offers?.length}</span>
                             </p>
@@ -383,30 +423,95 @@ function SingleAuction() {
                         allowOffers={auction.allowOffers}
                         auctionType={auction.auctionType}
                         status={countdown.status}
+                        auction={auction}
                     />
                 </div>
 
-                {/* Buy Now Badge */}
-                {isBuyNowAvailable && (
-                    <div className="mb-4 inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full">
-                        <Zap size={16} />
-                        <span className="font-semibold">Buy Now Available: £{auction.buyNowPrice.toLocaleString()}</span>
-                    </div>
-                )}
+                <h2 className="text-2xl md:text-3xl font-semibold my-6 text-primary">{auction.title}</h2>
 
                 {/* Image section */}
-                <ImageLightBox images={auction.photos} captions={auction.photos.map(photo => photo.caption || '')} auctionType={auction?.auctionType} isReserveMet={auction.currentPrice >= auction.reservePrice} />
-
-                <hr className="my-8" />
-
-                <h2 className="text-2xl md:text-3xl font-semibold my-4 text-primary">{auction.title}</h2>
-                <h3 className="text-lg md:text-xl font-semibold text-primary">{auction?.subTitle}</h3>
+                {/* <Suspense fallback={<LoadingSpinner />}> */}
+                <ImageLightBox images={auction.photos} auctionType={auction?.auctionType} isReserveMet={auction.currentPrice >= auction.reservePrice} />
+                {/* </Suspense> */}
 
                 <hr className="my-8" />
 
                 {/* Info section */}
                 <div>
-                    {/* <h3 className="my-5 text-primary text-xl font-semibold">Auction Overview</h3> */}
+                    <h3 className="my-5 text-primary text-xl font-semibold">Auction Overview</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-5 gap-y-10">
+                        {/* <div className="flex items-center gap-3">
+                            <Plane className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8" strokeWidth={1} />
+                            <div>
+                                <p className="text-secondary text-sm">Title</p>
+                                <p className="text-base">{auction.title}</p>
+                            </div>
+                        </div> */}
+
+                        <div className="flex items-center gap-3">
+                            <Tag className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8" strokeWidth={1} />
+                            <div>
+                                <p className="text-secondary text-sm">Category</p>
+                                <p className="text-base capitalize">{auction?.categories[1]}</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <MapPin className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8" strokeWidth={1} />
+                            <div>
+                                <p className="text-secondary text-sm">Location</p>
+                                <p className="text-base">{auction.location || 'Not specified'}</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <CalendarDays className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8" strokeWidth={1} />
+                            <div>
+                                <p className="text-secondary text-sm">Start Date</p>
+                                <p className="text-base">
+                                    {new Date(auction.startDate).toLocaleDateString()}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <Clock className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8" strokeWidth={1} />
+                            <div>
+                                <p className="text-secondary text-sm">End Date</p>
+                                <p className="text-base">
+                                    {new Date(auction.endDate).toLocaleDateString()}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <User className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8" strokeWidth={1} />
+                            <div>
+                                <p className="text-secondary text-sm">Seller</p>
+                                <p className="text-base break-all">{auction.sellerUsername}</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <Gavel className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8" strokeWidth={1} />
+                            <div>
+                                <p className="text-secondary text-sm">Auction Type</p>
+                                <p className="text-base capitalize">
+                                    {auction.auctionType === 'reserve' ? 'Reserve Price' : 'Standard'}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* <div className="flex items-center gap-3">
+                            <ShieldCheck className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8" strokeWidth={1} />
+                            <div>
+                                <p className="text-secondary text-sm">Status</p>
+                                <p className="text-base capitalize">
+                                    {auction.status}
+                                </p>
+                            </div>
+                        </div> */}
+                    </div>
 
                     {/* Dynamic Specifications Section */}
                     <SpecificationsSection auction={auction} />
@@ -476,7 +581,7 @@ function SingleAuction() {
                 {/* Video section */}
                 {youtubeVideoId && (
                     <>
-                        <hr className="my-8" />
+                        <div className="my-8" />
                         <div>
                             <h3 className="my-5 text-primary text-xl font-semibold">Video Look</h3>
                             <Suspense fallback={<LoadingSpinner />}>
@@ -536,20 +641,33 @@ function SingleAuction() {
                     }
 
                     {
-                        auction.allowOffers && (auction.auctionType !== 'standard' && auction.auctionType !== 'reserve') && (
+                        auction.allowOffers && (auction.auctionType === 'buy_now' || auction.auctionType === 'giveaway') && (
                             <>
                                 <div className="flex flex-col gap-2">
-                                    <p className="font-light">{auction.status === 'sold' ? 'Final Offer' : 'Offer Starting At'}</p>
-                                    <p className="flex items-center gap-1 text-3xl sm:text-4xl font-medium">
-                                        <span>£ </span>
-                                        <span> {auction.currentPrice.toLocaleString()}</span>
-                                    </p>
+                                    {auction.status === 'sold' || auction.winner ? (
+                                        <>
+                                            <p className="font-light">Sold For</p>
+                                            <p className="flex items-center gap-1 text-3xl sm:text-4xl font-medium">
+                                                <span>£ </span>
+                                                <span>{auction.finalPrice?.toLocaleString() || auction.currentPrice?.toLocaleString()}</span>
+                                            </p>
+                                        </>
+                                    ) : (
+                                        // Only show offer starting at if startPrice > 0
+                                        auction.startPrice > 0 ? (
+                                            <>
+                                                <p className="font-light">Offer Starting At</p>
+                                                <p className="flex items-center gap-1 text-3xl sm:text-4xl font-medium">
+                                                    <span>£ </span>
+                                                    <span>{auction.startPrice.toLocaleString()}</span>
+                                                </p>
+                                            </>
+                                        ) : (
+                                            // For items with 0 startPrice (giveaways/buy now), show make offer prompt
+                                            ''
+                                        )
+                                    )}
                                 </div>
-
-                                <p className="flex w-full justify-between border-b pb-2">
-                                    <span className="text-secondary">No. of Offers</span>
-                                    <span className="font-medium">{auction?.offers?.length}</span>
-                                </p>
                             </>
                         )
                     }
@@ -591,13 +709,73 @@ function SingleAuction() {
                         </div>
                     )}
 
+                    {/* Giveaway Display */}
+                    {auction.auctionType === 'giveaway' && (
+                        <div className="bg-green-50 border border-green-300 rounded-lg p-3 mb-2">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <p className="text-secondary text-sm">Free Giveaway</p>
+                                    <p className="text-2xl font-bold text-green-600">FREE</p>
+                                    {auction.winner && (
+                                        <p className="text-sm text-green-600 mt-1">
+                                            Claimed by: {auction.winner.username}
+                                        </p>
+                                    )}
+                                </div>
+                                <span className="text-4xl">🎁</span>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Conditional Action Buttons based on auction status */}
-                    {countdown.status === 'counting-down' ? (
+
+                    {/* GIVEAWAY HANDLING - This should be first */}
+                    {auction.auctionType === 'giveaway' && !auction.winner && countdown?.status === 'always-available' && (
                         <>
-                            {
-                                (auction.auctionType === 'standard' || auction.auctionType === 'reserve') && (
+                            <button
+                                onClick={() => setShowBuyNowModal(true)}
+                                disabled={claiming}
+                                className="flex items-center justify-center gap-2 w-full bg-purple-600 text-white py-3 px-6 cursor-pointer rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-purple-700 transition-colors text-lg font-semibold"
+                            >
+                                {claiming ? (
+                                    <Loader size={20} className="animate-spin-slow" />
+                                ) : (
                                     <>
-                                        {/* Bid Form */}
+                                        <span>🎁</span>
+                                        <span>Claim for Free</span>
+                                    </>
+                                )}
+                            </button>
+
+                            <BuyNowModal
+                                isOpen={showBuyNowModal}
+                                onClose={() => setShowBuyNowModal(false)}
+                                onConfirm={handleClaimNow}
+                                auction={auction}
+                                loading={claiming}
+                                isGiveaway={true}
+                            />
+                        </>
+                    )}
+
+                    {/* Show claimed status for won giveaways */}
+                    {auction.auctionType === 'giveaway' && auction.winner && (
+                        <div className="text-center py-4 bg-purple-100 rounded-lg border border-purple-200">
+                            <p className="font-medium text-purple-700">🎁 Item Claimed</p>
+                            <p className="text-sm text-purple-600 mt-1">
+                                Claimed by: {auction.winner.username}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* REGULAR AUCTION HANDLING - For non-giveaway auctions */}
+                    {auction.auctionType !== 'giveaway' && (
+                        <>
+                            {/* ACTIVE STATES - Show for both counting-down and always-available */}
+                            {(countdown.status === 'counting-down' || countdown.status === 'always-available') && (
+                                <>
+                                    {/* Bid Form for standard/reserve - only show for timed auctions */}
+                                    {(auction.auctionType === 'standard' || auction.auctionType === 'reserve') && (
                                         <form ref={formRef} onSubmit={handleBid} className="flex flex-col gap-4">
                                             <input
                                                 type="number"
@@ -632,110 +810,121 @@ function SingleAuction() {
                                                 ref={formRef}
                                             />
                                         </form>
-                                    </>
-                                )
-                            }
+                                    )}
 
-                            {/* Buy Now Button */}
-                            {isBuyNowAvailable && (
-                                <>
-                                    <button
-                                        onClick={() => setShowBuyNowModal(true)}
-                                        disabled={buying || !isBuyNowAvailable}
-                                        className="flex items-center justify-center gap-2 w-full bg-green-600 text-white py-3 px-6 cursor-pointer rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-700 transition-colors"
-                                    >
-                                        {buying ? (
-                                            <Loader size={16} className="animate-spin-slow" />
-                                        ) : (
-                                            <>
-                                                <Zap />
-                                                <span>Buy Now £{auction.buyNowPrice.toLocaleString()}</span>
-                                            </>
-                                        )}
-                                    </button>
+                                    {/* Buy Now Button - Show for buy_now auctions */}
+                                    {auction.auctionType === 'buy_now' && isBuyNowAvailable && (
+                                        <>
+                                            <button
+                                                onClick={() => setShowBuyNowModal(true)}
+                                                disabled={buying || !isBuyNowAvailable}
+                                                className="flex items-center justify-center gap-2 w-full bg-green-600 text-white py-3 px-6 cursor-pointer rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-700 transition-colors"
+                                            >
+                                                {buying ? (
+                                                    <Loader size={16} className="animate-spin-slow" />
+                                                ) : (
+                                                    <>
+                                                        <Zap />
+                                                        <span>Buy Now £{auction.buyNowPrice.toLocaleString()}</span>
+                                                    </>
+                                                )}
+                                            </button>
 
-                                    <BuyNowModal
-                                        isOpen={showBuyNowModal}
-                                        onClose={() => setShowBuyNowModal(false)}
-                                        onConfirm={handleBuyNow}
-                                        auction={auction}
-                                        loading={buying}
-                                    />
+                                            <BuyNowModal
+                                                isOpen={showBuyNowModal}
+                                                onClose={() => setShowBuyNowModal(false)}
+                                                onConfirm={handleBuyNow}
+                                                auction={auction}
+                                                loading={buying}
+                                            />
+                                        </>
+                                    )}
+
+                                    {/* Make Offer Button - Show for any auction type that allows offers and is active */}
+                                    {isMakeOfferAvailable && (
+                                        <button
+                                            onClick={handleOpenMakeOfferModal}
+                                            className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 py-3 px-6 cursor-pointer rounded-lg transition-colors"
+                                        >
+                                            <Banknote />
+                                            <span>Make an Offer</span>
+                                        </button>
+                                    )}
+
+                                    {/* Make Offer Modal */}
+                                    <Suspense fallback={null}>
+                                        <MakeOfferModal
+                                            isOpen={isMakeOfferModalOpen}
+                                            onClose={handleCloseMakeOfferModal}
+                                            onSubmit={handleMakeOffer}
+                                            offerAmount={offerAmount}
+                                            setOfferAmount={setOfferAmount}
+                                            offerMessage={offerMessage}
+                                            setOfferMessage={setOfferMessage}
+                                            loading={makingOffer}
+                                            auction={auction}
+                                        />
+                                    </Suspense>
                                 </>
                             )}
 
-                            {/* Make Offer Button */}
-                            {isMakeOfferAvailable && (
-                                <button
-                                    onClick={handleOpenMakeOfferModal}
-                                    className="flex items-center justify-center gap-2 w-full bg-[#edcd1f] text-black py-3 px-6 cursor-pointer rounded-lg hover:bg-[#edcd1f]/90 transition-colors"
-                                >
-                                    <PoundSterling />
-                                    <span>Make an Offer</span>
-                                </button>
+                            {/* Non-active states for regular auctions */}
+                            {countdown.status === 'approved' && (
+                                <div className="text-center py-4 bg-blue-100 rounded-lg border border-blue-200">
+                                    <p className="font-medium text-blue-700">Auction Not Started</p>
+                                    <p className="text-sm text-blue-600 mt-1">Bidding will begin when the auction starts</p>
+                                </div>
                             )}
 
-                            {/* Make Offer Modal */}
-                            <Suspense fallback={null}>
-                                <MakeOfferModal
-                                    isOpen={isMakeOfferModalOpen}
-                                    onClose={handleCloseMakeOfferModal}
-                                    onSubmit={handleMakeOffer}
-                                    offerAmount={offerAmount}
-                                    setOfferAmount={setOfferAmount}
-                                    offerMessage={offerMessage}
-                                    setOfferMessage={setOfferMessage}
-                                    loading={makingOffer}
-                                    auction={auction}
-                                />
-                            </Suspense>
+                            {countdown.status === 'ended' && (
+                                <div className="text-center py-4 bg-yellow-100 rounded-lg border border-yellow-200">
+                                    <p className="font-medium text-yellow-700">Auction Ended</p>
+                                    {auction.winner ? (
+                                        <p className="text-sm text-yellow-600 mt-1">Winner: {auction.winner.username}</p>
+                                    ) : auction.status === 'sold' ? (
+                                        <p className="text-sm text-green-600 mt-1">Item Sold</p>
+                                    ) : auction.status === 'reserve_not_met' ? (
+                                        <p className="text-sm text-yellow-600 mt-1">Reserve Not Met</p>
+                                    ) : auction.status === 'sold_buy_now' ? (
+                                        <p className="text-sm text-green-600 mt-1">Sold via Buy Now</p>
+                                    ) : (
+                                        <p className="text-sm text-yellow-600 mt-1">No winning bidder</p>
+                                    )}
+                                </div>
+                            )}
+
+                            {countdown.status === 'cancelled' && (
+                                <div className="text-center py-4 bg-yellow-100 rounded-lg border border-yellow-200">
+                                    <p className="font-medium text-yellow-700">Auction Cancelled</p>
+                                    {auction.winner ? (
+                                        <p className="text-sm text-yellow-600 mt-1">Winner: {auction.winner.username}</p>
+                                    ) : auction.status === 'sold' ? (
+                                        <p className="text-sm text-green-600 mt-1">Item Sold</p>
+                                    ) : (
+                                        <p className="text-sm text-yellow-600 mt-1">No winning bidder</p>
+                                    )}
+                                </div>
+                            )}
+
+                            {countdown.status === 'draft' && (
+                                <div className="text-center py-4 bg-yellow-100 rounded-lg border border-yellow-200">
+                                    <p className="font-medium text-yellow-700">Auction Pending</p>
+                                    {auction.winner ? (
+                                        <p className="text-sm text-yellow-600 mt-1">Winner: {auction.winner.username}</p>
+                                    ) : auction.status === 'sold' ? (
+                                        <p className="text-sm text-green-600 mt-1">Item Sold</p>
+                                    ) : (
+                                        <p className="text-sm text-yellow-600 mt-1">Needs Admin Approval</p>
+                                    )}
+                                </div>
+                            )}
+
+                            {countdown.status === 'loading' && (
+                                <div className="text-center py-4 bg-gray-100 rounded-lg">
+                                    <p className="font-medium text-gray-600">Loading auction status...</p>
+                                </div>
+                            )}
                         </>
-                    ) : countdown.status === 'approved' ? (
-                        <div className="text-center py-4 bg-blue-100 rounded-lg border border-blue-200">
-                            <p className="font-medium text-blue-700">Auction Not Started</p>
-                            <p className="text-sm text-blue-600 mt-1">Bidding will begin when the auction starts</p>
-                        </div>
-                    ) : countdown.status === 'ended' ? (
-                        <div className="text-center py-4 bg-yellow-100 rounded-lg border border-yellow-200">
-                            <p className="font-medium text-yellow-700">Auction Ended</p>
-                            {auction.winner ? (
-                                <p className="text-sm text-yellow-600 mt-1">Winner: {auction.winner.username}</p>
-                            ) : auction.status === 'sold' ? (
-                                <p className="text-sm text-green-600 mt-1">Item Sold</p>
-                            ) : auction.status === 'reserve_not_met' ? (
-                                <p className="text-sm text-yellow-600 mt-1">Reserve Not Met</p>
-                            ) : auction.status === 'sold_buy_now' ? (
-                                <p className="text-sm text-green-600 mt-1">Sold via Buy Now</p>
-                            ) : (
-                                <p className="text-sm text-yellow-600 mt-1">No winning bidder</p>
-                            )}
-                        </div>
-                    ) : countdown.status === 'cancelled' ? (
-                        <div className="text-center py-4 bg-yellow-100 rounded-lg border border-yellow-200">
-                            <p className="font-medium text-yellow-700">Auction Cancelled</p>
-                            {auction.winner ? (
-                                <p className="text-sm text-yellow-600 mt-1">Winner: {auction.winner.username}</p>
-                            ) : auction.status === 'sold' ? (
-                                <p className="text-sm text-green-600 mt-1">Item Sold</p>
-                            ) : (
-                                <p className="text-sm text-yellow-600 mt-1">No winning bidder</p>
-                            )}
-                        </div>
-                    ) : countdown.status === 'draft' ? (
-                        <div className="text-center py-4 bg-yellow-100 rounded-lg border border-yellow-200">
-                            <p className="font-medium text-yellow-700">Auction Pending</p>
-                            {auction.winner ? (
-                                <p className="text-sm text-yellow-600 mt-1">Winner: {auction.winner.username}</p>
-                            ) : auction.status === 'sold' ? (
-                                <p className="text-sm text-green-600 mt-1">Item Sold</p>
-                            ) : (
-                                <p className="text-sm text-yellow-600 mt-1">Needs Admin Approval</p>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="text-center py-4 bg-gray-100 rounded-lg">
-                            <p className="font-medium text-gray-600">Loading auction status...</p>
-                        </div>
                     )}
 
                     {/* Watchlist Count */}
@@ -754,7 +943,7 @@ function SingleAuction() {
                     {/* Pending Offers Count */}
                     {auction.offers && auction.offers.filter(o => o.status === 'pending').length > 0 && (
                         <p className="text-center bg-white p-3 text-secondary text-sm flex items-center justify-center gap-2 border border-gray-200 rounded-lg">
-                            <PoundSterling className="w-4 h-4" />
+                            <Banknote className="w-4 h-4" />
                             <span>{auction.offers.filter(o => o.status === 'pending').length} pending offer{auction.offers.filter(o => o.status === 'pending').length !== 1 ? 's' : ''}</span>
                         </p>
                     )}

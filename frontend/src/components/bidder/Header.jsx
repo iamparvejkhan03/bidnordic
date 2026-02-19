@@ -47,7 +47,7 @@ function Header() {
                             ?
                             <Link to={`/bidder/profile`}><img src={user?.image} alt="userImage" className="h-10 w-10 rounded-full" /></Link>
                             :
-                            <Link to={`/bidder/profile`} className = "h-10 w-10 rounded-full bg-gradient-to-r from-[#edcd1f]/70 to-[#1e2d3b]/20 flex items-center justify-center text-black font-semibold">
+                            <Link to={`/bidder/profile`} className = "h-10 w-10 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center text-white font-semibold">
                                 {user?.firstName[0] + user?.lastName[0]}
                             </Link>
                     }

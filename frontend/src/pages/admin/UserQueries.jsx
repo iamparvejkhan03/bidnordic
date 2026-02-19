@@ -274,7 +274,7 @@ function UserQueries() {
     };
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
+        return new Date(dateString).toLocaleDateString('nb-NO', {
             month: 'short',
             day: 'numeric',
             year: 'numeric',
@@ -295,28 +295,28 @@ function UserQueries() {
     const statCards = [
         {
             title: "Total Queries",
-            value: queryStats.total.toString(),
+            value: queryStats.total.toLocaleString('nb-NO'),
             change: "Showing",
             icon: MessageSquare,
             color: "blue"
         },
         {
             title: "New Queries",
-            value: queryStats.new.toString(),
+            value: queryStats.new.toLocaleString('nb-NO'),
             change: "Require Attention",
             icon: AlertCircle,
             color: "orange"
         },
         {
             title: "In Progress",
-            value: queryStats.inProgress.toString(),
+            value: queryStats.inProgress.toLocaleString('nb-NO'),
             change: "Being Handled",
             icon: Clock,
             color: "amber"
         },
         {
             title: "Resolved",
-            value: queryStats.resolved.toString(),
+            value: queryStats.resolved.toLocaleString('nb-NO'),
             change: "Completed",
             icon: CheckCircle2,
             color: "green"

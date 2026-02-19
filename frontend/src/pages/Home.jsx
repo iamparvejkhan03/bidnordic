@@ -1,8 +1,32 @@
 import { lazy, Suspense } from "react";
-import { Hero, Container, Testimonial, HowItWorksCard, LoadingSpinner, About, AuctionCard, AuctionListItem } from "../components";
+import { Hero, Container, Testimonial, HowItWorksCard, LoadingSpinner, About, AuctionCard, AuctionListItem, CategoryCarousel, HowItWorks } from "../components";
 import Marquee from "react-fast-marquee";
 import { BadgeCheck, Gavel, Grid, List, Tag, Upload, Filter, UserCog2, LucideVerified, UserPlus, Clock, PhoneCall, Target, Users, ArrowRight, User, CarFront, Hand } from "lucide-react";
-import { volkswagen, ford, bmw, hyundai, kia, engineCategoryIcon, mercedes, skoda, volvo, audi, renault, tesla, lamborghini, convertible, electric, hatchback, luxury, pickup, sedan, sports, suv, truck, van } from "../assets";
+import {
+    CaseIH,
+    Claas,
+    Cummins,
+    Fendt,
+    Freightliner,
+    Hitachi,
+    JCB,
+    JohnDeere,
+    Komatsu,
+    Kubota,
+    Liebherr,
+    MasseyFerguson,
+    Mercedes,
+    NewHolland,
+    NokianTyres,
+    Peterbilt,
+    Scag,
+    Skania,
+    Stiga,
+    Timberjack,
+    Toro,
+    Toyota,
+    Volvo,
+} from "../assets";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import axiosInstance from "../utils/axiosInstance";
@@ -12,6 +36,7 @@ import { Link, useNavigate } from "react-router-dom";
 const FAQs = lazy(() => import('../components/FAQs'));
 const CTA = lazy(() => import('../components/CTA'));
 const CategoryIconsSection = lazy(() => import('../components/CategoryIconsSection'));
+const TestimonialSection = lazy(() => import('../components/TestimonialSection'));
 
 const faqs = [
     {
@@ -163,116 +188,91 @@ const HowItWorksBuying = [
 ];
 
 const trustedBrands = [
-    {
-        src: bmw,
-        alt: 'BMW'
-    },
-    {
-        src: hyundai,
-        alt: 'Hyundai'
-    },
-    {
-        src: volvo,
-        alt: 'Volvo'
-    },
-    {
-        src: audi,
-        alt: 'Audi'
-    },
-    {
-        src: volkswagen,
-        alt: 'Volkswagen'
-    },
-    {
-        src: ford,
-        alt: 'Ford'
-    },
-    {
-        src: kia,
-        alt: 'Kia'
-    },
-    {
-        src: mercedes,
-        alt: 'Mercedes'
-    },
-    {
-        src: skoda,
-        alt: 'Skoda'
-    },
-    {
-        src: renault,
-        alt: 'Renault'
-    },
-    {
-        src: tesla,
-        alt: 'Tesla'
-    },
-    {
-        src: lamborghini,
-        alt: 'Lamborghini'
-    },
+    { src: CaseIH, alt: 'Case IH' },
+    { src: Claas, alt: 'Claas' },
+    { src: Cummins, alt: 'Cummins' },
+    { src: Fendt, alt: 'Fendt' },
+    { src: Freightliner, alt: 'Freightliner' },
+    { src: Hitachi, alt: 'Hitachi' },
+    { src: JCB, alt: 'JCB' },
+    { src: JohnDeere, alt: 'John Deere' },
+    { src: Komatsu, alt: 'Komatsu' },
+    { src: Kubota, alt: 'Kubota' },
+    { src: Liebherr, alt: 'Liebherr' },
+    { src: MasseyFerguson, alt: 'Massey Ferguson' },
+    { src: Mercedes, alt: 'Mercedes' },
+    { src: NewHolland, alt: 'New Holland' },
+    { src: NokianTyres, alt: 'Nokian Tyres' },
+    { src: Peterbilt, alt: 'Peterbilt' },
+    { src: Scag, alt: 'Scag' },
+    { src: Skania, alt: 'Skania' },
+    { src: Stiga, alt: 'Stiga' },
+    { src: Timberjack, alt: 'Timberjack' },
+    { src: Toro, alt: 'Toro' },
+    { src: Toyota, alt: 'Toyota' },
+    { src: Volvo, alt: 'Volvo' },
 ];
 
-const categoryIcons = [
-    {
-        name: 'Convertible',
-        icon: convertible,
-        type: 'img'
-    },
-    {
-        name: 'Electric',
-        icon: electric,
-        type: 'img'
-    },
-    {
-        name: 'Hatchback',
-        icon: hatchback,
-        type: 'img'
-    },
-    {
-        name: 'Luxury',
-        icon: luxury,
-        type: 'img'
-    },
-    {
-        name: 'Pickup',
-        icon: pickup,
-        type: 'img'
-    },
-    {
-        name: 'Sedan',
-        icon: sedan,
-        type: 'img'
-    },
-    {
-        name: 'Sports',
-        icon: sports,
-        type: 'img'
-    },
-    {
-        name: 'SUV',
-        icon: suv,
-        type: 'img'
-    },
-    {
-        name: 'Van',
-        icon: van,
-        type: 'img'
-    },
-    {
-        name: 'Explore',
-        icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 13 13">
-            <path fill="currentColor" d="M6.5,1A5.5,5.5,0,1,1,1,6.5,5.51,5.51,0,0,1,6.5,1m0-1A6.5,6.5,0,1,0,13,6.5,6.49,6.49,0,0,0,6.5,0Z" />
-            <path fill="currentColor" d="M9.7,5.78V7.15a.07.07,0,0,1-.07.07H7.28V9.57a.07.07,0,0,1-.07.07H5.79a.07.07,0,0,1-.07-.07V7.22H3.37a.07.07,0,0,1-.07-.07V5.78a.1.1,0,0,1,.1-.1H5.72V3.33a.07.07,0,0,1,.07-.07H7.21a.07.07,0,0,1,.07.07V5.68H9.6A.1.1,0,0,1,9.7,5.78Z" />
-        </svg>,
-    }
-];
+// const categoryIcons = [
+//     {
+//         name: 'Convertible',
+//         icon: convertible,
+//         type: 'img'
+//     },
+//     {
+//         name: 'Electric',
+//         icon: electric,
+//         type: 'img'
+//     },
+//     {
+//         name: 'Hatchback',
+//         icon: hatchback,
+//         type: 'img'
+//     },
+//     {
+//         name: 'Luxury',
+//         icon: luxury,
+//         type: 'img'
+//     },
+//     {
+//         name: 'Pickup',
+//         icon: pickup,
+//         type: 'img'
+//     },
+//     {
+//         name: 'Sedan',
+//         icon: sedan,
+//         type: 'img'
+//     },
+//     {
+//         name: 'Sports',
+//         icon: sports,
+//         type: 'img'
+//     },
+//     {
+//         name: 'SUV',
+//         icon: suv,
+//         type: 'img'
+//     },
+//     {
+//         name: 'Van',
+//         icon: van,
+//         type: 'img'
+//     },
+//     {
+//         name: 'Explore',
+//         icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 13 13">
+//             <path fill="currentColor" d="M6.5,1A5.5,5.5,0,1,1,1,6.5,5.51,5.51,0,0,1,6.5,1m0-1A6.5,6.5,0,1,0,13,6.5,6.49,6.49,0,0,0,6.5,0Z" />
+//             <path fill="currentColor" d="M9.7,5.78V7.15a.07.07,0,0,1-.07.07H7.28V9.57a.07.07,0,0,1-.07.07H5.79a.07.07,0,0,1-.07-.07V7.22H3.37a.07.07,0,0,1-.07-.07V5.78a.1.1,0,0,1,.1-.1H5.72V3.33a.07.07,0,0,1,.07-.07H7.21a.07.07,0,0,1,.07.07V5.68H9.6A.1.1,0,0,1,9.7,5.78Z" />
+//         </svg>,
+//     }
+// ];
 
 function Home() {
     const [auctions, setAuctions] = useState([]);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('approved'); // 'sold', 'active', 'approved'
+    const [activeTab, setActiveTab] = useState('active'); // 'sold', 'active', 'approved'
     const [viewMode, setViewMode] = useState("grid"); // "grid" or "list"
 
     // Map tab values to API status values
@@ -289,9 +289,9 @@ function Home() {
     };
 
     const tabDescriptions = {
-        'active': 'Explore a handpicked lineup of high-quality vehicles — find your perfect car with clear bidding and verified listings you can trust.',
-        'sold': 'Browse completed vehicle auctions — including sold and reserve-not-met listings — to make confident, well-informed buying decisions.',
-        'approved': 'Discover what’s arriving soon — premium cars entering auction shortly, giving you time to research and strategize your bids.'
+        'active': 'Handpicked heavy equipment. Clear bidding. Verified listings. — find your perfect machine today.',
+        'sold': 'Learn from past auctions — browse sold and reserve-not-met listings to bid smarter on your next machine.',
+        'approved': 'Plan your next move — browse upcoming heavy equipment auctions and build your bidding strategy in advance.'
     };
 
     const fetchAuctions = async (tab = activeTab, category = null, limit = 4, sortBy = 'highestBid') => {
@@ -324,7 +324,7 @@ function Home() {
     };
 
     useEffect(() => {
-        fetchAuctions('approved'); // Load sold auctions by default
+        fetchAuctions('active'); // Load sold auctions by default
     }, []);
 
     const handleLoadByStatus = () => {
@@ -355,7 +355,7 @@ function Home() {
                         {
                             trustedBrands.map(brand => (
                                 <div key={brand.alt} className="flex items-center justify-center border rounded-lg shadow hover:shadow-lg transition-all border-slate-200 p-4 md:p-5">
-                                    <img src={brand.src} alt={brand.alt} className="h-7 sm:h-7 md:h-8 lg:h-10 xl:h-12" />
+                                    <img src={brand.src} alt={brand.alt} className="h-6 sm:h-6 md:h-7 lg:h-8 xl:h-9" />
                                 </div>
                             ))
                         }
@@ -363,19 +363,7 @@ function Home() {
                 </Marquee>
             </Container>
 
-            {/* Category Icons Section */}
-            {/* <Container className="mb-14">
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5 sm:gap-7">
-                    {
-                        categoryIcons.map(categoryIcon => (
-                            <div onClick={() => handleSearchByTitle(categoryIcon.name)} key={categoryIcon.name} className="flex flex-col gap- items-center justify-center p-3 rounded-lg shadow-md max-h-28 cursor-pointer">
-                                {categoryIcon.type && categoryIcon.type === 'img' ? <img className="max-h-16" src={categoryIcon.icon} alt={categoryIcon.name} /> : categoryIcon.icon}
-                                <p className="text-base sm:text-lg font-medium">{categoryIcon.name}</p>
-                            </div>
-                        ))
-                    }
-                </div>
-            </Container> */}
+            {/* Category section */}
             <CategoryIconsSection />
 
             {/* Dynamic Auctions section */}
@@ -385,7 +373,7 @@ function Home() {
                     <p className="text-sm md:text-base text-gray-500 order-2 md:order-3">
                         {tabDescriptions[activeTab]}
                     </p>
-                    <div className="flex items-center gap-5 order-2 mb-3">
+                    <div className="flex items-center  flex-wrap gap-5 order-2 mb-3">
                         <div className="flex space-x-2 bg-white p-1 border border-gray-500/50 rounded-md text-sm">
                             <div className="flex items-center">
                                 <input
@@ -396,7 +384,7 @@ function Home() {
                                     checked={activeTab === 'active'}
                                     onChange={() => handleTabChange('active')}
                                 />
-                                <label htmlFor="active" className="cursor-pointer rounded py-2 px-4 sm:px-8 text-[#1e2d3b] transition-colors duration-200 peer-checked:bg-[#edcd1f] peer-checked:text-black">
+                                <label htmlFor="active" className="cursor-pointer rounded py-2 px-4 sm:px-8 text-[#1e2d3b] transition-colors duration-200 peer-checked:bg-gradient-to-r peer-checked:from-amber-400 peer-checked:via-amber-500 peer-checked:to-amber-600 peer-checked:text-white">
                                     Live
                                 </label>
                             </div>
@@ -409,7 +397,7 @@ function Home() {
                                     checked={activeTab === 'sold'}
                                     onChange={() => handleTabChange('sold')}
                                 />
-                                <label htmlFor="sold" className="cursor-pointer rounded py-2 px-4 sm:px-8 text-gray-500 transition-colors duration-200 peer-checked:bg-[#edcd1f] peer-checked:text-black">
+                                <label htmlFor="sold" className="cursor-pointer rounded py-2 px-4 sm:px-8 text-gray-500 transition-colors duration-200 peer-checked:bg-gradient-to-r peer-checked:from-amber-400 peer-checked:via-amber-500 peer-checked:to-amber-600 peer-checked:text-white">
                                     Closed
                                 </label>
                             </div>
@@ -422,7 +410,7 @@ function Home() {
                                     checked={activeTab === 'approved'}
                                     onChange={() => handleTabChange('approved')}
                                 />
-                                <label htmlFor="approved" className="cursor-pointer rounded py-2 px-4 sm:px-8 text-gray-500 transition-colors duration-200 peer-checked:bg-[#edcd1f] peer-checked:text-black">
+                                <label htmlFor="approved" className="cursor-pointer rounded py-2 px-4 sm:px-8 text-gray-500 transition-colors duration-200 peer-checked:bg-gradient-to-r peer-checked:from-amber-400 peer-checked:via-amber-500 peer-checked:to-amber-600 peer-checked:text-white">
                                     Upcoming
                                 </label>
                             </div>
@@ -435,14 +423,14 @@ function Home() {
                                 className={`p-2 rounded transition-colors ${viewMode === "grid" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
                                 title="Grid View"
                             >
-                                <Grid size={18} className={viewMode === "grid" ? "text-blue-600" : "text-gray-500"} />
+                                <Grid size={18} className={viewMode === "grid" ? "text-orange-600" : "text-gray-500"} />
                             </button>
                             <button
                                 onClick={() => setViewMode("list")}
                                 className={`p-2 rounded transition-colors ${viewMode === "list" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
                                 title="List View"
                             >
-                                <List size={18} className={viewMode === "list" ? "text-blue-600" : "text-gray-500"} />
+                                <List size={18} className={viewMode === "list" ? "text-orange-600" : "text-gray-500"} />
                             </button>
                         </div>
                     </div>
@@ -530,7 +518,7 @@ function Home() {
                         {auctions.length > 0 && (
                             <button
                                 onClick={handleLoadByStatus}
-                                className="px-8 py-3 bg-[#edcd1f] text-black font-medium rounded-lg hover:bg-[#edcd1f]/90 focus:outline-none focus:ring-2 focus:ring-[#edcd1f] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 mt-10 mx-auto"
+                                className="px-8 py-3 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-white font-medium rounded-lg hover:bg-gradient-to-r hover:from-amber-500 hover:via-amber-600 hover:to-amber-700 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 mt-10 mx-auto"
                             >
                                 View More
                             </button>
@@ -540,138 +528,20 @@ function Home() {
             </Container>
 
             {/* Who we are section */}
-            <Container className="my-14">
+            <Container className="mb-8 md:mb-0">
                 <About />
             </Container>
 
-            {/* <Container className="my-14">
-                <section className="">
-                    <h2 className="text-3xl md:text-4xl font-bold text-primary">How It Works For Sellers</h2>
-                    <p className="text-sm md:text-base text-gray-500 mt-3 mb-8">
-                        Easy process, smooth results — see how SpeedWays Auto streamlines every stage of selling your car.
-                    </p>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 xl:gap-8">
-                        {
-                            HowItWorksSelling && HowItWorksSelling.map((howItWork, i) => {
-                                return (
-                                    <HowItWorksCard key={howItWork.title} index={i} icon={howItWork.icon} title={howItWork.title} description={howItWork.description} />
-                                )
-                            })
-                        }
-                    </div>
-                </section>
-            </Container> */}
-
-            {/* <Container className="my-14">
-                <section className="">
-                    <h2 className="text-3xl md:text-4xl font-bold text-primary">How It Works</h2>
-                    <p className="text-sm md:text-base text-gray-500 mt-3 mb-8">
-                        Effortless bidding, confident buying — experience how SpeedWays Auto makes finding the right car simple and smooth.
-                    </p>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 xl:gap-8">
-                        {
-                            HowItWorksBuying && HowItWorksBuying.map((howItWork, i) => {
-                                return (
-                                    <HowItWorksCard key={howItWork.title} index={i} icon={howItWork.icon} title={howItWork.title} description={howItWork.description} />
-                                )
-                            })
-                        }
-                    </div>
-                </section>
-            </Container> */}
-
-            <Container className="my-14">
-                <div className="text-left mb-8">
-                    <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
-                        How It Works
-                    </h2>
-                    <p className="text-sm md:text-base text-gray-500">
-                        We combine verified listings and expert support to give buyers a safe and transparent vehicle trading experience.
-                    </p>
-                </div>
-
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
-                    {howItWorks.map((item, index) => (
-                        <div
-                            key={index}
-                            className="relative group bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300"
-                        >
-                            {/* Step number in top-right corner */}
-                            <div className="absolute top-6 right-6">
-                                <span className="text-3xl font-bold text-gray-200">{item.step}</span>
-                            </div>
-
-                            {/* Icon container */}
-                            <div className="inline-flex items-center justify-center p-4 bg-gray-100 group-hover:bg-[#edcd1f] transition-colors duration-200 rounded-xl mb-6">
-                                <div className="text-primary">
-                                    {item.icon}
-                                </div>
-                            </div>
-
-                            {/* Content */}
-                            <h3 className="text-xl font-bold text-gray-900 mb-4">{item.title}</h3>
-                            <p className="text-gray-600 leading-relaxed">{item.description}</p>
-
-                            {/* Connector line for desktop */}
-                            {index < howItWorks.length - 1 && (
-                                <div className="hidden md:block absolute top-1/2 -right-5 w-10 h-0.5 bg-gray-200"></div>
-                            )}
-                        </div>
-                    ))}
-                </div>
-
-                <div className="flex justify-center items-center">
-                    <Link to={`/register`} className="mt-8 px-8 py-3 bg-[#edcd1f] text-black font-medium rounded-lg hover:bg-[#edcd1f]/90 transition-colors flex items-center gap-2">
-                        <span>Get Started</span>
-                        <ArrowRight />
-                    </Link>
-                </div>
+            <Container className="">
+                <HowItWorks />
             </Container>
 
-            {/* <Container className="my-14">
-                <section>
-                    <h2 className="text-3xl md:text-4xl font-bold text-primary">
-                        What Our Customers Say
-                    </h2>
-                    <p className="text-sm md:text-base text-gray-500 mt-3">
-                        Trusted by car buyers and sellers across the UK — discover why thousands rely on SpeedWays Auto for every automotive deal.
-                    </p>
-                    <Marquee speed={50} gradient={false} pauseOnHover={true}>
-                        <div className="flex flex-wrap justify-between items-stretch gap-5 mt-8 mx-5 text-left pb-1">
-                            {
-                                testimonials?.slice(0, 4).map(testimonial => (
-                                    <Testimonial
-                                        key={testimonial.name}
-                                        name={testimonial.name}
-                                        review={testimonial.review}
-                                        rating={testimonial.rating}
-                                        vehicle={testimonial.vehicle}
-                                    />
-                                ))
-                            }
-                        </div>
-                    </Marquee>
-
-                    <Marquee speed={50} direction="right" gradient={false} pauseOnHover={true}>
-                        <div className="flex flex-wrap justify-between items-stretch gap-5 mt-8 mx-5 text-left pb-1">
-                            {
-                                testimonials?.slice(4, 8).map(testimonial => (
-                                    <Testimonial
-                                        key={testimonial.name}
-                                        name={testimonial.name}
-                                        review={testimonial.review}
-                                        rating={testimonial.rating}
-                                        vehicle={testimonial.vehicle}
-                                    />
-                                ))
-                            }
-                        </div>
-                    </Marquee>
-                </section>
-            </Container> */}
+            {/* Testimonials */}
+            <Container>
+                <Suspense fallback={<LoadingSpinner />}>
+                    <TestimonialSection />
+                </Suspense>
+            </Container>
 
             {/* <Container className="my-14">
                 <Suspense fallback={<LoadingSpinner />}>
@@ -679,11 +549,7 @@ function Home() {
                 </Suspense>
             </Container> */}
 
-            <Container className="my-14">
-                <Suspense fallback={<LoadingSpinner />}>
-                    <CTA />
-                </Suspense>
-            </Container>
+            <CTA />
         </>
     )
 }

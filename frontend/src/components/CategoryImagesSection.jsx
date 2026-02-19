@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { ArrowUp, X } from "lucide-react";
 import { CategoryImg, Container } from "./";
-import { airCrafts, endingSoonAuctions, liveAuctions, memorabilia, parts, soldAuctions, upcomingAuctions } from "../assets";
+import { endingSoonAuctions, liveAuctions, soldAuctions, upcomingAuctions } from "../assets";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import axiosInstance from "../utils/axiosInstance";
 
 function CategoryImagesSection({ closePopup }) {
@@ -20,60 +19,56 @@ function CategoryImagesSection({ closePopup }) {
     const fetchCategories = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.get('/api/v1/admin/categories/public/with-images');
+            // Use the public endpoint for parent categories with images
+            const response = await axiosInstance.get('/api/v1/categories/public/parents/with-images');
 
             if (response.data.success) {
-                // Use all categories returned from the API
-                const apiCategories = response.data.data.filter(cat =>
-                    cat.name && cat.image // Ensure both name and image exist
-                );
-
-                if (apiCategories.length > 0) {
-                    // Map all categories to the required format
-                    const formattedCategories = apiCategories.map(cat => ({
-                        title: cat.name,
-                        image: cat.image,
-                        slug: cat.slug,
-                        isDynamic: true
-                    }));
-                    setCategories(formattedCategories);
-                }
+                // Format categories from API
+                const apiCategories = response.data.data.map(cat => ({
+                    title: cat.name,
+                    image: cat.image,
+                    slug: cat.slug,
+                    auctionCount: cat.auctionCount
+                }));
+                setCategories(apiCategories);
+            } else {
+                setCategories([]);
             }
         } catch (err) {
             console.error('Error fetching categories:', err);
             setError('Failed to load categories');
+            setCategories([]);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleSearchByCategory = (title) => {
-        const params = new URLSearchParams();
-        params.append('categories', title);
-
-        navigate(`/auctions?${params.toString()}`);
+    const handleSearchByCategory = (title, slug) => {
+        // Use slug if available, otherwise use title
+        const categoryParam = slug || title;
+        navigate(`/auctions?category=${encodeURIComponent(categoryParam)}`);
         closePopup('category');
-    }
+    };
 
-    const handleSearchByStatus = (title) => {
-        const params = new URLSearchParams();
-        params.append('status', title);
-
-        navigate(`/auctions?${params.toString()}`);
+    const handleSearchByStatus = (status) => {
+        navigate(`/auctions?status=${status}`);
         closePopup('category');
-    }
+    };
 
-    const statusImg = [
+    const statusImages = [
         {
             title: 'active',
+            label: 'Live Auctions',
             image: liveAuctions,
         },
         {
             title: 'sold',
+            label: 'Sold',
             image: soldAuctions,
         },
         {
             title: 'approved',
+            label: 'Upcoming',
             image: upcomingAuctions,
         }
     ];
@@ -89,27 +84,17 @@ function CategoryImagesSection({ closePopup }) {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        {[...Array(4)].map((_, index) => (
+                            <div key={index} className="h-44 rounded-xl overflow-hidden bg-gray-200 animate-pulse"></div>
+                        ))}
+                    </div>
+
+                    <h2 className="text-2xl font-semibold my-7 text-primary">Explore By Status</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                         {[...Array(3)].map((_, index) => (
                             <div key={index} className="h-44 rounded-xl overflow-hidden bg-gray-200 animate-pulse"></div>
                         ))}
-                        <div onClick={() => { navigate('/auctions'); closePopup('category') }} className="group hover:scale-[101%] transition-all duration-200 relative h-44 rounded-xl overflow-hidden bg-gray-100 border-2 border-gray-200 cursor-pointer">
-                            <p className="absolute bottom-5 left-5 text-primary">Explore All Auctions</p>
-                            <ArrowUp className="absolute group-hover:top-4 group-hover:right-4 transition-all duration-200 top-5 right-5 text-primary rotate-45" strokeWidth={1.5} size={30} />
-                        </div>
-                    </div>
-
-                    {/* Status section remains static */}
-                    <h2 className="text-2xl font-semibold my-7 text-primary">Explore By Status</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                        {
-                            statusImg.map(category => (
-                                <CategoryImg key={category.title} title={category.title} image={category.image} link={category.link} onClick={handleSearchByStatus} />
-                            ))
-                        }
-                        <div onClick={() => { navigate('/auctions'); closePopup('category') }} className="group hover:scale-[101%] transition-all duration-200 relative h-44 rounded-xl overflow-hidden bg-gray-100 border-2 border-gray-200 cursor-pointer">
-                            <p className="absolute bottom-5 left-5 text-primary">Explore All Auctions</p>
-                            <ArrowUp className="absolute group-hover:top-4 group-hover:right-4 transition-all duration-200 top-5 right-5 text-primary rotate-45" strokeWidth={1.5} size={30} />
-                        </div>
+                        <div className="h-44 rounded-xl overflow-hidden bg-gray-200 animate-pulse"></div>
                     </div>
                 </section>
             </Container>
@@ -124,71 +109,55 @@ function CategoryImagesSection({ closePopup }) {
                     <X onClick={() => closePopup('category')} size={30} className="cursor-pointer" />
                 </div>
 
-                {
-                    categories && categories.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                            {
-                                categories.map(category => (
-                                    <CategoryImg
-                                        key={category.title}
-                                        title={category.title}
-                                        slug={category.slug}
-                                        image={category.image}
-                                        link={category.link}
-                                        onClick={handleSearchByCategory}
-                                        // Add error handling for dynamic images
-                                        onImageError={(e) => {
-                                            if (category.isDynamic) {
-                                                e.target.src = getStaticImageForCategory(category.title);
-                                            }
-                                        }}
-                                    />
-                                ))
-                            }
-                            <div onClick={() => { navigate('/auctions'); closePopup('category') }} className="group hover:scale-[101%] transition-all duration-200 relative h-44 rounded-xl overflow-hidden bg-gray-100 border-2 border-gray-200 cursor-pointer">
-                                <p className="absolute bottom-5 left-5 text-primary">Explore All Auctions</p>
-                                <ArrowUp className="absolute group-hover:top-4 group-hover:right-4 transition-all duration-200 top-5 right-5 text-primary rotate-45" strokeWidth={1.5} size={30} />
-                            </div>
+                {/* Categories Grid */}
+                {categories && categories.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        {categories.map(category => (
+                            <CategoryImg
+                                key={category.slug || category.title}
+                                title={category.title}
+                                image={category.image}
+                                onClick={() => handleSearchByCategory(category.title, category.slug)}
+                                subtitle={category.auctionCount ? `${category.auctionCount} auctions` : ''}
+                            />
+                        ))}
+                        {/* Explore All Card */}
+                        <div 
+                            onClick={() => { navigate('/auctions'); closePopup('category'); }} 
+                            className="group hover:scale-[101%] transition-all duration-200 relative h-44 rounded-xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-gray-300 cursor-pointer"
+                        >
+                            <p className="absolute bottom-5 left-5 text-primary font-medium">Explore All Auctions</p>
+                            <ArrowUp className="absolute group-hover:top-4 group-hover:right-4 transition-all duration-200 top-5 right-5 text-primary rotate-45" strokeWidth={1.5} size={30} />
                         </div>
-                    )
-                }
+                    </div>
+                ) : (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg mb-6">
+                        <p className="text-gray-500">No categories available</p>
+                    </div>
+                )}
 
-                {/* Status section remains static */}
+                {/* Status section */}
                 <h2 className="text-2xl font-semibold my-7 text-primary">Explore By Status</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                    {
-                        statusImg.map(category => (
-                            <CategoryImg key={category.title} title={category.title} image={category.image} link={category.link} onClick={handleSearchByStatus} />
-                        ))
-                    }
-                    <div onClick={() => { navigate('/auctions'); closePopup('category') }} className="group hover:scale-[101%] transition-all duration-200 relative h-44 rounded-xl overflow-hidden bg-gray-100 border-2 border-gray-200 cursor-pointer">
-                        <p className="absolute bottom-5 left-5 text-primary">Explore All Auctions</p>
+                    {statusImages.map(item => (
+                        <CategoryImg 
+                            key={item.title} 
+                            title={item.label || item.title} 
+                            image={item.image} 
+                            onClick={() => handleSearchByStatus(item.title)} 
+                        />
+                    ))}
+                    <div 
+                        onClick={() => { navigate('/auctions'); closePopup('category'); }} 
+                        className="group hover:scale-[101%] transition-all duration-200 relative h-44 rounded-xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-gray-300 cursor-pointer"
+                    >
+                        <p className="absolute bottom-5 left-5 text-primary font-medium">Explore All Auctions</p>
                         <ArrowUp className="absolute group-hover:top-4 group-hover:right-4 transition-all duration-200 top-5 right-5 text-primary rotate-45" strokeWidth={1.5} size={30} />
                     </div>
                 </div>
             </section>
         </Container>
     );
-}
-
-// Helper function to get fallback image for categories
-const getStaticImageForCategory = (categoryTitle) => {
-    const categoryMap = {
-        'Convertible': '/images/categories/convertible.png',
-        'Electric': '/images/categories/electric.png',
-        'SUV': '/images/categories/suv.png',
-        'Sedan': '/images/categories/sedan.png',
-        'Sports': '/images/categories/sports.png',
-        'Luxury': '/images/categories/luxury.png',
-        'Pickup': '/images/categories/pickup.png',
-        'Hatchback': '/images/categories/hatchback.png',
-        'Van': '/images/categories/van.png',
-        'Aircraft': airCrafts, // Imported from assets
-        'Engines & Parts': parts,
-        'Memorabilia': memorabilia
-    };
-
-    return categoryMap[categoryTitle] || '/images/default-category.jpg';
 }
 
 export default CategoryImagesSection;

@@ -11,7 +11,7 @@ import {
     Zap,
     TrendingUp,
     SortAsc,
-    PoundSterling,
+    Banknote,
 } from "lucide-react";
 import axiosInstance from "../../utils/axiosInstance";
 import { Link } from "react-router-dom";
@@ -94,21 +94,19 @@ function WonAuctions() {
     }, [filter, searchTerm, allAuctions, sortBy]);
 
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "GBP",
+        return new Intl.NumberFormat('nb-NO', {
+            style: 'currency',
+            currency: 'NOK',
             minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
+            maximumFractionDigits: 0
         }).format(amount);
     };
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
+        return new Date(dateString).toLocaleDateString('nb-NO', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
     };
 
@@ -146,7 +144,7 @@ function WonAuctions() {
                             <p className="text-red-600">{error}</p>
                             <button
                                 onClick={fetchWonAuctions}
-                                className="mt-4 bg-[#edcd1f] text-black px-4 py-2 rounded-lg hover:bg-[#1e2d3b]/90"
+                                className="mt-4 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 px-4 py-2 rounded-lg"
                             >
                                 Try Again
                             </button>
@@ -210,7 +208,7 @@ function WonAuctions() {
                                     <p className="text-green-200 text-xs mt-1">In Winning Auctions</p>
                                 </div>
                                 <div className="p-3 bg-white/20 rounded-full">
-                                    <PoundSterling size={24} />
+                                    <Banknote size={24} />
                                 </div>
                             </div>
                         </div>
@@ -413,7 +411,7 @@ function WonAuctions() {
                                         <Link
                                             to={`/auction/${auction._id}`}
                                             target="_blank"
-                                            className="flex-1 text-center bg-gradient-to-r from-[#edcd1f]/80 to-[#edcd1f] text-black py-3 rounded-lg font-semibold hover:from-[#edcd1f]/90 hover:to-[#edcd1f] transition-all"
+                                            className="flex-1 text-center bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 py-3 rounded-lg font-semibold  transition-all"
                                         >
                                             View Auction
                                         </Link>

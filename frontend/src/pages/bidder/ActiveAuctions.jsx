@@ -26,21 +26,21 @@ function ActiveAuctions() {
     const auctionStats = [
         {
             title: "Active Auctions",
-            value: stats.activeAuctions?.toLocaleString(),
+            value: stats.activeAuctions?.toLocaleString('nb-NO'),
             change: "All Time",
             icon: <Gavel size={24} />,
             trend: "up"
         },
         {
             title: "New Today",
-            value: stats.newToday?.toLocaleString(),
+            value: stats.newToday?.toLocaleString('nb-NO'),
             change: "In Last 24 Hours",
             icon: <Award size={24} />,
             trend: "up"
         },
         {
             title: "Ending Soon",
-            value: stats.endingSoon?.toLocaleString(),
+            value: stats.endingSoon?.toLocaleString('nb-NO'),
             change: "In Next 24 Hours",
             icon: <Clock size={24} />,
             trend: "down",
@@ -182,7 +182,7 @@ function ActiveAuctions() {
                             </div>
 
                             <div className="flex flex-col sm:flex-row gap-3">
-                                <div className="flex items-center gap-2">
+                                {/* <div className="flex items-center gap-2">
                                     <Filter size={18} className="text-gray-500" />
                                     <select
                                         className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -195,7 +195,7 @@ function ActiveAuctions() {
                                             </option>
                                         ))}
                                     </select>
-                                </div>
+                                </div> */}
 
                                 <div className="flex items-center gap-2">
                                     <SortAsc size={18} className="text-gray-500" />
@@ -218,7 +218,7 @@ function ActiveAuctions() {
                         <div className="flex flex-wrap gap-3">
                             <button
                                 onClick={() => setFilter("all")}
-                                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === "all" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === "all" ? "bg-orange-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                             >
                                 All
                             </button>
@@ -334,7 +334,7 @@ function ActiveAuctions() {
                                     setSearchTerm("");
                                     setCategoryFilter("all");
                                 }}
-                                className="bg-[#edcd1f] hover:bg-[#edcd1f]/90 text-black px-6 py-2 rounded-lg transition-colors"
+                                className="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 px-6 py-2 rounded-lg transition-colors"
                             >
                                 Clear All Filters
                             </button>

@@ -36,6 +36,14 @@ export const makeOffer = async (req, res) => {
       });
     }
 
+    // Check if user is a bidder
+    if (buyer.userType !== 'bidder') {
+        return res.status(403).json({
+            success: false,
+            message: 'Only bidders can make offers'
+        });
+    }
+
     // Find auction
     const auction = await Auction.findById(id)
       .populate("seller", "username firstName lastName email")
@@ -143,15 +151,7 @@ export const makeOffer = async (req, res) => {
       },
     });
 
-    offerConfirmationEmail(
-      buyer?.email,
-      buyer?.firstName || buyer?.username,
-      updatedAuction?.title,
-      updatedAuction?.specifications?.get("year"),
-      offerAmount,
-      updatedAuction?.buyNowPrice || updatedAuction?.startPrice,
-      updatedAuction?._id
-    ).catch((error) => console.error("Failed to send buyer email:", error));
+    offerConfirmationEmail(buyer?.email, buyer?.firstName || buyer?.username, updatedAuction, offerAmount, updatedAuction?.buyNowPrice || updatedAuction?.startPrice, updatedAuction?._id).catch((error) => console.error("Failed to send buyer email:", error));
 
     newOfferNotificationEmail(
       updatedAuction?.seller,
@@ -1539,8 +1539,6 @@ export const adminEndAuctionWithOffer = async (req, res) => {
     });
   }
 };
-
-// Add this function in offer.controller.js after the adminCancelOffer function:
 
 /**
  * @desc    Reactivate and accept a rejected offer

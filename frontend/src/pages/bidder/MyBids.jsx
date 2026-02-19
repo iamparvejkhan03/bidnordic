@@ -6,7 +6,7 @@ import {
     Gavel,
     Award,
     Clock,
-    PoundSterling,
+    Banknote,
     TrendingUp,
     TrendingDown,
     Eye,
@@ -145,20 +145,19 @@ function MyBids() {
     };
 
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('nb-NO', {
             style: 'currency',
-            currency: 'GBP',
+            currency: 'NOK',
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         }).format(amount);
     };
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+        return new Date(dateString).toLocaleDateString('nb-NO', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
     };
 
@@ -190,7 +189,7 @@ function MyBids() {
                             <p className="text-red-600">{error}</p>
                             <button
                                 onClick={fetchMyBids}
-                                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                                className="mt-4 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600"
                             >
                                 Try Again
                             </button>
@@ -273,7 +272,7 @@ function MyBids() {
                                     <p className="text-purple-200 text-xs mt-1">Across all auctions</p>
                                 </div>
                                 <div className="p-3 bg-white/20 rounded-lg">
-                                    <PoundSterling size={24} />
+                                    <Banknote size={24} />
                                 </div>
                             </div>
                         </div>
@@ -325,7 +324,7 @@ function MyBids() {
                                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === "winning" ? "bg-green-100 text-green-800 border border-green-200 shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                             >
                                 <Award size={14} className="inline mr-1" />
-                                Winning ({statistics.totalWinning})
+                                Winning ({statistics.totalWinning?.toLocaleString('nb-NO')})
                             </button>
                             <button
                                 onClick={() => setFilter("outbid")}
@@ -339,7 +338,7 @@ function MyBids() {
                                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === "won" ? "bg-blue-100 text-blue-800 border border-blue-200 shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                             >
                                 <CheckCircle size={14} className="inline mr-1" />
-                                Won ({statistics.totalWon})
+                                Won ({statistics.totalWon?.toLocaleString('nb-NO')})
                             </button>
                         </div>
                     </div>
@@ -470,7 +469,7 @@ function MyBids() {
                                             setFilter("all");
                                             setSearchTerm("");
                                         }}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+                                        className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors"
                                     >
                                         Clear Filters
                                     </button>
@@ -492,16 +491,16 @@ function MyBids() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                                 <div>
                                     <p className="text-sm text-gray-600">Total Bids Placed</p>
-                                    <p className="text-2xl font-bold text-gray-900">{statistics.totalBids}</p>
+                                    <p className="text-2xl font-bold text-gray-900">{statistics.totalBids?.toLocaleString('nb-NO')}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-600">Active Participation</p>
-                                    <p className="text-2xl font-bold text-green-600">{statistics.totalActiveBids}</p>
+                                    <p className="text-2xl font-bold text-green-600">{statistics.totalActiveBids?.toLocaleString('nb-NO')}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-600">Success Rate</p>
                                     <p className="text-2xl font-bold text-blue-600">
-                                        {statistics.successRate}%
+                                        {statistics.successRate?.toLocaleString('nb-NO')}%
                                     </p>
                                 </div>
                             </div>

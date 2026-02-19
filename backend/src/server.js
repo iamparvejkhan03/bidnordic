@@ -42,7 +42,7 @@ app.use(express.json({ limit: '16kb' }));
 app.use(express.urlencoded({ limit: '16kb' }));
 
 app.use(cors({
-    origin: ['https://www.speedways.uk', 'https://speedways.uk', 'https://speedwaysuk-frontend.onrender.com', 'https://speedwaysie.netlify.app', 'https://speedways.ie', 'https://www.speedways.ie', 'http://localhost:5173'],
+    origin: ['https://www.bidnordic.com', 'https://bidnordic.com', 'https://bidnordic-frontend.onrender.com', 'http://localhost:5173'],
     credentials: true,
 }));
 
@@ -61,12 +61,13 @@ app.use('/api/v1/watchlist', watchlistRouter);
 app.use('/api/v1/comments', commentRouter);
 app.use('/api/v1/bids', bidRouter);
 app.use('/api/v1/admin', AdminRouter);
-app.use('/api/v1/admin/commissions', commissionRouter);
+app.use('/api/v1/commissions', commissionRouter);
 app.use('/api/v1/bid-payments', bidPaymentRouter);
 app.use('/api/v1/contact', contactQueryRouter);
 app.use('/api/v1/offers', offerRouter);
 app.use('/api/v1/buy-now', buyNowRouter);
-app.use('/api/v1/admin/categories', categoryRouter);
+// app.use('/api/v1/admin/categories', categoryRouter);
+app.use('/api/v1/categories', categoryRouter);
 
 // 404 handler - SIMPLIFIED VERSION
 app.use((req, res, next) => {

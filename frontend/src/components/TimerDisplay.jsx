@@ -1,5 +1,44 @@
 // Simple status-based timer display
 const TimerDisplay = ({ countdown, auction }) => {
+    // ALWAYS AVAILABLE AUCTIONS (Buy Now & Giveaway)
+    if (auction?.auctionType === 'buy_now' || auction?.auctionType === 'giveaway') {
+        if (auction.winner) {
+            return (
+                <div className="text-center py-8">
+                    <div className={`text-lg font-semibold mb-2 ${
+                        auction.auctionType === 'buy_now' ? 'text-green-600' : 'text-purple-600'
+                    }`}>
+                        {auction.auctionType === 'buy_now' ? '💰 Item Purchased' : '🎁 Giveaway Claimed'}
+                    </div>
+                    <div className="text-xl font-bold text-gray-700">
+                        {auction.auctionType === 'buy_now' 
+                            ? `Sold for £${auction.finalPrice?.toLocaleString() || auction.buyNowPrice?.toLocaleString()}`
+                            : `Claimed by: ${auction.winner.username}`
+                        }
+                    </div>
+                </div>
+            );
+        }
+        
+        // Active - show appropriate message
+        return (
+            <div className="text-center py-8">
+                <div className={`text-lg font-semibold mb-2 ${
+                    auction.auctionType === 'buy_now' ? 'text-green-600' : 'text-purple-600'
+                }`}>
+                    {auction.auctionType === 'buy_now' ? '💰 Buy Now Available' : '🎁 Free Giveaway'}
+                </div>
+                <div className="text-md text-gray-600">
+                    {auction.auctionType === 'buy_now' 
+                        ? `Available until purchased`
+                        : 'Available until claimed'
+                    }
+                </div>
+            </div>
+        );
+    }
+
+    // TIMED AUCTIONS (Standard & Reserve)
     if (countdown.status === 'approved') {
         return (
             <div className="text-center py-8">
@@ -52,6 +91,7 @@ const TimerDisplay = ({ countdown, auction }) => {
         );
     }
 
+    // Rest of your existing status displays for ended/draft/cancelled...
     if (countdown.status === 'ended') {
         return (
             <div className="text-center py-8">

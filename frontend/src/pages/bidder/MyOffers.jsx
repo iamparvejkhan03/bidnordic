@@ -3,7 +3,7 @@ import { AccountInactiveBanner, BidderContainer, BidderHeader, BidderSidebar, Lo
 import {
     Search,
     Filter,
-    PoundSterling,
+    Banknote,
     CheckCircle,
     XCircle,
     Clock,
@@ -203,21 +203,19 @@ function MyOffers() {
     };
 
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('nb-NO', {
             style: 'currency',
-            currency: 'GBP',
+            currency: 'NOK',
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         }).format(amount);
     };
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
+        return new Date(dateString).toLocaleDateString('nb-NO', {
             year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+            month: 'long',
+            day: 'numeric'
         });
     };
 
@@ -319,7 +317,7 @@ function MyOffers() {
                             <p className="text-red-600">{error}</p>
                             <button
                                 onClick={fetchMyOffers}
-                                className="mt-4 bg-[#edcd1f] text-black px-4 py-2 rounded-lg hover:bg-[#edcd1f]/90"
+                                className="mt-4 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 px-4 py-2 rounded-lg"
                             >
                                 Try Again
                             </button>
@@ -405,7 +403,7 @@ function MyOffers() {
                                     <p className="text-purple-200 text-xs mt-1">Across all offers</p>
                                 </div>
                                 <div className="p-3 bg-white/20 rounded-lg">
-                                    <PoundSterling size={24} />
+                                    <Banknote size={24} />
                                 </div>
                             </div>
                         </div>
@@ -450,28 +448,28 @@ function MyOffers() {
                                 onClick={() => setFilter("all")}
                                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === "all" ? "bg-blue-600 text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                             >
-                                All Offers ({statistics.total})
+                                All Offers ({statistics.total?.toLocaleString('nb-NO')})
                             </button>
                             <button
                                 onClick={() => setFilter("pending")}
                                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === "pending" ? "bg-yellow-100 text-yellow-800 border border-yellow-200 shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                             >
                                 <Clock size={14} className="inline mr-1" />
-                                Pending ({statistics.pending})
+                                Pending ({statistics.pending?.toLocaleString('nb-NO')})
                             </button>
                             <button
                                 onClick={() => setFilter("accepted")}
                                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === "accepted" ? "bg-green-100 text-green-800 border border-green-200 shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                             >
                                 <CheckCircle size={14} className="inline mr-1" />
-                                Accepted ({statistics.accepted})
+                                Accepted ({statistics.accepted?.toLocaleString('nb-NO')})
                             </button>
                             <button
                                 onClick={() => setFilter("rejected")}
                                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === "rejected" ? "bg-red-100 text-red-800 border border-red-200 shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                             >
                                 <XCircle size={14} className="inline mr-1" />
-                                Rejected ({statistics.rejected})
+                                Rejected ({statistics.rejected?.toLocaleString('nb-NO')})
                             </button>
                         </div>
                     </div>
@@ -687,7 +685,7 @@ function MyOffers() {
                             })
                         ) : (
                             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-                                <PoundSterling size={64} className="mx-auto text-gray-300 mb-4" />
+                                <Banknote size={64} className="mx-auto text-gray-300 mb-4" />
                                 <h3 className="text-2xl font-semibold text-gray-700 mb-2">No offers found</h3>
                                 <p className="text-gray-500 mb-6">
                                     {searchTerm || filter !== "all"
@@ -700,7 +698,7 @@ function MyOffers() {
                                             setFilter("all");
                                             setSearchTerm("");
                                         }}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+                                        className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors"
                                     >
                                         Clear Filters
                                     </button>
@@ -722,7 +720,7 @@ function MyOffers() {
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
                                 <div>
                                     <p className="text-sm text-gray-600">Total Offers Made</p>
-                                    <p className="text-2xl font-bold text-gray-900">{statistics.total}</p>
+                                    <p className="text-2xl font-bold text-gray-900">{statistics.total?.toLocaleString('nb-NO')}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-600">Success Rate</p>
@@ -743,7 +741,7 @@ function MyOffers() {
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-600">Active Negotiations</p>
+                                    <p className="text-sm text-gray-600">Active Offers</p>
                                     <p className="text-2xl font-bold text-yellow-600">
                                         {statistics.pending + statistics.countered}
                                     </p>

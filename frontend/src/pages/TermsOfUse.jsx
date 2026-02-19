@@ -1,9 +1,12 @@
 import { Link } from "react-router-dom";
 import { Container } from "../components";
+import { otherData } from "../assets";
+
+const { phone, email, address } = otherData;
 
 const TermsOfUse = () => {
     const currentDate = new Date();
-    const formattedDate = currentDate.toLocaleDateString('en-GB', {
+    const formattedDate = currentDate.toLocaleDateString('nb-NO', {
         day: 'numeric',
         month: 'long',
         year: 'numeric'
@@ -15,14 +18,14 @@ const TermsOfUse = () => {
                 {/* Header */}
                 <div className="max-w-full mx-auto mb-10">
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">Terms of Use</h1>
-                    <p className="text-gray-600 mb-6">SpeedWays Auto Limited | Last Updated: {formattedDate}</p>
+                    <p className="text-gray-600 mb-6">BidNordic | Last Updated: {formattedDate}</p>
                     
                     <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
-                        <p className="text-red-800 font-semibold mb-2">TRADE-ONLY PLATFORM</p>
+                        <p className="text-red-800 font-semibold mb-2">IMPORTANT – PLEASE READ</p>
                         <p className="text-red-700 text-sm">
-                            This website and platform are strictly for motor trade users. By using SpeedWays Auto, 
-                            you confirm you are acting in the course of business. All sales are on a "sold as seen" 
-                            trade sale basis without warranty.
+                            These Terms govern your use of BidNordic. By registering or using our platform, 
+                            you confirm your agreement to these Terms. All equipment is sold on a "sold as seen" 
+                            trade basis without warranty unless otherwise stated.
                         </p>
                     </div>
                 </div>
@@ -33,8 +36,8 @@ const TermsOfUse = () => {
                         {/* Introduction */}
                         <div className="mb-8">
                             <p className="text-gray-700 mb-4">
-                                <strong>SpeedWays Auto Limited</strong> ("we", "our", "us") operates a trade-only online 
-                                marketplace for motor vehicles. These Terms of Use ("Terms") govern your access to and use 
+                                <strong>BidNordic</strong> ("we", "our", "us") operates an online marketplace for heavy 
+                                equipment and industrial machinery. These Terms of Use ("Terms") govern your access to and use 
                                 of our website, platform, and services.
                             </p>
                             <p className="text-gray-700">
@@ -42,154 +45,192 @@ const TermsOfUse = () => {
                             </p>
                         </div>
 
-                        {/* Section 1 */}
+                        {/* Section 1 - Platform Access */}
                         <div className="border-t pt-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-3">1. Trade-Only Platform</h2>
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">1. Platform Access</h2>
                             <ul className="text-gray-700 space-y-2 list-disc pl-5">
-                                <li>This Platform is strictly for motor trade users only</li>
-                                <li>By using the Platform, you confirm you are acting in the course of business</li>
-                                <li>Only verified motor traders in the UK or Ireland may use the Platform</li>
-                                <li>Consumer use is strictly prohibited</li>
+                                <li>BidNordic is open to both trade professionals and private buyers</li>
+                                <li>All users must register and maintain accurate account information</li>
+                                <li>We reserve the right to refuse or terminate access at our discretion</li>
+                                <li>Users must comply with all applicable Swedish and EU laws</li>
                             </ul>
                         </div>
 
-                        {/* Section 2 */}
+                        {/* Section 2 - Account Registration */}
                         <div className="border-t pt-6">
                             <h2 className="text-xl font-bold text-gray-900 mb-3">2. Account Registration</h2>
                             <ul className="text-gray-700 space-y-2 list-disc pl-5">
-                                <li>Registration is free for trade users</li>
-                                <li>Approval is at our discretion</li>
-                                <li>Trade verification may be required</li>
+                                <li>Registration is free</li>
+                                <li>You must provide accurate and complete information</li>
+                                <li>You are responsible for maintaining account security</li>
                                 <li>We may suspend or terminate accounts for misuse or non-payment</li>
+                                <li>Account sharing or transferring is prohibited without consent</li>
                             </ul>
                         </div>
 
-                        {/* Section 3 */}
+                        {/* Section 3 - Our Role */}
                         <div className="border-t pt-6">
                             <h2 className="text-xl font-bold text-gray-900 mb-3">3. Our Role</h2>
-                            <p className="text-gray-700 mb-3">SpeedWays Auto may act as:</p>
+                            <p className="text-gray-700 mb-3">BidNordic may act as:</p>
                             <ul className="text-gray-700 space-y-2 list-disc pl-5 mb-3">
-                                <li>Principal seller of vehicles we own</li>
-                                <li>Agent/intermediary for third-party vendors</li>
+                                <li><strong>Principal:</strong> Selling equipment we own directly</li>
+                                <li><strong>Intermediary:</strong> Facilitating sales between third-party sellers and buyers</li>
                             </ul>
                             <div className="bg-gray-50 p-4 rounded">
                                 <p className="text-gray-700 font-semibold">
-                                    In all cases, SpeedWays issues the invoice and receives payment.
+                                    In all cases, BidNordic manages the transaction and issues the invoice.
                                 </p>
                             </div>
                         </div>
 
-                        {/* Section 4 */}
+                        {/* Section 4 - Transactions */}
                         <div className="border-t pt-6">
                             <h2 className="text-xl font-bold text-gray-900 mb-3">4. Auctions, Offers & Buy Now</h2>
                             <div className="bg-red-50 p-4 rounded mb-3">
-                                <p className="text-red-700 font-semibold mb-2">LEGALLY BINDING</p>
-                                <ul className="text-red-700 space-y-1">
-                                    <li>• All bids, offers, and Buy Now actions are legally binding</li>
-                                    <li>• Bid retractions are not permitted</li>
-                                    <li>• Failure to complete payment constitutes a breach</li>
+                                <p className="text-red-700 font-semibold mb-2">LEGALLY BINDING COMMITMENTS</p>
+                                <ul className="text-red-700 space-y-1 list-disc pl-5">
+                                    <li>All bids, offers, and Buy Now purchases are legally binding contracts</li>
+                                    <li>Bid retractions are not permitted</li>
+                                    <li>Failure to complete payment constitutes a breach of contract</li>
+                                    <li>Giveaway entries are subject to separate terms displayed with each promotion</li>
                                 </ul>
                             </div>
                         </div>
 
-                        {/* Section 5 */}
+                        {/* Section 5 - Buyer Fees */}
                         <div className="border-t pt-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-3">5. Payments</h2>
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">5. Buyer Fees</h2>
+                            <p className="text-gray-700">
+                                A minimal buyer fee applies to successful purchases. The fee amount is clearly displayed 
+                                before you bid, make an offer, or complete a Buy Now purchase. All fees are in NOK unless 
+                                otherwise stated.
+                            </p>
+                        </div>
+
+                        {/* Section 6 - Seller Fees */}
+                        <div className="border-t pt-6">
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">6. Seller Fees</h2>
+                            <p className="text-gray-700">
+                                Sellers may be charged commission-based or fixed fees. Fee structures are agreed upon 
+                                during the onboarding process. Sellers are responsible for managing their own listings, 
+                                including descriptions and images.
+                            </p>
+                        </div>
+
+                        {/* Section 7 - Payments */}
+                        <div className="border-t pt-6">
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">7. Payments</h2>
                             <ul className="text-gray-700 space-y-2 list-disc pl-5">
-                                <li>Bank transfer only</li>
-                                <li>Payment due within 3 working days</li>
-                                <li>Vehicles will not be released until payment clears</li>
+                                <li>Bank transfer is the primary payment method</li>
+                                <li>Payment terms vary by listing – check each auction or sale for deadlines</li>
+                                <li>Equipment will not be released until payment clears in full</li>
+                                <li>All payments must be made in NOK</li>
                             </ul>
                         </div>
 
-                        {/* Section 6 */}
+                        {/* Section 8 - Collection & Delivery */}
                         <div className="border-t pt-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-3">6. Collection & Delivery</h2>
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">8. Collection & Delivery</h2>
                             <ul className="text-gray-700 space-y-2 list-disc pl-5">
-                                <li>Collection by appointment only</li>
-                                <li>Minimum one hour notice required</li>
-                                <li>Delivery available at additional cost</li>
-                                <li>Release codes may be required for third-party collection</li>
+                                <li>Collection is available by appointment only</li>
+                                <li>Please contact us at least 24 hours in advance to arrange collection</li>
+                                <li>Delivery can be arranged across Sweden at additional cost</li>
+                                <li>Quotes for delivery are provided before dispatch</li>
+                                <li>Risk transfers to buyer upon collection or delivery</li>
                             </ul>
                         </div>
 
-                        {/* Section 7 */}
+                        {/* Section 9 - Sold As Seen */}
                         <div className="border-t pt-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-3">7. Sold As Seen – Trade Sale</h2>
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">9. Sold As Seen – No Warranty</h2>
                             <div className="bg-yellow-50 p-4 rounded mb-3">
-                                <p className="text-red-600 font-bold text-center mb-2">ALL VEHICLES ARE SOLD:</p>
+                                <p className="text-red-600 font-bold text-center mb-2">ALL EQUIPMENT IS SOLD:</p>
                                 <div className="text-center space-y-1">
-                                    <p className="text-red-600">Trade sale (as seen)</p>
-                                    <p className="text-red-600">Without warranty</p>
+                                    <p className="text-red-600">As seen / "i befintligt skick"</p>
+                                    <p className="text-red-600">Without any warranty</p>
                                     <p className="text-red-600">Without consumer rights</p>
                                 </div>
                             </div>
                             <p className="text-gray-700">
-                                Vehicle descriptions are for guidance only. Buyers should inspect before payment.
+                                Equipment descriptions are provided for guidance only. Buyers are encouraged to ask questions 
+                                before bidding or purchasing. We are here to help with any inquiries.
                             </p>
                         </div>
 
-                        {/* Section 8 */}
+                        {/* Section 10 - Inspections & Returns */}
                         <div className="border-t pt-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-3">8. Title & Risk</h2>
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">10. Inspections & Returns</h2>
                             <ul className="text-gray-700 space-y-2 list-disc pl-5">
-                                <li>Title and ownership pass once full payment is received</li>
-                                <li>Risk passes upon collection or delivery</li>
+                                <li>On-site inspections are not available before bidding</li>
+                                <li>If you have concerns after winning, please contact us immediately</li>
+                                <li>Returns are not automatically accepted – we review concerns case by case</li>
+                                <li>All sales are final unless otherwise agreed in writing</li>
                             </ul>
                         </div>
 
-                        {/* Section 9 */}
+                        {/* Section 11 - Title & Risk */}
                         <div className="border-t pt-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-3">9. No Returns</h2>
-                            <div className="bg-red-50 p-4 rounded mb-3">
-                                <p className="text-red-700 font-bold text-center mb-2">NO RETURNS OR REFUNDS</p>
-                                <p className="text-red-700 text-sm text-center">
-                                    No refunds or returns are accepted under any circumstances.
-                                </p>
-                            </div>
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">11. Title & Risk</h2>
+                            <ul className="text-gray-700 space-y-2 list-disc pl-5">
+                                <li>Legal title and ownership pass only when full payment is received</li>
+                                <li>Risk of loss or damage transfers to buyer upon collection or delivery</li>
+                                <li>Buyers are responsible for insurance from the moment of collection/delivery</li>
+                            </ul>
                         </div>
 
-                        {/* Section 10 */}
+                        {/* Section 12 - Default & Enforcement */}
                         <div className="border-t pt-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-3">10. Enforcement</h2>
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">12. Default & Enforcement</h2>
                             <p className="text-gray-700 mb-2">If payment is not completed, we may:</p>
                             <ul className="text-gray-700 space-y-2 list-disc pl-5">
-                                <li>Cancel the sale</li>
-                                <li>Resell the vehicle</li>
-                                <li>Recover losses and costs</li>
-                                <li>Suspend or terminate the account</li>
+                                <li>Cancel the sale and relist the equipment</li>
+                                <li>Seek recovery of any losses or costs incurred</li>
+                                <li>Suspend or permanently terminate the user's account</li>
+                                <li>Report to relevant authorities if fraud is suspected</li>
                             </ul>
                         </div>
 
-                        {/* Section 11 */}
+                        {/* Section 13 - Limitation of Liability */}
                         <div className="border-t pt-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-3">11. Limitation of Liability</h2>
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">13. Limitation of Liability</h2>
                             <p className="text-gray-700">
-                                Liability is limited to the purchase price of the vehicle, except where excluded by law 
-                                (e.g., death or personal injury caused by negligence).
+                                To the extent permitted by Swedish law, BidNordic's total liability is limited to the 
+                                purchase price of the equipment in question. We are not liable for indirect or consequential 
+                                losses. This does not limit liability for fraud, death, or personal injury caused by negligence.
                             </p>
                         </div>
 
-                        {/* Section 12 */}
+                        {/* Section 14 - Governing Law */}
                         <div className="border-t pt-6">
-                            <h2 className="text-xl font-bold text-gray-900 mb-3">12. Governing Law</h2>
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">14. Governing Law & Disputes</h2>
                             <ul className="text-gray-700 space-y-2 list-disc pl-5">
-                                <li>England and Wales law applies</li>
-                                <li>English courts have exclusive jurisdiction</li>
+                                <li>These Terms are governed by the laws of Sweden</li>
+                                <li>Disputes shall be resolved by the courts of Sweden</li>
+                                <li>BidNordic is located in {address}</li>
                             </ul>
+                        </div>
+
+                        {/* Section 15 - Changes to Terms */}
+                        <div className="border-t pt-6">
+                            <h2 className="text-xl font-bold text-gray-900 mb-3">15. Changes to These Terms</h2>
+                            <p className="text-gray-700">
+                                We may update these Terms from time to time. The "Last Updated" date indicates the most 
+                                recent version. Material changes will be communicated via email or platform notice. 
+                                Continued use after changes constitutes acceptance.
+                            </p>
                         </div>
 
                         {/* Contact */}
                         <div className="border-t pt-6">
                             <h2 className="text-xl font-bold text-gray-900 mb-4">Contact Information</h2>
                             <div className="bg-gray-50 p-4 rounded">
-                                <p className="font-semibold text-gray-900 mb-2">SpeedWays Auto Limited</p>
-                                <p className="text-gray-700 text-sm mb-1">Wilmslow Rd, Heald Green, Cheadle SK8 3PW, UK</p>
+                                <p className="font-semibold text-gray-900 mb-2">BidNordic</p>
+                                <p className="text-gray-700 text-sm mb-1">{address}</p>
                                 <p className="text-gray-700 text-sm mb-1">
-                                    Email: <a href="mailto:admin@speedways.uk" className="text-blue-600 hover:underline break-all">admin@speedways.uk</a>
+                                    Email: <a href={`mailto:${email}`} className="text-blue-600 hover:underline break-all">{email}</a>
                                 </p>
                                 <p className="text-gray-700 text-sm">
-                                    Phone: <a href="tel:+441618832737" className="text-blue-600 hover:underline">+44 (0)161 883 2737</a>
+                                    Phone: <a href={`tel:${phone}`} className="text-blue-600 hover:underline">{phone}</a>
                                 </p>
                             </div>
                         </div>
@@ -197,8 +238,8 @@ const TermsOfUse = () => {
                         {/* Footer Note */}
                         <div className="border-t pt-6 mt-8">
                             <p className="text-gray-500 text-sm">
-                                These Terms were last updated on {formattedDate}. We may update these Terms at any time. 
-                                Continued use constitutes acceptance of modified Terms.
+                                These Terms were last updated on {formattedDate}. If you have questions about these Terms, 
+                                please contact us at {email}.
                             </p>
                         </div>
                     </div>

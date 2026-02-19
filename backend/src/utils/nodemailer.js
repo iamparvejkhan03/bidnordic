@@ -1,7 +1,8 @@
 import nodemailer from "nodemailer";
+import Commission from "../models/commission.model.js";
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.hostinger.com",
+  host: "smtp.domeneshop.no",
   port: 465,
   secure: true,
   auth: {
@@ -19,6 +20,113 @@ transporter.verify(function (error, success) {
   }
 });
 
+// Helper function to format specifications dynamically
+const formatSpecifications = (specifications) => {
+  if (!specifications) return [];
+  
+  const specs = specifications instanceof Map 
+    ? Object.fromEntries(specifications) 
+    : specifications;
+  
+  if (!specs || Object.keys(specs).length === 0) return [];
+  
+  // Define which fields to show and how to format them
+  const importantFields = [
+    { key: 'make', label: 'Make' },
+    { key: 'model', label: 'Model' },
+    { key: 'brand', label: 'Brand' },
+    { key: 'manufacturer', label: 'Manufacturer' },
+    { key: 'year', label: 'Year' },
+    { key: 'modelYear', label: 'Model Year' },
+    { key: 'serialNumber', label: 'Serial Number' },
+    { key: 'vin', label: 'VIN' },
+    { key: 'condition', label: 'Condition' },
+    { key: 'hours', label: 'Hours', suffix: ' h' },
+    { key: 'mileage', label: 'Mileage', suffix: ' km' },
+    { key: 'weight', label: 'Weight', suffix: ' kg' },
+    { key: 'capacity', label: 'Capacity' },
+    { key: 'power', label: 'Power', suffix: ' kW' },
+    { key: 'engine', label: 'Engine' },
+    { key: 'fuelType', label: 'Fuel Type' },
+    { key: 'transmission', label: 'Transmission' },
+    { key: 'driveType', label: 'Drive Type' },
+    { key: 'tireSize', label: 'Tire Size' },
+    { key: 'size', label: 'Size' },
+    { key: 'dimensions', label: 'Dimensions' },
+    { key: 'color', label: 'Color' },
+    { key: 'location', label: 'Location' },
+    { key: 'country', label: 'Country' },
+    { key: 'city', label: 'City' }
+  ];
+  
+  // Return only fields that exist in the specifications
+  return importantFields
+    .filter(field => specs[field.key] !== undefined && specs[field.key] !== null && specs[field.key] !== '')
+    .map(field => ({
+      label: field.label,
+      value: field.suffix ? `${specs[field.key]}${field.suffix}` : specs[field.key]
+    }));
+};
+
+const formatNOK = (amount) => {
+    if (!amount && amount !== 0) return "0 kr";
+    return `${Number(amount).toLocaleString("nb-NO")} kr`;
+};
+
+// Helper to get time remaining
+const getTimeRemaining = (endDate) => {
+  if (!endDate) return 'Time not available';
+  
+  const remaining = new Date(endDate) - new Date();
+  if (remaining <= 0) return 'Auction Ended';
+  
+  const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+  
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+};
+
+// Helper to render specifications as HTML
+const renderSpecifications = (specifications) => {
+  const specs = formatSpecifications(specifications);
+  if (specs.length === 0) return '';
+  
+  let html = '<div class="specs-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">';
+  
+  specs.forEach(spec => {
+    html += `
+      <div class="spec-item" style="background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center;">
+        <div class="spec-label" style="color: #666; font-size: 14px; margin-bottom: 5px;">${spec.label}</div>
+        <div class="spec-value" style="font-weight: bold; color: #1e2d3b; font-size: 16px;">${spec.value}</div>
+      </div>
+    `;
+  });
+  
+  html += '</div>';
+  return html;
+};
+
+// Helper to render specifications as table rows
+const renderSpecificationsRows = (specifications) => {
+  const specs = formatSpecifications(specifications);
+  if (specs.length === 0) return '';
+  
+  let html = '';
+  specs.forEach(spec => {
+    html += `
+      <tr>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #e9ecef; color: #666; font-weight: bold;">${spec.label}:</td>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #e9ecef; color: #1e2d3b;">${spec.value}</td>
+      </tr>
+    `;
+  });
+  
+  return html;
+};
+
 const contactEmail = async (
   name,
   email,
@@ -28,7 +136,7 @@ const contactEmail = async (
 ) => {
   try {
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: `${process.env.EMAIL_USER}`,
       subject: `New Contact Query - ${name}`,
       html: `
@@ -69,12 +177,10 @@ const contactEmail = async (
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <!-- Replace with your logo URL if available -->
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
@@ -120,9 +226,9 @@ const contactEmail = async (
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">This email was sent from the contact form on <span class="highlight">SpeedWays Auto</span> website.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
-                            <p class="footer-text">Premium Vehicle Auctions | United Kingdom</p>
+                            <p class="footer-text">This email was sent from the contact form on <span class="highlight">BidNordic</span> website.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
+                            <p class="footer-text">Nordic Online Auctions</p>
                         </div>
                     </div>
                 </body>
@@ -139,9 +245,9 @@ const contactEmail = async (
 const contactConfirmationEmail = async (name, email) => {
   try {
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: `Thank You for Contacting SpeedWays Auto`,
+      subject: `Thank You for Contacting BidNordic`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -152,7 +258,8 @@ const contactConfirmationEmail = async (name, email) => {
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
                         .logo { max-width: 180px; height: auto; }
-                        .tagline { color: #ffffff; font-size: 16px; margin: 10px 0 0 0; opacity: 0.9; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
+                        .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .title { color: #1e2d3b; font-size: 24px; margin: 0 0 20px 0; padding-bottom: 15px; border-bottom: 2px solid #edcd1f; text-align: center; }
                         .message-box { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #edcd1f; }
@@ -175,11 +282,10 @@ const contactConfirmationEmail = async (name, email) => {
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
@@ -189,7 +295,7 @@ const contactConfirmationEmail = async (name, email) => {
                                 <p class="greeting">Dear <span class="highlight">${name}</span>,</p>
                                 
                                 <p class="message-text">
-                                    Thank you for reaching out to <span class="highlight">SpeedWays Auto</span>. We have successfully received your inquiry and appreciate you taking the time to contact us.
+                                    Thank you for reaching out to <span class="highlight">BidNordic</span>. We have successfully received your inquiry and appreciate you taking the time to contact us.
                                 </p>
                                 
                                 <p class="message-text">
@@ -197,7 +303,7 @@ const contactConfirmationEmail = async (name, email) => {
                                 </p>
                                 
                                 <p class="message-text">
-                                    We're committed to providing you with the best possible service and look forward to assisting you with your vehicle auction needs.
+                                    We're committed to providing you with the best possible service and look forward to assisting you with your auction needs.
                                 </p>
                             </div>
                             
@@ -209,24 +315,21 @@ const contactConfirmationEmail = async (name, email) => {
                             </div>
                             
                             <div class="contact-info">
-                                <p><strong>Phone Support:</strong> Available Monday-Friday, 9:00 AM - 6:00 PM GMT</p>
-                                <p><strong>Email Support:</strong> ${
-                                  process.env.EMAIL_USER ||
-                                  "info@speedwaysuk.com"
-                                }</p>
+                                <p><strong>Phone Support:</strong> Available Monday-Friday, 9:00 AM - 6:00 PM CET</p>
+                                <p><strong>Email Support:</strong> ${process.env.EMAIL_USER || "admin@bidnordic.com"}</p>
                             </div>
                             
                             <div class="signature">
                                 <p>Best regards,</p>
-                                <p><strong>The SpeedWays Auto Team</strong></p>
-                                <p>Premium Vehicle Auctions | United Kingdom</p>
+                                <p><strong>The BidNordic Team</strong></p>
+                                <p>Nordic Online Auctions</p>
                             </div>
                         </div>
                         
                         <div class="footer">
                             <p class="footer-text">This is an automated confirmation email. Please do not reply to this message.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
-                            <p class="footer-text">Your dream car is just a bid away!</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
+                            <p class="footer-text">Your next great find is just a bid away!</p>
                         </div>
                     </div>
                 </body>
@@ -244,17 +347,15 @@ const contactConfirmationEmail = async (name, email) => {
 const bidConfirmationEmail = async (
   userEmail,
   userName,
-  itemName,
+  auction,
   amount,
-  currentBid,
-  auctionEnd,
-  auctionId
+  currentBid
 ) => {
   try {
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: userEmail,
-      subject: `Bid Confirmation - ${itemName}`,
+      subject: `Bid Confirmation - ${auction.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -264,6 +365,7 @@ const bidConfirmationEmail = async (
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .title { color: #1e2d3b; font-size: 20px; margin: 0 0 20px 0; padding-bottom: 15px; border-bottom: 2px solid #edcd1f; }
@@ -317,137 +419,108 @@ const bidConfirmationEmail = async (
                             color: #856404;
                             margin: 5px 0;
                         }
+                        .specs-section { margin: 25px 0; }
+                        .specs-title { color: #1e2d3b; font-size: 18px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .spec-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
+                        .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+                        .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
                             <h2 class="title">Your Bid Has Been Confirmed</h2>
                             
                             <div class="bid-box">
-                                <div class="item-name">${itemName}</div>
+                                <div class="item-name">${auction.title}</div>
                                 
                                 <div class="bid-amount">
-                                    Bid Amount: <span>£${amount?.toLocaleString()}</span>
+                                    Bid Amount: <span>${formatNOK(amount)}</span>
                                 </div>
                                 
-                                <div class="status-indicator ${
-                                  amount >= currentBid ? "winning" : "outbid"
-                                }">
-                                    ${
-                                      amount >= currentBid
-                                        ? "🏆 CURRENT WINNING BID"
-                                        : "⚠️ YOU HAVE BEEN OUTBID"
-                                    }
+                                <div class="status-indicator ${amount >= currentBid ? "winning" : "outbid"}">
+                                    ${amount >= currentBid ? "🏆 CURRENT WINNING BID" : "⚠️ YOU HAVE BEEN OUTBID"}
                                 </div>
                                 
                                 <div class="details-box">
                                     <div class="detail-row">
                                         <span class="detail-label">Your Bid Amount:</span>
-                                        <span class="detail-value">£${amount?.toLocaleString()}</span>
+                                        <span class="detail-value">${formatNOK(amount)}</span>
                                     </div>
                                     <div class="detail-row">
                                         <span class="detail-label">Current Highest Bid:</span>
-                                        <span class="detail-value">£${currentBid?.toLocaleString()}</span>
+                                        <span class="detail-value">${formatNOK(currentBid)}</span>
                                     </div>
                                     <div class="detail-row">
                                         <span class="detail-label">Your Position:</span>
-                                        <span class="detail-value">${
-                                          amount >= currentBid
-                                            ? "Leading"
-                                            : "Not Leading"
-                                        }</span>
+                                        <span class="detail-value">${amount >= currentBid ? "Leading" : "Not Leading"}</span>
                                     </div>
                                     <div class="detail-row">
                                         <span class="detail-label">Auction End Date:</span>
-                                        <span class="detail-value">${new Date(
-                                          auctionEnd
-                                        ).toLocaleDateString("en-GB", {
+                                        <span class="detail-value">${auction.endDate ? new Date(auction.endDate).toLocaleDateString("nb-NO", {
                                           weekday: "long",
                                           year: "numeric",
                                           month: "long",
                                           day: "numeric",
-                                        })}</span>
+                                        }) : 'Not set'}</span>
                                     </div>
                                     <div class="detail-row">
                                         <span class="detail-label">Auction End Time:</span>
-                                        <span class="detail-value">${new Date(
-                                          auctionEnd
-                                        ).toLocaleTimeString("en-GB", {
+                                        <span class="detail-value">${auction.endDate ? new Date(auction.endDate).toLocaleTimeString("nb-NO", {
                                           hour: "2-digit",
                                           minute: "2-digit",
-                                        })}</span>
+                                        }) : 'Not set'}</span>
                                     </div>
                                 </div>
+                                
+                                ${auction.specifications ? `
+                                <div class="specs-section">
+                                    <div class="specs-title">📋 Item Details</div>
+                                    ${renderSpecifications(auction.specifications)}
+                                </div>
+                                ` : ''}
                                 
                                 <div class="time-remaining">
                                     <div>Time Remaining:</div>
                                     <div class="time-value">
-                                        ${(() => {
-                                          const remaining =
-                                            new Date(auctionEnd) - new Date();
-                                          const days = Math.floor(
-                                            remaining / (1000 * 60 * 60 * 24)
-                                          );
-                                          const hours = Math.floor(
-                                            (remaining %
-                                              (1000 * 60 * 60 * 24)) /
-                                              (1000 * 60 * 60)
-                                          );
-                                          const minutes = Math.floor(
-                                            (remaining % (1000 * 60 * 60)) /
-                                              (1000 * 60)
-                                          );
-
-                                          if (days > 0)
-                                            return `${days}d ${hours}h`;
-                                          if (hours > 0)
-                                            return `${hours}h ${minutes}m`;
-                                          return `${minutes}m`;
-                                        })()}
+                                        ${getTimeRemaining(auction.endDate)}
                                     </div>
                                 </div>
                             </div>
                             
                             <div class="next-steps">
-                                🚗 What Happens Next?<br>
+                                🎯 What Happens Next?<br>
                                 <div style="font-size: 14px; margin-top: 10px; font-weight: normal;">
-                                    ${
-                                      amount >= currentBid
-                                        ? "You are currently the highest bidder! Monitor the auction to maintain your position."
-                                        : "Your bid is below the current highest bid. Consider placing a higher bid to become the leader."
-                                    }
+                                    ${amount >= currentBid ? "You are currently the highest bidder! Monitor the auction to maintain your position." : "Your bid is below the current highest bid. Consider placing a higher bid to become the leader."}
                                 </div>
                             </div>
                             
                             <p>Dear <span class="highlight">${userName}</span>,</p>
-                            <p>Thank you for placing your bid on <strong>${itemName}</strong> on SpeedWays Auto.</p>
+                            <p>Thank you for placing your bid on <strong>${auction.title}</strong> on BidNordic.</p>
                             <p>We'll notify you immediately if you are outbid or when the auction ends.</p>
                             
                             <div style="text-align: center; margin: 25px 0;">
-                                <a href="${
-                                  process.env.FRONTEND_URL
-                                }/auction/${auctionId}" class="cta-button">
+                                <a href="${process.env.FRONTEND_URL}/auction/${auction._id}" class="cta-button">
                                     VIEW AUCTION DETAILS
                                 </a>
                             </div>
                             
-                            <p><strong>Important:</strong> Remember that auctions on SpeedWays Auto use automatic extension. If a bid is placed in the last 2 minutes, the auction extends by 2 minutes to ensure fair bidding.</p>
+                            <p><strong>Important:</strong> Remember that auctions on BidNordic use automatic extension. If a bid is placed in the last 2 minutes, the auction extends by 2 minutes to ensure fair bidding.</p>
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">This is an automated confirmation from SpeedWays Auto.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
-                            <p class="footer-text">Happy Bidding! Your dream vehicle awaits.</p>
+                            <p class="footer-text">This is an automated confirmation from BidNordic.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
+                            <p class="footer-text">Happy Bidding! Your next great find awaits.</p>
                         </div>
                     </div>
                 </body>
@@ -465,17 +538,16 @@ const bidConfirmationEmail = async (
 const offerConfirmationEmail = async (
   userEmail,
   userName,
-  carName,
-  carYear,
+  auction,
   offerAmount,
   listingPrice,
   offerId
 ) => {
   try {
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: userEmail,
-      subject: `Offer Submitted - ${carName}`,
+      subject: `Offer Submitted - ${auction.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -485,13 +557,14 @@ const offerConfirmationEmail = async (
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .title { color: #1e2d3b; font-size: 20px; margin: 0 0 20px 0; padding-bottom: 15px; border-bottom: 2px solid #edcd1f; }
                         .offer-box { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #edcd1f; }
                         .offer-amount { font-size: 32px; font-weight: bold; color: #1e2d3b; margin: 15px 0; }
                         .offer-amount span { color: #edcd1f; }
-                        .car-name { font-size: 22px; color: #1e2d3b; margin-bottom: 10px; }
+                        .item-name { font-size: 22px; color: #1e2d3b; margin-bottom: 10px; }
                         .details-box { background: #ffffff; padding: 20px; border-radius: 6px; border: 1px solid #e9ecef; margin: 20px 0; }
                         .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
                         .detail-label { color: #666; }
@@ -502,27 +575,32 @@ const offerConfirmationEmail = async (
                         .footer-text { margin: 5px 0; }
                         .highlight { color: #edcd1f; font-weight: bold; }
                         .contact-info { margin-top: 20px; font-size: 14px; color: #666; }
+                        .specs-section { margin: 25px 0; }
+                        .specs-title { color: #1e2d3b; font-size: 18px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .spec-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
+                        .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+                        .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
                             <h2 class="title">Your Offer Has Been Submitted</h2>
                             
                             <div class="offer-box">
-                                <div class="car-name">${carYear} ${carName}</div>
+                                <div class="item-name">${auction.title}</div>
                                 
                                 <div class="offer-amount">
-                                    <span>£${offerAmount?.toLocaleString()}</span>
+                                    <span>${formatNOK(offerAmount)}</span>
                                 </div>
                                 
                                 <div class="offer-id">
@@ -532,37 +610,42 @@ const offerConfirmationEmail = async (
                                 <div class="details-box">
                                     <div class="detail-row">
                                         <span class="detail-label">Your Offer Amount:</span>
-                                        <span class="detail-value">£${offerAmount?.toLocaleString()}</span>
+                                        <span class="detail-value">${formatNOK(offerAmount)}</span>
                                     </div>
                                     <div class="detail-row">
                                         <span class="detail-label">Listing Price:</span>
-                                        <span class="detail-value">£${listingPrice?.toLocaleString()}</span>
+                                        <span class="detail-value">${formatNOK(listingPrice)}</span>
                                     </div>
                                     <div class="detail-row">
                                         <span class="detail-label">Offer Difference:</span>
-                                        <span class="detail-value">£${(
-                                          offerAmount - listingPrice
-                                        ).toLocaleString()}</span>
+                                        <span class="detail-value">${formatNOK(offerAmount - listingPrice)}</span>
                                     </div>
                                 </div>
+                                
+                                ${auction.specifications ? `
+                                <div class="specs-section">
+                                    <div class="specs-title">📋 Item Details</div>
+                                    ${renderSpecifications(auction.specifications)}
+                                </div>
+                                ` : ''}
                             </div>
                             
                             <div class="next-steps">
-                                🚗 What Happens Next?<br>
+                                🎯 What Happens Next?<br>
                                 <div style="font-size: 14px; margin-top: 10px; font-weight: normal;">
-                                    The seller/admin has 48 hours to respond to your offer. We'll notify you immediately when they respond.
+                                    The seller has 48 hours to respond to your offer. We'll notify you immediately when they respond.
                                 </div>
                             </div>
                             
                             <p>Dear <span class="highlight">${userName}</span>,</p>
-                            <p>Thank you for submitting your offer for the <strong>${carYear} ${carName}</strong> on SpeedWays Auto.</p>
-                            <p>We have notified the seller of your offer and they have 48 hours to accept or decline your offer.</p>
+                            <p>Thank you for submitting your offer for the <strong>${auction.title}</strong> on BidNordic.</p>
+                            <p>We have notified the seller of your offer and they have 48 hours to respond.</p>
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">This is an automated confirmation from SpeedWays Auto.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
-                            <p class="footer-text">Your dream car is just an offer away!</p>
+                            <p class="footer-text">This is an automated confirmation from BidNordic.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
+                            <p class="footer-text">Your next great find is just an offer away!</p>
                         </div>
                     </div>
                 </body>
@@ -580,17 +663,16 @@ const offerConfirmationEmail = async (
 const outbidNotificationEmail = async (
   userEmail,
   userName,
-  itemName,
+  auction,
   newBid,
   auctionUrl,
-  auctionEnd,
   yourPreviousBid
 ) => {
   try {
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: userEmail,
-      subject: `🚨 You've Been Outbid - ${itemName}`,
+      subject: `🚨 You've Been Outbid - ${auction.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -600,6 +682,7 @@ const outbidNotificationEmail = async (
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .alert-banner { background: #f8d7da; padding: 25px; border-radius: 8px; margin: 20px 0; border: 2px solid #f5c6cb; text-align: center; }
@@ -652,15 +735,22 @@ const outbidNotificationEmail = async (
                         .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #e9ecef; margin-top: 25px; }
                         .footer-text { margin: 5px 0; }
                         .highlight { color: #dc3545; font-weight: bold; }
+                        .specs-section { margin: 25px 0; }
+                        .specs-title { color: #1e2d3b; font-size: 18px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .spec-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
+                        .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+                        .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
@@ -670,46 +760,41 @@ const outbidNotificationEmail = async (
                             </div>
                             
                             <div class="bid-box">
-                                <div class="item-name">${itemName}</div>
+                                <div class="item-name">${auction.title}</div>
                                 
                                 <div class="bid-amount">
-                                    New Highest Bid: <span>£${newBid?.toLocaleString()}</span>
+                                    New Highest Bid: <span>${formatNOK(newBid)}</span>
                                 </div>
                                 
                                 <div class="comparison-box">
                                     <div class="comparison-row">
                                         <span class="comparison-label">Your Previous Bid:</span>
-                                        <span class="comparison-value your-bid">£${yourPreviousBid?.toLocaleString() || 'N/A'}</span>
+                                        <span class="comparison-value your-bid">${formatNOK(yourPreviousBid || 0)}</span>
                                     </div>
                                     <div class="comparison-row">
                                         <span class="comparison-label">New Highest Bid:</span>
-                                        <span class="comparison-value new-bid">£${newBid?.toLocaleString()}</span>
+                                        <span class="comparison-value new-bid">${formatNOK(newBid)}</span>
                                     </div>
                                     <div class="comparison-row">
                                         <span class="comparison-label">Difference:</span>
-                                        <span class="comparison-value difference">£${(newBid - (yourPreviousBid || 0)).toLocaleString()}</span>
+                                        <span class="comparison-value difference">${formatNOK(newBid - (yourPreviousBid || 0))}</span>
                                     </div>
                                 </div>
+                                
+                                ${auction.specifications ? `
+                                <div class="specs-section">
+                                    <div class="specs-title">📋 Item Details</div>
+                                    ${renderSpecifications(auction.specifications)}
+                                </div>
+                                ` : ''}
                                 
                                 <div class="time-box">
                                     <div class="time-label">Auction Ends In:</div>
                                     <div class="time-value">
-                                        ${(() => {
-                                            if (!auctionEnd) return 'Time not available';
-                                            const remaining = new Date(auctionEnd) - new Date();
-                                            if (remaining <= 0) return 'Auction Ended';
-                                            
-                                            const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
-                                            const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                                            const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-                                            
-                                            if (days > 0) return `${days}d ${hours}h`;
-                                            if (hours > 0) return `${hours}h ${minutes}m`;
-                                            return `${minutes}m`;
-                                        })()}
+                                        ${getTimeRemaining(auction.endDate)}
                                     </div>
                                     <div class="time-label">
-                                        ${auctionEnd ? new Date(auctionEnd).toLocaleDateString('en-GB', { 
+                                        ${auction.endDate ? new Date(auction.endDate).toLocaleDateString('nb-NO', { 
                                             weekday: 'long', 
                                             year: 'numeric', 
                                             month: 'long', 
@@ -737,19 +822,19 @@ const outbidNotificationEmail = async (
                             
                             <div class="tip-box">
                                 <div class="tip-title">💡 Quick Tip:</div>
-                                <p>For a better chance to win, consider placing a bid that's significantly higher than the current bid. Remember, auctions on SpeedWays Auto use automatic extension - if a bid is placed in the last 2 minutes, the auction extends by 2 minutes.</p>
+                                <p>For a better chance to win, consider placing a bid that's significantly higher than the current bid. Remember, auctions on BidNordic use automatic extension - if a bid is placed in the last 2 minutes, the auction extends by 2 minutes.</p>
                             </div>
                             
                             <p>Dear <span class="highlight">${userName}</span>,</p>
-                            <p>This is an automated notification to let you know that another bidder has placed a higher bid on <strong>${itemName}</strong>.</p>
+                            <p>This is an automated notification to let you know that another bidder has placed a higher bid on <strong>${auction.title}</strong>.</p>
                             <p><strong>Act quickly!</strong> This auction is getting competitive. The sooner you place your next bid, the better your chances of winning.</p>
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">You're receiving this email because you placed a bid on ${itemName}.</p>
-                            <p class="footer-text">This is an automated notification from SpeedWays Auto.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
-                            <p class="footer-text">Need help? Contact support at ${process.env.EMAIL_USER || 'info@speedwaysuk.com'}</p>
+                            <p class="footer-text">You're receiving this email because you placed a bid on ${auction.title}.</p>
+                            <p class="footer-text">This is an automated notification from BidNordic.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
+                            <p class="footer-text">Need help? Contact support at ${process.env.EMAIL_USER || 'admin@bidnordic.com'}</p>
                         </div>
                     </div>
                 </body>
@@ -760,127 +845,6 @@ const outbidNotificationEmail = async (
     return !!info;
   } catch (error) {
     throw new Error(`Failed to send outbid notification: ${error.message}`);
-  }
-};
-
-const offerOutbidEmail = async (
-  userEmail,
-  userName,
-  carName,
-  carYear,
-  yourOffer,
-  newHighestOffer,
-  listingUrl,
-  offerId
-) => {
-  try {
-    const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
-      to: userEmail,
-      subject: `🚨 Higher Offer Received - ${carYear} ${carName}`,
-      html: `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <style>
-                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
-                        .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
-                        .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
-                        .logo-container { margin-bottom: 15px; }
-                        .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
-                        .content { padding: 25px; }
-                        .alert-box { background: #fff3e0; padding: 25px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #edcd1f; border: 2px solid #edcd1f; }
-                        .alert-title { font-size: 24px; color: #1e2d3b; margin-bottom: 15px; text-align: center; }
-                        .car-info { background: #ffffff; padding: 20px; border-radius: 6px; margin: 20px 0; border: 1px solid #e9ecef; }
-                        .car-name { font-size: 22px; color: #1e2d3b; margin-bottom: 10px; text-align: center; }
-                        .offer-comparison { display: flex; justify-content: space-around; margin: 25px 0; }
-                        .offer-box { text-align: center; padding: 20px; border-radius: 8px; width: 45%; }
-                        .your-offer { background: #f8f9fa; border: 2px solid #dc3545; }
-                        .new-offer { background: #f8f9fa; border: 2px solid #28a745; }
-                        .offer-label { font-size: 14px; color: #666; margin-bottom: 10px; }
-                        .offer-amount { font-size: 28px; font-weight: bold; }
-                        .your-amount { color: #dc3545; }
-                        .new-amount { color: #28a745; }
-                        .difference-box { background: #1e2d3b; color: #ffffff; padding: 12px; border-radius: 6px; text-align: center; margin: 20px 0; }
-                        .cta-button { background: #edcd1f; color: #1e2d3b !important; padding: 14px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; font-size: 16px; margin: 20px 0; }
-                        .action-box { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center; border: 1px dashed #1e2d3b; }
-                        .offer-id { background: #1e2d3b; color: #ffffff; padding: 8px 15px; border-radius: 20px; display: inline-block; font-size: 14px; margin: 10px 0; }
-                        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #e9ecef; margin-top: 25px; }
-                        .footer-text { margin: 5px 0; }
-                        .highlight { color: #edcd1f; font-weight: bold; }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <div class="header">
-                            <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
-                            </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
-                        </div>
-                        
-                        <div class="content">
-                            <div class="alert-box">
-                                <div class="alert-title">⚠️ Higher Offer Received</div>
-                                <p style="text-align: center; font-size: 16px;">Another buyer has submitted a higher offer on a vehicle you're interested in.</p>
-                            </div>
-                            
-                            <div class="car-info">
-                                <div class="car-name">${carYear} ${carName}</div>
-                                <div class="offer-id" style="text-align: center;">Offer ID: ${offerId}</div>
-                            </div>
-                            
-                            <div class="offer-comparison">
-                                <div class="offer-box your-offer">
-                                    <div class="offer-label">Your Offer</div>
-                                    <div class="offer-amount your-amount">£${yourOffer.toLocaleString()}</div>
-                                </div>
-                                <div class="offer-box new-offer">
-                                    <div class="offer-label">New Highest Offer</div>
-                                    <div class="offer-amount new-amount">£${newHighestOffer.toLocaleString()}</div>
-                                </div>
-                            </div>
-                            
-                            <div class="difference-box">
-                                <strong>Difference: £${(
-                                  newHighestOffer - yourOffer
-                                ).toLocaleString()}</strong>
-                            </div>
-                            
-                            <p>Dear <span class="highlight">${userName}</span>,</p>
-                            <p>A higher offer has been submitted for the <strong>${carYear} ${carName}</strong>.</p>
-                            <p>The seller is now considering offers from multiple buyers. You can increase your offer to improve your chances of securing this vehicle.</p>
-                            
-                            <div class="action-box">
-                                <p style="font-size: 18px; margin-bottom: 15px; color: #1e2d3b;"><strong>Want to stay in the running?</strong></p>
-                                <p>Submit a new offer to increase your chances of purchase.</p>
-                                <p style="text-align: center; margin: 25px 0;">
-                                    <a href="${listingUrl}" class="cta-button">Submit New Offer</a>
-                                </p>
-                                <p style="font-size: 14px; color: #666;">The seller typically responds within 48 hours of receiving offers.</p>
-                            </div>
-                            
-                            <p style="margin-top: 25px;"><em>Act quickly – this vehicle is receiving multiple offers!</em></p>
-                        </div>
-                        
-                        <div class="footer">
-                            <p class="footer-text">You're receiving this email because you submitted an offer on this vehicle.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
-                            <p class="footer-text">Don't miss out on your dream car – act now!</p>
-                        </div>
-                    </div>
-                </body>
-                </html>
-            `,
-    });
-
-    return !!info;
-  } catch (error) {
-    throw new Error(
-      `Failed to send offer outbid notification: ${error.message}`
-    );
   }
 };
 
@@ -939,10 +903,11 @@ const sendOutbidNotifications = async (
       try {
         await outbidNotificationEmail(
           user.email,
-          user.username,
-          auction.title,
+          user.username || `${user.firstName} ${user.lastName}`,
+          auction,
           newBidAmount,
-          auctionUrl
+          auctionUrl,
+          null // Your previous bid - would need to fetch this
         );
       } catch (error) {
         console.error(
@@ -970,133 +935,8 @@ const sendOutbidNotifications = async (
   }
 };
 
-const sendOfferOutbidNotifications = async (
-  car,
-  previousHighestOfferUser,
-  allOfferUsers,
-  newOfferUserId,
-  newOfferAmount,
-  offerId
-) => {
-  try {
-    const carId = car._id.toString();
-
-    // Debounce check for this car
-    const now = Date.now();
-    const lastTime = lastOfferNotificationTimes.get(carId) || 0;
-
-    if (now - lastTime < DEBOUNCE_DELAY) {
-      console.log(
-        `Offer notifications debounced for car ${carId} - too frequent`
-      );
-      return;
-    }
-    lastOfferNotificationTimes.set(carId, now);
-
-    // Get all unique users who should be notified (excluding the new highest offer user)
-    const usersToNotify = allOfferUsers.filter(
-      (userId) => userId !== newOfferUserId.toString()
-    );
-
-    if (usersToNotify.length === 0) {
-      console.log("No users to notify for higher offer");
-      return;
-    }
-
-    // Get user details for all users to notify
-    const User = (await import("../models/user.model.js")).default;
-    const users = await User.find({
-      _id: { $in: usersToNotify },
-      "preferences.offerNotifications": true,
-    });
-
-    if (users.length === 0) {
-      console.log("No users found with offer notifications enabled");
-      return;
-    }
-
-    // Get all existing offers for this car to determine each user's offer amount
-    const Offer = (await import("../models/offer.model.js")).default;
-    const existingOffers = await Offer.find({
-      car: carId,
-      user: { $in: usersToNotify },
-      status: "pending",
-    }).sort({ amount: -1 });
-
-    // Create mapping of user ID to their offer amount
-    const userOfferMap = new Map();
-    existingOffers.forEach((offer) => {
-      userOfferMap.set(offer.user.toString(), offer.amount);
-    });
-
-    // Create listing URL
-    const listingUrl = `${process.env.FRONTEND_URL}/car/${carId}`;
-
-    // Send notifications to each user who made an offer
-    const notificationPromises = users.map(async (user) => {
-      try {
-        const userOfferAmount = userOfferMap.get(user._id.toString());
-
-        if (!userOfferAmount) {
-          console.log(
-            `No offer found for user ${user._id}, skipping notification`
-          );
-          return;
-        }
-
-        await offerOutbidEmail(
-          user.email,
-          user.username,
-          car.name,
-          car.year,
-          userOfferAmount,
-          newOfferAmount,
-          listingUrl,
-          offerId
-        );
-      } catch (error) {
-        console.error(
-          `❌ Failed to send offer notification to ${user.email}:`,
-          error.message
-        );
-      }
-    });
-
-    const results = await Promise.allSettled(notificationPromises);
-
-    // Log summary
-    const successful = results.filter(
-      (result) => result.status === "fulfilled"
-    ).length;
-    const failed = results.filter(
-      (result) => result.status === "rejected"
-    ).length;
-
-    console.log(
-      `Higher offer notifications for car ${carId}: ${successful} successful, ${failed} failed`
-    );
-  } catch (error) {
-    console.error("Error sending offer outbid notifications:", error);
-  }
-};
-
-setInterval(() => {
-  const now = Date.now();
-  const oneHourAgo = now - 60 * 60 * 1000;
-
-  for (const [auctionId, lastTime] of lastNotificationTimes.entries()) {
-    if (lastTime < oneHourAgo) {
-      lastNotificationTimes.delete(auctionId);
-    }
-  }
-}, 30 * 60 * 1000);
-
 const sendAuctionWonEmail = async (auction) => {
   try {
-    const specs = auction.specifications
-      ? Object.fromEntries(auction.specifications)
-      : {};
-
     // Safety check - ensure winner is populated and has email
     if (
       !auction?.winner ||
@@ -1110,10 +950,22 @@ const sendAuctionWonEmail = async (auction) => {
       return false;
     }
 
+    const finalPrice = auction?.finalPrice || auction?.currentPrice || 0;
+    const commissionAmount = auction?.commissionAmount || 0;
+    const totalAmount = finalPrice + commissionAmount;
+    
+    let commissionDisplay = '';
+    
+    if (auction.commissionType === 'fixed') {
+      commissionDisplay = `Fixed Fee: ${formatNOK(commissionAmount)}`;
+    } else if (auction.commissionType === 'percentage') {
+      commissionDisplay = `${auction.commissionValue}% Fee: ${formatNOK(commissionAmount)}`;
+    }
+
     const info = await transporter.sendMail({
-      from: `"SpeedWays" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: auction?.winner?.email,
-      subject: `Invoice - ${specs?.year || ""} ${auction?.title}`,
+      subject: `Invoice - ${auction?.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -1122,35 +974,29 @@ const sendAuctionWonEmail = async (auction) => {
                         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5; }
                         .container { max-width: 700px; margin: 20px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
                         .header { background: #1e2d3b; padding: 20px; text-align: left; color: white; }
-                        .company-info { margin-bottom: 10px; }
                         .company-name { font-size: 24px; font-weight: bold; color: #edcd1f; margin: 0 0 5px 0; }
                         .company-address { font-size: 12px; line-height: 1.4; margin: 5px 0; opacity: 0.9; }
                         .contact-info { font-size: 12px; margin: 5px 0; }
-                        .vat-number { font-size: 12px; margin: 5px 0; font-weight: bold; }
                         
                         .invoice-header { background: #2c3e50; color: white; padding: 15px 20px; text-align: center; }
                         .invoice-title { font-size: 28px; font-weight: bold; margin: 0; }
-                        
-                        .buyer-info { background: #f8f9fa; padding: 15px 20px; border-bottom: 1px solid #e9ecef; }
-                        .buyer-title { font-weight: bold; margin-bottom: 5px; color: #1e2d3b; }
-                        
-                        .invoice-details { padding: 15px 20px; background: #f8f9fa; border-bottom: 1px solid #e9ecef; }
-                        .invoice-detail-row { display: flex; justify-content: space-between; margin: 5px 0; gap: 30px; }
-                        .invoice-detail-row > div { flex: 1;}
-                        .invoice-label { font-weight: bold; min-width: 120px; }
-                        
-                        .vehicle-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                        .vehicle-table th { background: #1e2d3b; color: white; padding: 12px; text-align: left; font-weight: bold; }
-                        .vehicle-table td { padding: 12px; border-bottom: 1px solid #e9ecef; }
-                        .vehicle-table tr:nth-child(even) { background: #f9f9f9; }
-                        .vehicle-table tr:hover { background: #f5f5f5; }
-                        .ref-no { font-weight: bold; color: #1e2d3b; }
-                        .amount { font-weight: bold; color: #155724; }
                         
                         .winner-section { background: #d4edda; padding: 25px; margin: 20px; border-radius: 8px; border: 2px solid #c3e6cb; text-align: center; }
                         .winner-title { font-size: 24px; font-weight: bold; color: #155724; margin-bottom: 10px; }
                         .winning-price { font-size: 36px; font-weight: bold; color: #1e2d3b; margin: 15px 0; }
                         .winning-price span { color: #28a745; }
+                        
+                        .item-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        .item-table th { background: #1e2d3b; color: white; padding: 12px; text-align: left; font-weight: bold; }
+                        .item-table td { padding: 12px; border-bottom: 1px solid #e9ecef; }
+                        .item-table tr:nth-child(even) { background: #f9f9f9; }
+                        .ref-no { font-weight: bold; color: #1e2d3b; }
+                        .amount { font-weight: bold; color: #155724; }
+                        
+                        .specs-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+                        .specs-table td { padding: 8px 12px; border-bottom: 1px solid #e9ecef; }
+                        .specs-table td:first-child { font-weight: bold; color: #666; width: 40%; }
+                        .specs-table td:last-child { color: #1e2d3b; }
                         
                         .payment-details { background: #e3f2fd; padding: 20px; margin: 20px; border-radius: 8px; border: 1px solid #bbdefb; }
                         .payment-title { color: #0d47a1; font-size: 18px; margin-bottom: 15px; font-weight: bold; }
@@ -1173,24 +1019,22 @@ const sendAuctionWonEmail = async (auction) => {
                             font-size: 16px;
                             margin: 10px 0;
                         }
+                        .support-link { color: #edcd1f; text-decoration: none; }
                         
                         .footer { background: #1e2d3b; color: white; padding: 15px; text-align: center; font-size: 12px; }
-                        .footer-company { margin: 5px 0; }
-                        .footer-contact { margin: 5px 0; opacity: 0.9; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <!-- Company Header -->
                         <div class="header">
-                            <div class="company-name">SpeedWays Auto</div>
+                            <div class="company-name">BidNordic</div>
                             <div class="company-address">
-                                Wilmslow Road, Heald Green, Cheadle, SK8 3PW
+                                Stockholm, Sweden
                             </div>
                             <div class="contact-info">
-                                Ph: 0161 883 2737 | Web: https://www.speedwaysuk.com | Email: info@speedwaysuk.com
+                                Web: https://www.bidnordic.com | Email: admin@bidnordic.com
                             </div>
-                            <div class="vat-number">VAT Number: 406721515</div>
                         </div>
                         
                         <!-- Invoice Title -->
@@ -1198,155 +1042,68 @@ const sendAuctionWonEmail = async (auction) => {
                             <div class="invoice-title">INVOICE</div>
                         </div>
                         
-                        <!-- Buyer Information -->
-<div class="buyer-info">
-    <div class="buyer-title">Invoice To:</div>
-    <div><strong>${
-      auction?.winner?.firstName || auction?.winner?.username || ""
-    } ${auction?.winner?.lastName || ""}</strong></div>
-    
-    ${
-      auction?.winner?.address?.street
-        ? `<div>${auction?.winner?.address.street}</div>`
-        : ""
-    }
-    
-    ${
-      auction?.winner?.address?.city && auction?.winner?.address?.state
-        ? `<div>${auction?.winner?.address.city}, ${auction?.winner?.address.state}</div>`
-        : auction?.winner?.address?.city
-        ? `<div>${auction?.winner?.address.city}</div>`
-        : auction?.winner?.address?.state
-        ? `<div>${auction?.winner?.address.state}</div>`
-        : ""
-    }
-    
-    ${
-      auction?.winner?.address?.zipCode
-        ? `<div>${auction?.winner?.address.zipCode}</div>`
-        : ""
-    }
-    
-    ${
-      auction?.winner?.address?.country
-        ? `<div>${auction?.winner?.address.country}</div>`
-        : ""
-    }
-    
-    ${
-      !auction?.winner?.address?.street &&
-      !auction?.winner?.address?.city &&
-      !auction?.winner?.address?.state &&
-      !auction?.winner?.address?.zipCode &&
-      !auction?.winner?.address?.country
-        ? "<div>Address on file</div>"
-        : ""
-    }
-</div>
-                        
                         <!-- Invoice Details -->
-                        <div class="invoice-details">
-                            <div class="invoice-detail-row">
-                                <div>
-                                    <span class="invoice-label">Invoice No:</span> ${
-                                      auction?.transactionId || "Not Provided"
-                                    }
-                                </div>
-                                <div>
-                                    <span class="invoice-label">Sales Date:</span> ${new Date().toLocaleDateString(
-                                      "en-GB",
-                                      {
-                                        day: "2-digit",
-                                        month: "long",
-                                        year: "numeric",
-                                      }
-                                    )}
-                                </div>
+                        <div style="padding: 15px 20px; background: #f8f9fa; border-bottom: 1px solid #e9ecef;">
+                            <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+                                <div><strong>Invoice No:</strong> ${auction?.transactionId || `INV-${auction?._id?.toString()?.toUpperCase()}`}</div>
+                                <div><strong>Date:</strong> ${new Date().toLocaleDateString("nb-NO", {
+                                  day: "2-digit",
+                                  month: "long",
+                                  year: "numeric",
+                                })}</div>
                             </div>
-                            <div class="invoice-detail-row">
-                                <div>
-                                    <span class="invoice-label">Payment Due:</span> ${new Date(
-                                      Date.now() + 7 * 24 * 60 * 60 * 1000
-                                    ).toLocaleDateString("en-GB", {
-                                      day: "2-digit",
-                                      month: "long",
-                                      year: "numeric",
-                                    })}
-                                </div>
-                                <div>
-                                    <span class="invoice-label">Payment Status:</span> <span style="color: #dc3545; font-weight: bold;">PENDING</span>
-                                </div>
+                            <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+                                <div><strong>Payment Due:</strong> ${new Date(
+                                  Date.now() + 7 * 24 * 60 * 60 * 1000
+                                ).toLocaleDateString("nb-NO", {
+                                  day: "2-digit",
+                                  month: "long",
+                                  year: "numeric",
+                                })}</div>
+                                <div><strong>Status:</strong> <span style="color: #dc3545; font-weight: bold;">PENDING</span></div>
                             </div>
                         </div>
                         
                         <!-- Winner Announcement -->
                         <div class="winner-section">
                             <div class="winner-title">🎉 CONGRATULATIONS! YOU WON THE AUCTION</div>
-                            <p>You are the winning bidder for this vehicle. Please complete payment within 7 days.</p>
+                            <p>You are the winning bidder for this item. Please complete payment within 7 days.</p>
                             <div class="winning-price">
-                                Final Price: <span>£${(
-                                  auction?.finalPrice ||
-                                  auction?.currentPrice ||
-                                  0
-                                ).toLocaleString()}</span>
+                                ${formatNOK(totalAmount)}
                             </div>
                         </div>
                         
-                        <!-- Vehicle Details Table -->
-                        <table class="vehicle-table">
+                        <!-- Item Details Table -->
+                        <table class="item-table">
                             <thead>
                                 <tr>
-                                    <th>Ref No</th>
+                                    <th>Item</th>
                                     <th>Description</th>
                                     <th>Amount</th>
-                                    <th>VAT@20%</th>
-                                    <th>Total</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td class="ref-no">${
-                                      auction?.transactionId || "Not Provided"
-                                    }</td>
+                                    <td class="ref-no">${auction?._id?.toString().toUpperCase()}</td>
                                     <td>
-                                        <strong>Reg No:</strong> ${
-                                          specs?.registration || "Not Provided"
-                                        }<br>
-                                        <strong>Miles:</strong> ${
-                                          specs?.miles || "Not Provided"
-                                        }<br>
-                                        <strong>Year:</strong> ${
-                                          specs?.year || "Not Provided"
-                                        }<br>
-                                        <strong>Colour:</strong> ${
-                                          specs?.colour || "Not Provided"
-                                        }<br>
-                                        <strong>Body Type:</strong> ${
-                                          specs?.bodyType || "0"
-                                        }<br>
-                                        <strong>Fuel Type:</strong> ${
-                                          specs?.fuelType ||
-                                          "Not Provided"
-                                        }<br>
-                                        <strong>Previous Owners:</strong> ${
-                                          specs?.previousOwners ||
-                                          "Not Provided"
-                                        }<br>
-                                        <strong>Cap Clean Value:</strong> ${
-                                          specs?.capClean || "Not Provided"
-                                        }<br>
+                                        <strong>${auction.title}</strong><br>
+                                        ${auction.subTitle ? `<small>${auction.subTitle}</small><br>` : ''}
+                                        
+                                        ${auction.specifications ? `
+                                        <table class="specs-table">
+                                            ${renderSpecificationsRows(auction.specifications)}
+                                        </table>
+                                        ` : ''}
                                     </td>
-                                    <td class="amount">£${(
-                                      auction?.finalPrice ||
-                                      auction?.currentPrice ||
-                                      0
-                                    ).toLocaleString()}</td>
-                                    <td>--</td>
-                                    <td class="amount">£${(
-                                      auction?.finalPrice ||
-                                      auction?.currentPrice ||
-                                      0
-                                    ).toLocaleString()}</td>
+                                    <td class="amount">${formatNOK(finalPrice)}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" style="text-align: right; font-weight: bold;">${commissionDisplay}:</td>
+                                    <td class="amount">${formatNOK(commissionAmount)}</td>
+                                </tr>
+                                <tr style="border-top: 2px solid #1e2d3b;">
+                                    <td colspan="2" style="text-align: right; font-weight: bold; font-size: 16px;">TOTAL AMOUNT DUE:</td>
+                                    <td style="font-weight: bold; font-size: 20px; color: #1e2d3b;">${formatNOK(totalAmount)}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1354,53 +1111,53 @@ const sendAuctionWonEmail = async (auction) => {
                         <!-- Payment Details -->
                         <div class="payment-details">
                             <div class="payment-title">💰 PAYMENT DETAILS</div>
-                            <p>Please transfer the full amount to the following account:</p>
+                            <p>Please transfer the total amount to the following account:</p>
                             <div class="bank-details">
                                 <div class="detail-row">
-                                    <span class="detail-label">Account name:</span> SPEEDWAYS Auto LIMITED
+                                    <span class="detail-label">Account name:</span> BidNordic AB
                                 </div>
                                 <div class="detail-row">
-                                    <span class="detail-label">Bank:</span> NatWest
+                                    <span class="detail-label">Bank:</span> Swedbank
                                 </div>
                                 <div class="detail-row">
-                                    <span class="detail-label">Sort Code:</span> 01-05-31
+                                    <span class="detail-label">Clearing number:</span> 1234-5678
                                 </div>
                                 <div class="detail-row">
-                                    <span class="detail-label">Account Number:</span> 46251626
+                                    <span class="detail-label">Account Number:</span> 9876543210
                                 </div>
                                 <div class="detail-row">
-                                    <span class="detail-label">BIC:</span> NWBKGB2L
+                                    <span class="detail-label">IBAN:</span> SE12345678901234567890
                                 </div>
                                 <div class="detail-row">
-                                    <span class="detail-label">IBAN:</span> GB21NWBK01053146251626
+                                    <span class="detail-label">BIC/SWIFT:</span> SWEDSESS
                                 </div>
                             </div>
                         </div>
                         
                         <!-- Collection Information -->
                         <div class="collection-info">
-                            <div class="collection-title">🚗 VEHICLE COLLECTION</div>
-                            <p><strong>VEHICLE LOCATION:</strong> ${
-                              auction?.location
-                            }</p>
-                            <p><strong>Important:</strong> Bring this invoice and your identification when collecting the vehicle.</p>
+                            <div class="collection-title">📦 ITEM COLLECTION</div>
+                            <p><strong>Important Information:</strong> Once your payment has been received and confirmed, you will receive a separate email containing the seller's contact details and the item location. You can then contact the seller directly to arrange collection or discuss delivery options.</p>
+                            <p style="margin-top: 10px; font-size: 14px; color: #856404;">
+                                ⚡ Please allow 24-48 hours for payment processing and verification before receiving the seller's details.
+                            </p>
                         </div>
                         
                         <!-- Call to Action -->
                         <div class="cta-section">
-                            <p>Once payment is confirmed, please contact us to schedule collection:</p>
+                            <p>Once payment is confirmed, our team will contact you within 24-48 hours.</p>
                             <p>
-                                <a href="mailto:info@speedwaysuk.com" class="cta-button">CONTACT TO SCHEDULE COLLECTION</a>
+                                <a href="mailto:admin@bidnordic.com?subject=Payment%20Confirmation%20-%20${auction?.title}" class="cta-button">CONFIRM PAYMENT</a>
+                            </p>
+                            <p style="font-size: 12px; color: #666;">
+                                Questions? Contact <a href="mailto:admin@bidnordic.com" class="support-link">admin@bidnordic.com</a>
                             </p>
                         </div>
                         
                         <!-- Footer -->
                         <div class="footer">
                             <div class="footer-company">
-                                SpeedWays Auto
-                            </div>
-                            <div class="footer-contact">
-                                ©SpeedWays Auto ${new Date().getFullYear()} | Need assistance? Contact support at info@speedwaysuk.com
+                                BidNordic © ${new Date().getFullYear()}
                             </div>
                         </div>
                     </div>
@@ -1422,31 +1179,27 @@ const sendAuctionWonEmail = async (auction) => {
   }
 };
 
-const sendAuctionEndedSellerEmail = async (car) => {
+const sendAuctionEndedSellerEmail = async (auction) => {
   try {
-    const specs = car.specifications
-      ? Object.fromEntries(car.specifications)
-      : {};
-
     // Safety check - ensure seller is populated and has email
     if (
-      !car?.seller ||
-      typeof car?.seller === "string" ||
-      !car?.seller?.email
+      !auction?.seller ||
+      typeof auction?.seller === "string" ||
+      !auction?.seller?.email
     ) {
-      console.error("Seller not populated or missing email for car:", car?._id);
+      console.error("Seller not populated or missing email for auction:", auction?._id);
       return false;
     }
 
     const statusMessage =
-      car?.status === "sold"
-        ? `Sold for £${car?.finalPrice?.toLocaleString()}`
+      auction?.status === "sold" || auction?.status === "sold_buy_now"
+        ? `Sold for ${formatNOK(auction?.finalPrice || 0)}`
         : "Listing ended without sale";
 
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
-      to: car?.seller?.email,
-      subject: `Your Car Listing Has Ended - ${specs?.year} ${car?.title}`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
+      to: auction?.seller?.email,
+      subject: `Your Listing Has Ended - ${auction?.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -1456,30 +1209,25 @@ const sendAuctionEndedSellerEmail = async (car) => {
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .status-box { 
-                            background: ${
-                              car.status === "sold" ? "#d4edda" : "#fff3cd"
-                            }; 
+                            background: ${auction.status === "sold" || auction.status === "sold_buy_now" ? "#d4edda" : "#fff3cd"}; 
                             padding: 25px; 
                             border-radius: 8px; 
                             margin: 20px 0; 
-                            border: 2px solid ${
-                              car.status === "sold" ? "#c3e6cb" : "#ffeaa7"
-                            };
+                            border: 2px solid ${auction.status === "sold" || auction.status === "sold_buy_now" ? "#c3e6cb" : "#ffeaa7"};
                             text-align: center;
                         }
                         .status-title { 
                             font-size: 26px; 
                             font-weight: bold; 
-                            color: ${
-                              car.status === "sold" ? "#155724" : "#856404"
-                            };
+                            color: ${auction.status === "sold" || auction.status === "sold_buy_now" ? "#155724" : "#856404"};
                             margin-bottom: 10px;
                         }
-                        .car-info { background: #f8f9fa; padding: 20px; border-radius: 6px; margin: 25px 0; border-left: 4px solid #edcd1f; }
-                        .car-name { font-size: 22px; color: #1e2d3b; margin-bottom: 10px; }
+                        .item-info { background: #f8f9fa; padding: 20px; border-radius: 6px; margin: 25px 0; border-left: 4px solid #edcd1f; }
+                        .item-name { font-size: 22px; color: #1e2d3b; margin-bottom: 10px; }
                         .final-price { 
                             font-size: 32px; 
                             font-weight: bold; 
@@ -1502,114 +1250,94 @@ const sendAuctionEndedSellerEmail = async (car) => {
                         .highlight { color: #edcd1f; font-weight: bold; }
                         .contact-link { color: #1e2d3b; text-decoration: none; font-weight: bold; }
                         .contact-link:hover { color: #edcd1f; text-decoration: underline; }
+                        .specs-section { margin: 25px 0; }
+                        .specs-title { color: #1e2d3b; font-size: 18px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .spec-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
+                        .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+                        .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
                             <div class="status-box">
-                                <div class="status-title">${
-                                  car.status === "sold"
-                                    ? "✅ CAR SOLD!"
-                                    : "📅 LISTING ENDED"
-                                }</div>
+                                <div class="status-title">${auction.status === "sold" || auction.status === "sold_buy_now" ? "✅ ITEM SOLD!" : "📅 LISTING ENDED"}</div>
                                 <div style="font-size: 18px;">${statusMessage}</div>
                             </div>
                             
-                            <div class="car-info">
-                                <div class="car-name">${specs?.year} ${
-        car?.title
-      }</div>
-                                ${
-                                  car?.finalPrice
-                                    ? `
+                            <div class="item-info">
+                                <div class="item-name">${auction?.title}</div>
+                                ${auction?.finalPrice ? `
                                 <div class="final-price">
-                                    <span>£${car?.finalPrice?.toLocaleString()}</span>
+                                    <span>${formatNOK(auction?.finalPrice)}</span>
                                 </div>
-                                `
-                                    : ""
-                                }
+                                ` : ""}
+                                
+                                ${auction.specifications ? `
+                                <div class="specs-section">
+                                    <div class="specs-title">📋 Item Details</div>
+                                    ${renderSpecifications(auction.specifications)}
+                                </div>
+                                ` : ''}
                             </div>
                             
-                            ${
-                              car?.status === "sold" && car?.winner
-                                ? `
+                            ${(auction?.status === "sold" || auction?.status === "sold_buy_now") && auction?.winner ? `
                             <div class="buyer-box">
-                                <div class="buyer-title">🎉 Congratulations! Your car has been sold.</div>
+                                <div class="buyer-title">🎉 Congratulations! Your item has been sold.</div>
+                                <!-- Buyer Information -->
                                 <div class="buyer-info">
-                                    <p><strong>Buyer:</strong> ${
-                                      car?.winner?.firstName ||
-                                      car?.winner?.username
-                                    }</p>
-                                    <p><strong>Email:</strong> <a href="mailto:${
-                                      car?.winner?.email
-                                    }" class="contact-link">${
-                                    car?.winner?.email
-                                  }</a></p>
-                                    ${
-                                      car?.winner?.phone
-                                        ? `<p><strong>Phone:</strong> <a href="tel:${car?.winner?.phone}" class="contact-link">${car?.winner?.phone}</a></p>`
-                                        : ""
-                                    }
+                                    <div style="background: #e8f4fd; padding: 15px; margin: 15px 20px; border-radius: 6px; border: 1px solid #b8daff; color: #004085;">
+                                        <p style="margin: 0 0 8px 0;"><strong>📋 Buyer details will be shared after payment confirmation</strong></p>
+                                        <p style="margin: 0 0 5px 0; font-size: 14px;">Once the buyer's payment is received, you'll get an email with their contact information to arrange collection.</p>
+                                        <p style="margin: 8px 0 0 0; font-size: 13px;"><strong>Status:</strong> ⏳ Awaiting payment</p>
+                                    </div>
                                 </div>
                             </div>
-                            `
-                                : `
+                            ` : `
                             <div class="buyer-box">
                                 <div class="buyer-title">⚠️ No Sale This Time</div>
                                 <div class="buyer-info">
-                                    <p>Your car listing ended without a sale. You can relist the vehicle or adjust the price from your dashboard.</p>
+                                    <p>Your listing ended without a sale. You can relist the item or adjust the price from your dashboard.</p>
                                 </div>
                             </div>
-                            `
-                            }
+                            `}
                             
                             <div class="details-grid">
                                 <div class="detail-item">
                                     <div class="detail-label">Final Status</div>
-                                    <div class="detail-value">${car?.status.toUpperCase()}</div>
+                                    <div class="detail-value">${auction?.status.toUpperCase()}</div>
                                 </div>
                                 <div class="detail-item">
                                     <div class="detail-label">Original Price</div>
-                                    <div class="detail-value">£${
-                                      car?.buyNowPrice?.toLocaleString() ||
-                                      car?.startPrice?.toLocaleString()
-                                    }</div>
+                                    <div class="detail-value">${formatNOK(auction?.buyNowPrice || auction?.startPrice || 0)}</div>
                                 </div>
                                 <div class="detail-item">
                                     <div class="detail-label">Total Offers</div>
-                                    <div class="detail-value">${
-                                      car?.offers?.length || 0
-                                    }</div>
+                                    <div class="detail-value">${auction?.offers?.length || 0}</div>
                                 </div>
                                 <div class="detail-item">
                                     <div class="detail-label">Total Views</div>
-                                    <div class="detail-value">${
-                                      car?.views || 0
-                                    }</div>
+                                    <div class="detail-value">${auction?.views || 0}</div>
                                 </div>
                             </div>
                             
-                            ${
-                              car?.status === "sold"
-                                ? `
+                            ${auction?.status === "sold" || auction?.status === "sold_buy_now" ? `
                             <div class="next-steps">
                                 <div class="next-title">📝 Next Steps</div>
-                                <p>1. Contact the buyer within 24 hours to arrange payment</p>
+                                <p>1. Contact the buyer within 24 hours</p>
                                 <p>2. Complete the sale agreement</p>
-                                <p>3. Arrange vehicle collection/delivery</p>
+                                <p>3. Arrange item collection/delivery</p>
                             </div>
-                            `
-                                : `
+                            ` : `
                             <div class="next-steps">
                                 <div class="next-title">🔄 Next Steps</div>
                                 <p>1. Review your listing and pricing</p>
@@ -1617,24 +1345,17 @@ const sendAuctionEndedSellerEmail = async (car) => {
                                 <p>3. Add more photos or description details</p>
                                 <p>4. Try our featured listing option for more visibility</p>
                             </div>
-                            `
-                            }
+                            `}
                             
-                            <p>Dear <span class="highlight">${
-                              car?.seller?.firstName || car?.seller?.username
-                            }</span>,</p>
-                            <p>Your listing for the <strong>${specs?.year} ${
-        car?.title
-      }</strong> on SpeedWays Auto has ended.</p>
+                            <p>Dear <span class="highlight">${auction?.seller?.firstName || auction?.seller?.username}</span>,</p>
+                            <p>Your listing for the <strong>${auction?.title}</strong> on BidNordic has ended.</p>
                             <p>For any questions about the sale process or assistance, please contact our support team.</p>
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">This is an automated notification from SpeedWays Auto.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
-                            <p class="footer-text">Need help? Contact support at ${
-                              process.env.EMAIL_USER || "info@speedwaysuk.com"
-                            }</p>
+                            <p class="footer-text">This is an automated notification from BidNordic.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
+                            <p class="footer-text">Need help? Contact support at ${process.env.EMAIL_USER || "admin@bidnordic.com"}</p>
                         </div>
                     </div>
                 </body>
@@ -1644,23 +1365,19 @@ const sendAuctionEndedSellerEmail = async (car) => {
     return !!info;
   } catch (error) {
     console.error(
-      `❌ Failed to send listing ended email to seller for car ${car?._id}:`,
+      `❌ Failed to send listing ended email to seller for auction ${auction?._id}:`,
       error
     );
     return false;
   }
 };
 
-const auctionListedEmail = async (car, seller) => {
+const auctionListedEmail = async (auction, seller) => {
   try {
-    const specs = car.specifications
-      ? Object.fromEntries(car.specifications)
-      : {};
-
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: seller.email,
-      subject: `✅ Your Listing is Live on SpeedWays Auto: ${specs?.year} ${car?.title}`,
+      subject: `✅ Your Listing is Live on BidNordic: ${auction?.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -1670,6 +1387,7 @@ const auctionListedEmail = async (car, seller) => {
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .confirmation-box { 
@@ -1686,8 +1404,8 @@ const auctionListedEmail = async (car, seller) => {
                             color: #155724;
                             margin-bottom: 10px;
                         }
-                        .car-details { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
-                        .car-title { font-size: 24px; color: #1e2d3b; margin-bottom: 15px; text-align: center; }
+                        .item-details { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
+                        .item-title { font-size: 24px; color: #1e2d3b; margin-bottom: 15px; text-align: center; }
                         .price-tag { 
                             font-size: 32px; 
                             font-weight: bold; 
@@ -1700,6 +1418,15 @@ const auctionListedEmail = async (car, seller) => {
                         .spec-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
                         .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
                         .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
+                        .listing-options { display: flex; justify-content: center; gap: 15px; margin: 20px 0; flex-wrap: wrap; }
+                        .option-badge { 
+                            background: #1e2d3b; 
+                            color: #ffffff; 
+                            padding: 6px 12px; 
+                            border-radius: 20px; 
+                            font-size: 12px; 
+                            font-weight: bold; 
+                        }
                         .tips-box { background: #fff3cd; padding: 25px; border-radius: 8px; margin: 25px 0; border: 1px solid #ffeaa7; }
                         .tips-title { color: #856404; font-size: 18px; margin-bottom: 15px; font-weight: bold; }
                         .tip-item { margin-bottom: 10px; padding-left: 20px; position: relative; }
@@ -1734,87 +1461,42 @@ const auctionListedEmail = async (car, seller) => {
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
                             <div class="confirmation-box">
-                                <div class="confirmation-title">🚗 YOUR CAR IS NOW LIVE!</div>
-                                <p style="font-size: 18px; color: #155724;">Your vehicle is now available for offers on SpeedWays Auto</p>
+                                <div class="confirmation-title">📦 YOUR LISTING IS NOW LIVE!</div>
+                                <p style="font-size: 18px; color: #155724;">Your item is now available on BidNordic</p>
                             </div>
                             
-                            <p>Dear <span class="highlight">${
-                              seller?.firstName || seller?.username
-                            }</span>,</p>
-                            <p>Great news! Your car listing is now active and visible to thousands of potential buyers on SpeedWays Auto.</p>
+                            <p>Dear <span class="highlight">${seller?.firstName || seller?.username}</span>,</p>
+                            <p>Great news! Your listing is now active and visible to thousands of potential buyers on BidNordic.</p>
                             
-                            <div class="car-details">
-                                <div class="car-title">${specs?.year} ${
-        car?.title
-      }</div>
+                            <div class="item-details">
+                                <div class="item-title">${auction?.title}</div>
+                                ${auction.subTitle ? `<p style="text-align: center; color: #666;">${auction.subTitle}</p>` : ''}
+                                
+                                <div class="listing-options">
+                                    ${auction?.auctionType ? `<span class="option-badge">${auction.auctionType.toUpperCase()}</span>` : ""}
+                                    ${auction?.allowOffers ? `<span class="option-badge" style="background: #edcd1f; color: #1e2d3b;">OFFERS ALLOWED</span>` : ""}
+                                    ${auction?.buyNowPrice ? `<span class="option-badge" style="background: #28a745;">BUY NOW AVAILABLE</span>` : ""}
+                                </div>
                                 
                                 <div class="price-tag">
-                                    <span>£${car?.startPrice?.toLocaleString()}</span>
+                                    <span>${formatNOK(auction?.startPrice)}</span>
                                 </div>
+                                ${auction?.buyNowPrice ? `<p style="text-align: center; color: #28a745;">Buy Now: ${formatNOK(auction.buyNowPrice)}</p>` : ''}
                                 
-                                <div class="specs-grid">
-                                    <div class="spec-item">
-                                        <div class="spec-label">Listing Type</div>
-                                        <div class="spec-value">${
-                                          car?.auctionType
-                                        }</div>
-                                    </div>
-                                    <div class="spec-item">
-                                        <div class="spec-label">Registration</div>
-                                        <div class="spec-value">${
-                                          specs?.registration || 'N/A'
-                                        }</div>
-                                    </div>
-                                    <div class="spec-item">
-                                        <div class="spec-label">Miles</div>
-                                        <div class="spec-value">${
-                                          specs?.miles || 'N/A'
-                                        }</div>
-                                    </div>
-                                    <div class="spec-item">
-                                        <div class="spec-label">Year</div>
-                                        <div class="spec-value">${
-                                          specs?.year
-                                        }</div>
-                                    </div>
-                                    <div class="spec-item">
-                                        <div class="spec-label">Body Type</div>
-                                        <div class="spec-value">${
-                                          specs?.bodyTpe || 'N/A'
-                                        }</div>
-                                    </div>
-                                    <div class="spec-item">
-                                        <div class="spec-label">Fuel Type</div>
-                                        <div class="spec-value">${specs?.fuelType || 'N/A'}</div>
-                                    </div>
-                                    <div class="spec-item">
-                                        <div class="spec-label">Colour</div>
-                                        <div class="spec-value">${
-                                          specs?.colour || 'N/A'
-                                        }</div>
-                                    </div>
-                                    <div class="spec-item">
-                                        <div class="spec-label">Cap Clean</div>
-                                        <div class="spec-value">${
-                                          specs?.capClean || 'N/A'
-                                        }</div>
-                                    </div>
-                                    <div class="spec-item">
-                                        <div class="spec-label">Previous Owners</div>
-                                        <div class="spec-value">${
-                                          specs?.previousOwners || 'N/A'
-                                        }</div>
-                                    </div>
+                                ${auction.specifications ? `
+                                <div class="specs-section">
+                                    <div class="specs-title">📋 Item Details</div>
+                                    ${renderSpecifications(auction.specifications)}
                                 </div>
+                                ` : ''}
                             </div>
                             
                             <div class="tips-box">
@@ -1828,19 +1510,13 @@ const auctionListedEmail = async (car, seller) => {
                             
                             <div class="listing-url">
                                 <strong>Your Listing URL:</strong><br>
-                                <a href="${process.env.FRONTEND_URL}/auction/${
-        car?._id
-      }" style="color: #edcd1f; text-decoration: none;">
-                                    ${process.env.FRONTEND_URL}/auction/${
-        car?._id
-      }
+                                <a href="${process.env.FRONTEND_URL}/auction/${auction?._id}" style="color: #edcd1f; text-decoration: none;">
+                                    ${process.env.FRONTEND_URL}/auction/${auction?._id}
                                 </a>
                             </div>
                             
                             <p style="text-align: center; margin: 25px 0;">
-                                <a href="${process.env.FRONTEND_URL}/auction/${
-        car?._id
-      }" class="cta-button">View Your Live Listing</a>
+                                <a href="${process.env.FRONTEND_URL}/auction/${auction?._id}" class="cta-button">View Your Live Listing</a>
                             </p>
                             
                             <div class="notifications-box">
@@ -1855,8 +1531,8 @@ const auctionListedEmail = async (car, seller) => {
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">This is an automated confirmation from SpeedWays Auto.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
+                            <p class="footer-text">This is an automated confirmation from BidNordic.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
                             <p class="footer-text">Need assistance? Contact our seller support team.</p>
                         </div>
                     </div>
@@ -1865,10 +1541,10 @@ const auctionListedEmail = async (car, seller) => {
             `,
     });
 
-    console.log(`✅ Car listed email sent to seller ${seller?.email}`);
+    console.log(`✅ Item listed email sent to seller ${seller?.email}`);
     return !!info;
   } catch (error) {
-    console.error(`❌ Failed to send car listed email:`, error);
+    console.error(`❌ Failed to send item listed email:`, error);
     return false;
   }
 };
@@ -1876,18 +1552,14 @@ const auctionListedEmail = async (car, seller) => {
 const auctionEndingSoonEmail = async (
   userEmail,
   userName,
-  car,
+  auction,
   timeRemaining
 ) => {
   try {
-    const specs = car.specifications
-      ? Object.fromEntries(car.specifications)
-      : {};
-
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: userEmail,
-      subject: `⏰ Listing Expires Soon: ${specs?.year} ${car?.title}`,
+      subject: `⏰ Listing Expires Soon: ${auction?.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -1897,6 +1569,7 @@ const auctionEndingSoonEmail = async (
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .alert-box { 
@@ -1923,8 +1596,8 @@ const auctionEndingSoonEmail = async (
                             font-size: 24px;
                             font-weight: bold;
                         }
-                        .car-info { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
-                        .car-title { font-size: 24px; color: #1e2d3b; margin-bottom: 15px; text-align: center; }
+                        .item-info { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
+                        .item-title { font-size: 24px; color: #1e2d3b; margin-bottom: 15px; text-align: center; }
                         .price-tag { 
                             font-size: 32px; 
                             font-weight: bold; 
@@ -1958,122 +1631,108 @@ const auctionEndingSoonEmail = async (
                         .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #e9ecef; margin-top: 25px; }
                         .footer-text { margin: 5px 0; }
                         .highlight { color: #edcd1f; font-weight: bold; }
+                        .specs-section { margin: 25px 0; }
+                        .specs-title { color: #1e2d3b; font-size: 18px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .spec-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
+                        .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+                        .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
                             <div class="alert-box">
                                 <div class="alert-title">⏰ LISTING EXPIRING SOON</div>
-                                <p style="font-size: 18px; color: #1e2d3b;">Time is running out to get this vehicle!</p>
+                                <p style="font-size: 18px; color: #1e2d3b;">Time is running out to get this item!</p>
                             </div>
                             
                             <div class="timer-box">
                                 ⏰ ${timeRemaining} REMAINING
                             </div>
                             
-                            <div class="car-info">
-                                <div class="car-title">${specs?.year} ${
-        car?.title
-      }</div>
+                            <div class="item-info">
+                                <div class="item-title">${auction?.title}</div>
+                                ${auction.subTitle ? `<p style="text-align: center; color: #666;">${auction.subTitle}</p>` : ''}
                                 
                                 <div class="price-tag">
-                                    <span>£${
-                                      car?.startPrice?.toLocaleString() ||
-                                      car?.buyNowPrice?.toLocaleString()
-                                    }</span>
+                                    <span>${formatNOK(auction?.startPrice || auction?.buyNowPrice || 0)}</span>
                                 </div>
+                                
+                                ${auction.specifications ? `
+                                <div class="specs-section">
+                                    <div class="specs-title">📋 Item Details</div>
+                                    ${renderSpecifications(auction.specifications)}
+                                </div>
+                                ` : ''}
                                 
                                 <div class="listing-details">
                                     <div class="detail-item">
-                                        <div class="detail-label">Current Offers</div>
-                                        <div class="detail-value">${
-                                          car?.offers?.length || 0
-                                        }</div>
+                                        <div class="detail-label">Current Offers/Bids</div>
+                                        <div class="detail-value">${auction?.offers?.length || auction?.bids?.length || 0}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Listing Type</div>
-                                        <div class="detail-value">${
-                                          car?.auctionType
-                                        }</div>
+                                        <div class="detail-value">${auction?.auctionType}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Views</div>
-                                        <div class="detail-value">${
-                                          car?.views || 0
-                                        }</div>
+                                        <div class="detail-value">${auction?.views || 0}</div>
                                     </div>
                                 </div>
                             </div>
                             
                             <p>Dear <span class="highlight">${userName}</span>,</p>
-                            <p>The listing for the <strong>${specs?.year} ${
-        car?.title
-      }</strong> is about to expire. Once the timer runs out, this vehicle will no longer be available for purchase.</p>
+                            <p>The listing for the <strong>${auction?.title}</strong> is about to expire. Once the timer runs out, this item will no longer be available for purchase.</p>
                             
                             <div class="urgency-box">
                                 <div class="urgency-title">⚠️ ACT NOW BEFORE IT'S GONE</div>
-                                <p>• This vehicle has ${
-                                  car?.offers?.length || 0
-                                } other offers</p>
+                                <p>• This listing has ${auction?.offers?.length || 0} other offers</p>
                                 <p>• Once expired, the listing will be removed</p>
-                                <p>• The seller may not relist this vehicle</p>
+                                <p>• The seller may not relist this item</p>
                                 <p>• Other buyers are actively interested</p>
                             </div>
                             
-                            ${
-                              car?.auctionType === "buy_now"
-                                ? `
+                            ${auction?.auctionType === "buy_now" && auction?.buyNowPrice ? `
                             <div class="buy-now-box">
-                                <div class="buy-now-title">🚗 BUY NOW OPTION</div>
-                                <div class="buy-now-price">£${car?.buyNowPrice?.toLocaleString()}</div>
-                                <p>Secure this vehicle immediately with Buy Now before the listing expires.</p>
+                                <div class="buy-now-title">💰 BUY NOW OPTION</div>
+                                <div class="buy-now-price">${formatNOK(auction?.buyNowPrice)}</div>
+                                <p>Secure this item immediately with Buy Now before the listing expires.</p>
                                 <p style="margin: 15px 0;">
-                                    <a href="${
-                                      process.env.FRONTEND_URL
-                                    }/auction/${
-                                    car._id
-                                  }" class="cta-button">BUY NOW</a>
+                                    <a href="${process.env.FRONTEND_URL}/auction/${auction._id}" class="cta-button">BUY NOW</a>
                                 </p>
                             </div>
-                            `
-                                : ""
-                            }
+                            ` : ""}
                             
+                            ${auction?.allowOffers ? `
                             <div class="offer-box">
-                                <div class="offer-title">💰 MAKE AN OFFER</div>
+                                <div class="offer-title">💬 MAKE AN OFFER</div>
                                 <p>Submit your best offer before the listing expires. The seller has limited time to respond.</p>
                                 <p style="margin: 15px 0;">
-                                    <a href="${
-                                      process.env.FRONTEND_URL
-                                    }/auction/${
-        car._id
-      }" class="cta-button">MAKE AN OFFER</a>
+                                    <a href="${process.env.FRONTEND_URL}/auction/${auction._id}" class="cta-button">MAKE AN OFFER</a>
                                 </p>
                             </div>
+                            ` : ""}
                             
                             <p style="text-align: center; margin: 25px 0;">
-                                <a href="${process.env.FRONTEND_URL}/auction/${
-        car._id
-      }" class="cta-button">VIEW LISTING NOW</a>
+                                <a href="${process.env.FRONTEND_URL}/auction/${auction._id}" class="cta-button">VIEW LISTING NOW</a>
                             </p>
                             
-                            <p><em>This is your final chance to secure this vehicle before it's gone forever!</em></p>
+                            <p><em>This is your final chance to secure this item before it's gone forever!</em></p>
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">You're receiving this email because you showed interest in this vehicle.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
-                            <p class="footer-text">Don't miss out on your dream car - act before time runs out!</p>
+                            <p class="footer-text">You're receiving this email because you showed interest in this item.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
+                            <p class="footer-text">Don't miss out - act before time runs out!</p>
                         </div>
                     </div>
                 </body>
@@ -2091,7 +1750,7 @@ const auctionEndingSoonEmail = async (
 const paymentSuccessEmail = async (user, auction, paymentAmount) => {
   try {
     const info = await transporter.sendMail({
-      from: `"PlaneVault" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: user.email,
       subject: `Payment Confirmed - ${auction.title}`,
       html: `
@@ -2102,6 +1761,7 @@ const paymentSuccessEmail = async (user, auction, paymentAmount) => {
                         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
                         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
                         .logo { width: auto; height: 48px; margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .confirmation { background: #d4edda; padding: 20px; border-radius: 5px; text-align: center; margin: 20px 0; }
                         .payment-details { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
                         .amount { font-size: 24px; font-weight: bold; color: #155724; }
@@ -2110,60 +1770,30 @@ const paymentSuccessEmail = async (user, auction, paymentAmount) => {
                 <body>
                     <div class="container">
                         <div class="confirmation">
-                            <img src="${
-                              process.env.FRONTEND_URL
-                            }/logo.png" alt="PlaneVault Logo" class="logo">
+                            <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
+                            <div class="brand-name">BidNordic</div>
                             <h2>✅ Payment Successful</h2>
                             <p>Your payment has been processed successfully</p>
                         </div>
                         
-                        <p>Dear <strong>${
-                          user.firstName || user.username
-                        }</strong>,</p>
+                        <p>Dear <strong>${user.firstName || user.username}</strong>,</p>
                         
                         <div class="payment-details">
                             <h4>Payment Details:</h4>
                             <p><strong>Item:</strong> ${auction.title}</p>
-                            <p class="amount">$${auction?.commissionAmount?.toLocaleString()}</p>
+                            <p class="amount">${formatNOK(auction?.commissionAmount || 0)}</p>
                             <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
                         </div>
 
-                        ${
-                          auction.status === "sold"
-                            ? `
-                            <p>Congratulations on being the highest bidder and winning this auction! Now, you can reach out to ${
-                              auction.seller.firstName ||
-                              auction.seller.username
-                            } on the following details and follow up to arrange payment and transfer details.</p>
+                        ${auction.status === "sold" || auction.status === "sold_buy_now" ? `
+                            <p>Congratulations on being the highest bidder and winning this auction! Now, you can reach out to ${auction.seller?.firstName || auction.seller?.username} on the following details and follow up to arrange payment and transfer details.</p>
 
-                            ${
-                              auction.seller
-                                ? `<p><strong>Seller:</strong> ${
-                                    auction.seller.firstName ||
-                                    auction.seller.username
-                                  }</p>`
-                                : ""
-                            }
+                            ${auction.seller ? `<p><strong>Seller:</strong> ${auction.seller?.firstName || auction.seller?.username}</p>` : ""}
 
-                            ${
-                              auction.seller
-                                ? `<p><strong>E-mail:</strong> ${auction.seller?.email}</p>`
-                                : ""
-                            }
+                            ${auction.seller ? `<p><strong>E-mail:</strong> ${auction.seller?.email}</p>` : ""}
 
-                            ${
-                              auction.seller
-                                ? `<p><strong>Phone:</strong> ${auction.seller?.phone}</p>`
-                                : ""
-                            }
-                        `
-                            : `
-                            <p></p>
-                        `
-                        }
-                        
-                        <p>The hold we created on your card on the first bid has been successfully released and the commission/fee has been charged. Now, you can proceed to contacat the seller.</p>
-                        
+                            ${auction.seller ? `<p><strong>Phone:</strong> ${auction.seller?.phone || 'Not provided'}</p>` : ""}
+                        ` : ``}                        
                         <p>You can check your order and contact the seller from your dashboard.</p>
                         
                         <p>Thank you for your purchase!</p>
@@ -2181,16 +1811,23 @@ const paymentSuccessEmail = async (user, auction, paymentAmount) => {
   }
 };
 
-const paymentCompletedEmail = async (user, car, paymentAmount) => {
+const paymentCompletedEmail = async (user, auction, paymentAmount) => {
   try {
-    const specs = car.specifications
-      ? Object.fromEntries(car.specifications)
-      : {};
+    const finalPrice = auction?.finalPrice || auction?.currentPrice || 0;
+    const commissionAmount = auction?.commissionAmount || 0;
+    const totalAmount = finalPrice + commissionAmount;
+    
+    let commissionDisplay = '';
+    if (auction.commissionType === 'fixed') {
+      commissionDisplay = `Fixed Fee (${formatNOK(commissionAmount)})`;
+    } else if (auction.commissionType === 'percentage') {
+      commissionDisplay = `${auction.commissionValue}% Fee (${formatNOK(commissionAmount)})`;
+    }
 
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: user?.email,
-      subject: `✅ Payment Completed - ${specs?.year} ${car?.title}`,
+      subject: `✅ Payment Confirmed - ${auction?.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -2199,7 +1836,7 @@ const paymentCompletedEmail = async (user, car, paymentAmount) => {
                         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
-                        .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .confirmation-box { 
@@ -2216,32 +1853,26 @@ const paymentCompletedEmail = async (user, car, paymentAmount) => {
                             color: #155724;
                             margin-bottom: 10px;
                         }
-                        .payment-box { 
+                        .payment-summary { 
                             background: #f8f9fa; 
                             padding: 25px; 
                             border-radius: 8px; 
                             margin: 25px 0; 
                             border-left: 4px solid #edcd1f;
-                            text-align: center;
                         }
-                        .payment-amount { 
-                            font-size: 36px; 
-                            font-weight: bold; 
-                            color: #1e2d3b; 
-                            margin: 15px 0;
-                        }
-                        .payment-amount span { color: #edcd1f; }
-                        .payment-details { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
-                        .detail-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
-                        .detail-label { color: #666; font-size: 14px; margin-bottom: 5px; }
-                        .detail-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
+                        .item-title { font-size: 22px; color: #1e2d3b; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .amount-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e9ecef; }
+                        .amount-row.total { border-bottom: none; font-weight: bold; font-size: 18px; margin-top: 10px; color: #1e2d3b; }
+                        .amount-label { color: #666; }
+                        .amount-value { font-weight: bold; }
+                        .commission-note { background: #e8f4fd; padding: 10px; border-radius: 4px; margin: 15px 0; font-size: 14px; color: #004085; text-align: center; }
                         .seller-info { background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 25px 0; border: 1px solid #bbdefb; }
-                        .seller-title { color: #0d47a1; font-size: 18px; margin-bottom: 15px; font-weight: bold; }
+                        .seller-title { color: #0d47a1; font-size: 18px; margin-bottom: 15px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
                         .contact-details { background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; }
                         .contact-link { color: #1e2d3b; text-decoration: none; font-weight: bold; }
                         .contact-link:hover { color: #edcd1f; text-decoration: underline; }
                         .next-steps { background: #fff3cd; padding: 20px; border-radius: 8px; margin: 25px 0; border: 1px solid #ffeaa7; }
-                        .steps-title { color: #856404; font-size: 18px; margin-bottom: 15px; font-weight: bold; }
+                        .steps-title { color: #856404; font-size: 18px; margin-bottom: 15px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
                         .dashboard-box { background: #edcd1f; color: #1e2d3b; padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center; }
                         .dashboard-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; }
                         .cta-button { 
@@ -2263,119 +1894,85 @@ const paymentCompletedEmail = async (user, car, paymentAmount) => {
                 <body>
                     <div class="container">
                         <div class="header">
-                            <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
-                            </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
                             <div class="confirmation-box">
                                 <div class="confirmation-title">✅ PAYMENT CONFIRMED</div>
-                                <p style="font-size: 18px; color: #155724;">The seller has marked your payment as completed</p>
+                                <p style="font-size: 18px; color: #155724;">Thank you for your payment, ${user?.firstName || user?.username}!</p>
                             </div>
                             
-                            <p>Dear <span class="highlight">${
-                              user?.firstName || user?.username
-                            }</span>,</p>
-                            <p>Great news! The seller has confirmed receipt of your payment for the vehicle purchase.</p>
+                            <p>Dear <span class="highlight">${user?.firstName || user?.username}</span>,</p>
+                            <p>Great news! Your payment has been successfully processed and confirmed. We've now shared your contact details with the seller so they can reach out to arrange collection/delivery of your item.</p>
                             
-                            <div class="payment-box">
-                                <div class="car-title" style="font-size: 22px; color: #1e2d3b; margin-bottom: 15px;">${
-                                  specs?.year
-                                } ${car?.title}</div>
+                            <div class="payment-summary">
+                                <div class="item-title">${auction?.title}</div>
+                                ${auction.subTitle ? `<p style="text-align: center; color: #666; margin-bottom: 20px;">${auction.subTitle}</p>` : ''}
                                 
-                                <div class="payment-amount">
-                                    <span>£${paymentAmount?.toLocaleString()}</span>
+                                <div class="amount-row">
+                                    <span class="amount-label">Item Price:</span>
+                                    <span class="amount-value">${formatNOK(finalPrice)}</span>
                                 </div>
-                                
-                                <div class="payment-details">
-                                    <div class="detail-item">
-                                        <div class="detail-label">Payment Status</div>
-                                        <div class="detail-value" style="color: #28a745;">COMPLETED</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label">Confirmation Date</div>
-                                        <div class="detail-value">${new Date().toLocaleDateString()}</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label">Vehicle Price</div>
-                                        <div class="detail-value">£${car?.finalPrice?.toLocaleString()}</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label">Auction Type</div>
-                                        <div class="detail-value">${
-                                          car?.auctionType
-                                        }</div>
-                                    </div>
+                                <div class="amount-row">
+                                    <span class="amount-label">${auction.commissionType === 'fixed' ? 'Platform Fee (Fixed)' : 'Platform Fee (Percentage)'}:</span>
+                                    <span class="amount-value">${formatNOK(commissionAmount)}</span>
+                                </div>
+                                <div class="commission-note">
+                                    ⚡ ${auction.commissionType === 'fixed' 
+                                        ? `A fixed fee of ${formatNOK(auction.commissionValue)} applies to this purchase.` 
+                                        : `A ${auction.commissionValue}% platform fee (${formatNOK(commissionAmount)}) applies to this purchase.`}
+                                </div>
+                                <div class="amount-row total">
+                                    <span class="amount-label">Total Amount Paid:</span>
+                                    <span class="amount-value">${formatNOK(totalAmount)}</span>
                                 </div>
                             </div>
                             
                             <div class="seller-info">
-                                <div class="seller-title">📞 SELLER CONTACT INFORMATION</div>
-                                <p>The seller has confirmed your payment. You can now contact them to arrange vehicle collection.</p>
-                                
-                                ${
-                                  car?.seller
-                                    ? `
-                                <div class="contact-details">
-                                    <p><strong>Seller Name:</strong> ${
-                                      car?.seller?.firstName ||
-                                      car?.seller?.username
-                                    }</p>
-                                    ${
-                                      car?.seller?.email
-                                        ? `<p><strong>Email:</strong> <a href="mailto:${car?.seller?.email}" class="contact-link">${car?.seller?.email}</a></p>`
-                                        : ""
-                                    }
-                                    ${
-                                      car?.seller?.phone
-                                        ? `<p><strong>Phone:</strong> <a href="tel:${car?.seller?.phone}" class="contact-link">${car?.seller?.phone}</a></p>`
-                                        : ""
-                                    }
-                                    ${
-                                      car?.seller?.address
-                                        ? `<p><strong>Location:</strong> ${car?.seller?.address}</p>`
-                                        : ""
-                                    }
+                                <div class="seller-title">
+                                    <span>📞 SELLER INFORMATION</span>
                                 </div>
-                                `
-                                    : ""
-                                }
+                                <p>Your payment has been confirmed. Below are the seller's contact details so you can coordinate the collection/delivery of your item.</p>
                                 
-                                <p style="margin-top: 15px;"><strong>Next Step:</strong> Contact the seller within 24 hours to arrange collection/delivery details.</p>
+                                ${auction?.seller ? `
+                                <div class="contact-details">
+                                    <p><strong>Seller Name:</strong> ${auction?.seller?.firstName || auction?.seller?.username}</p>
+                                    ${auction?.seller?.email ? `<p><strong>Email:</strong> <a href="mailto:${auction?.seller?.email}" class="contact-link">${auction?.seller?.email}</a></p>` : ""}
+                                    ${auction?.seller?.phone ? `<p><strong>Phone:</strong> <a href="tel:${auction?.seller?.phone}" class="contact-link">${auction?.seller?.phone}</a></p>` : ""}
+                                    ${auction?.location ? `<p><strong>Item Location:</strong> ${auction?.location}</p>` : ""}
+                                </div>
+                                ` : ""}
+                                
+                                <p style="margin-top: 15px; font-size: 14px;"><strong>Next Step:</strong> Please contact the seller within 48 hours to arrange collection or delivery of your item.</p>
                             </div>
                             
                             <div class="next-steps">
-                                <div class="steps-title">🚗 VEHICLE COLLECTION PROCESS</div>
-                                <p>1. <strong>Contact the seller</strong> - Use the details above to arrange pickup</p>
-                                <p>2. <strong>Schedule collection</strong> - Agree on a date and time</p>
-                                <p>3. <strong>Inspect the vehicle</strong> - Verify condition upon collection</p>
-                                <p>4. <strong>Complete handover</strong> - Sign required documentation</p>
-                                <p>5. <strong>Transfer ownership</strong> - Submit DVLA paperwork</p>
+                                <div class="steps-title">
+                                    <span>📋 WHAT HAPPENS NEXT</span>
+                                </div>
+                                <p>1. <strong>Contact the seller</strong> using the details provided above</p>
+                                <p>2. <strong>Arrange collection/delivery</strong> - Agree on a convenient time and method</p>
+                                <p>3. <strong>Inspect your item</strong> upon collection/delivery</p>
+                                <p>4. <strong>Complete the transaction</strong> by signing any necessary documentation</p>
                             </div>
                             
                             <div class="dashboard-box">
-                                <div class="dashboard-title">📋 VIEW YOUR PURCHASE</div>
-                                <p>You can view your purchase details, download invoices, and track the collection process from your dashboard.</p>
+                                <div class="dashboard-title">📋 MANAGE YOUR PURCHASE</div>
+                                <p>You can view all your won items, download invoices, and track the collection process from your dashboard.</p>
                                 <p style="margin: 15px 0;">
-                                    <a href="${
-                                      process.env.FRONTEND_URL
-                                    }/dashboard/auctions/won" class="cta-button">GO TO MY WINNIGNS</a>
+                                    <a href="${process.env.FRONTEND_URL}/dashboard/auctions/won" class="cta-button">GO TO MY WINS</a>
                                 </p>
                             </div>
                             
-                            <p>For any questions about the collection process or if you encounter issues with the seller, please contact our support team.</p>
+                            <p style="margin-top: 25px;">If you have any questions or encounter any issues when contacting the seller, please don't hesitate to reach out to our support team. We're here to help!</p>
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">This payment confirmation was sent after the seller marked your payment as completed.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
-                            <p class="footer-text">Need assistance? Contact support at ${
-                              process.env.EMAIL_USER || "indo@speedwaysuk.com"
-                            }</p>
+                            <p class="footer-text">This payment confirmation was sent by BidNordic.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
+                            <p class="footer-text">Need assistance? Contact us at ${process.env.EMAIL_USER || "support@bidnordic.com"}</p>
                         </div>
                     </div>
                 </body>
@@ -2383,7 +1980,7 @@ const paymentCompletedEmail = async (user, car, paymentAmount) => {
             `,
     });
 
-    console.log(`✅ Payment completed email sent to ${user?.email}`);
+    console.log(`✅ Payment completed email sent to buyer ${user?.email}`);
     return !!info;
   } catch (error) {
     console.error(`❌ Failed to send payment completed email:`, error);
@@ -2391,12 +1988,170 @@ const paymentCompletedEmail = async (user, car, paymentAmount) => {
   }
 };
 
+const paymentCompletedSellerEmail = async (seller, auction, buyer) => {
+  try {
+    const finalPrice = auction?.finalPrice || auction?.currentPrice || 0;
+
+    const info = await transporter.sendMail({
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
+      to: seller?.email,
+      subject: `💰 Payment Received - ${auction?.title}`,
+      html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+                        .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
+                        .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
+                        .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
+                        .content { padding: 25px; }
+                        .success-box { 
+                            background: #d4edda; 
+                            padding: 25px; 
+                            border-radius: 8px; 
+                            margin: 20px 0; 
+                            border: 2px solid #c3e6cb;
+                            text-align: center;
+                        }
+                        .success-title { 
+                            font-size: 26px; 
+                            font-weight: bold; 
+                            color: #155724;
+                            margin-bottom: 10px;
+                        }
+                        .payment-summary { 
+                            background: #f8f9fa; 
+                            padding: 25px; 
+                            border-radius: 8px; 
+                            margin: 25px 0; 
+                            border-left: 4px solid #edcd1f;
+                        }
+                        .item-title { font-size: 22px; color: #1e2d3b; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .amount-row { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #e9ecef; }
+                        .amount-row.total { border-bottom: none; font-weight: bold; font-size: 20px; margin-top: 10px; color: #1e2d3b; }
+                        .amount-label { color: #666; }
+                        .amount-value { font-weight: bold; }
+                        .buyer-info { background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 25px 0; border: 1px solid #bbdefb; }
+                        .buyer-title { color: #0d47a1; font-size: 18px; margin-bottom: 15px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+                        .contact-details { background: #ffffff; padding: 15px; border-radius: 6px; margin: 15px 0; }
+                        .contact-link { color: #1e2d3b; text-decoration: none; font-weight: bold; }
+                        .contact-link:hover { color: #edcd1f; text-decoration: underline; }
+                        .next-steps { background: #fff3cd; padding: 20px; border-radius: 8px; margin: 25px 0; border: 1px solid #ffeaa7; }
+                        .steps-title { color: #856404; font-size: 18px; margin-bottom: 15px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+                        .dashboard-box { background: #edcd1f; color: #1e2d3b; padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center; }
+                        .dashboard-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; }
+                        .cta-button { 
+                            background: #1e2d3b; 
+                            color: #ffffff !important; 
+                            padding: 14px 30px; 
+                            text-decoration: none; 
+                            border-radius: 6px; 
+                            display: inline-block; 
+                            font-weight: bold; 
+                            font-size: 16px;
+                            margin: 10px 0;
+                        }
+                        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #e9ecef; margin-top: 25px; }
+                        .footer-text { margin: 5px 0; }
+                        .highlight { color: #edcd1f; font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
+                        </div>
+                        
+                        <div class="content">
+                            <div class="success-box">
+                                <div class="success-title">💰 PAYMENT RECEIVED</div>
+                                <p style="font-size: 18px; color: #155724;">Great news, ${seller?.firstName || seller?.username}!</p>
+                            </div>
+                            
+                            <p>Dear <span class="highlight">${seller?.firstName || seller?.username}</span>,</p>
+                            <p>We're pleased to inform you that the buyer has successfully completed payment for your item. The funds have been received and confirmed by our platform.</p>
+                            
+                            <div class="payment-summary">
+                                <div class="item-title">${auction?.title}</div>
+                                ${auction.subTitle ? `<p style="text-align: center; color: #666; margin-bottom: 20px;">${auction.subTitle}</p>` : ''}
+                                
+                                <div class="amount-row total">
+                                    <span class="amount-label">Final Sale Price:</span>
+                                    <span class="amount-value">${formatNOK(finalPrice)}</span>
+                                </div>
+                                
+                                <p style="margin-top: 15px; font-size: 14px; color: #666; text-align: center;">
+                                    *Platform fees will be processed separately. View your dashboard for detailed payout information.
+                                </p>
+                            </div>
+                            
+                            <div class="buyer-info">
+                                <div class="buyer-title">
+                                    <span>👤 BUYER INFORMATION</span>
+                                </div>
+                                <p>The buyer is now ready to coordinate collection/delivery. Here are their contact details:</p>
+                                
+                                ${buyer ? `
+                                <div class="contact-details">
+                                    <p><strong>Buyer Name:</strong> ${buyer?.firstName || buyer?.username} ${buyer?.lastName || ''}</p>
+                                    ${buyer?.email ? `<p><strong>Email:</strong> <a href="mailto:${buyer?.email}" class="contact-link">${buyer?.email}</a></p>` : ""}
+                                    ${buyer?.phone ? `<p><strong>Phone:</strong> <a href="tel:${buyer?.phone}" class="contact-link">${buyer?.phone}</a></p>` : ""}
+                                    ${buyer?.address ? `<p><strong>Address:</strong> ${buyer?.address?.street ? `${buyer?.address?.street}, ` : ''}${buyer?.address?.city || ''} ${buyer?.address?.postCode || ''} ${buyer?.address?.country || ''}</p>` : ""}
+                                </div>
+                                ` : ""}
+                                
+                                <p style="margin-top: 15px; font-size: 14px;"><strong>Next Step:</strong> Please reach out to the buyer within 24-48 hours to arrange collection or delivery of the item.</p>
+                            </div>
+                            
+                            <div class="next-steps">
+                                <div class="steps-title">
+                                    <span>📋 YOUR NEXT STEPS</span>
+                                </div>
+                                <p>1. <strong>Contact the buyer</strong> using the details provided above</p>
+                                <p>2. <strong>Arrange collection/delivery</strong> - Agree on a convenient time and method</p>
+                                <p>3. <strong>Prepare the item</strong> for handover with any relevant documentation</p>
+                                <p>4. <strong>Complete the handover</strong> and have the buyer sign any necessary documentation</p>
+                            </div>
+                            
+                            <div class="dashboard-box">
+                                <div class="dashboard-title">📋 MANAGE YOUR SALE</div>
+                                <p>You can view all your sold items, track payouts, and manage the collection process from your dashboard.</p>
+                                <p style="margin: 15px 0;">
+                                    <a href="${process.env.FRONTEND_URL}/dashboard/auctions/sold" class="cta-button">VIEW SOLD ITEMS</a>
+                                </p>
+                            </div>
+                            
+                            <p style="margin-top: 25px;">If you encounter any issues when contacting the buyer or need assistance with the handover process, please reach out to our support team. We're here to help ensure a smooth transaction!</p>
+                        </div>
+                        
+                        <div class="footer">
+                            <p class="footer-text">This payment confirmation was sent by BidNordic.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
+                            <p class="footer-text">Need assistance? Contact us at ${process.env.EMAIL_USER || "support@bidnordic.com"}</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `,
+    });
+
+    console.log(`✅ Payment completed email sent to seller ${seller?.email}`);
+    return !!info;
+  } catch (error) {
+    console.error(`❌ Failed to send payment completed email to seller:`, error);
+    return false;
+  }
+};
+
 const welcomeEmail = async (user) => {
   try {
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: user.email,
-      subject: `🚗 Welcome to SpeedWays Auto!`,
+      subject: `👋 Welcome to BidNordic!`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -2406,6 +2161,7 @@ const welcomeEmail = async (user) => {
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .welcome-box { 
@@ -2450,8 +2206,6 @@ const welcomeEmail = async (user) => {
                         }
                         .account-info { background: #d4edda; padding: 20px; border-radius: 8px; margin: 25px 0; border: 1px solid #c3e6cb; }
                         .info-title { color: #155724; font-size: 18px; margin-bottom: 15px; font-weight: bold; }
-                        .verification-box { background: #fff3cd; padding: 20px; border-radius: 8px; margin: 25px 0; border: 1px solid #ffeaa7; }
-                        .verification-title { color: #856404; font-size: 18px; margin-bottom: 15px; font-weight: bold; }
                         .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #e9ecef; margin-top: 25px; }
                         .footer-text { margin: 5px 0; }
                         .highlight { color: #edcd1f; font-weight: bold; }
@@ -2461,41 +2215,46 @@ const welcomeEmail = async (user) => {
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
                             <div class="welcome-box">
-                                <div class="welcome-title">🚗 WELCOME TO SPEEDWAYS Auto!</div>
-                                <p style="font-size: 18px; color: #1e2d3b;">Your premier destination for premium vehicle auctions</p>
+                                <div class="welcome-title">👋 WELCOME TO BIDNORDIC!</div>
+                                <p style="font-size: 18px; color: #1e2d3b;">Your premier destination for online auctions in the Nordics</p>
                             </div>
                             
                             <div class="user-greeting">
-                                Hello <span>${
-                                  user.firstName || user.username
-                                }</span>!
+                                Hello <span>${user.firstName || user.username}</span>!
                             </div>
                             
-                            <p>We're thrilled to welcome you to SpeedWays Auto, where you'll find exceptional vehicles and unbeatable deals. Your account has been successfully created.</p>
+                            <p>We're thrilled to welcome you to BidNordic, where you'll discover exceptional items and great deals across multiple categories. Your account has been successfully created.</p>
                             
                             <div class="features-box">
                                 <div class="features-title">🎯 GET STARTED TODAY</div>
                                 <div class="features-grid">
                                     <div class="feature-item">
                                         <div class="feature-icon">🔍</div>
-                                        <div class="feature-text">Browse Vehicles</div>
+                                        <div class="feature-text">Browse Items</div>
                                     </div>
                                     <div class="feature-item">
                                         <div class="feature-icon">💰</div>
+                                        <div class="feature-text">Place Bids</div>
+                                    </div>
+                                    <div class="feature-item">
+                                        <div class="feature-icon">📝</div>
                                         <div class="feature-text">Make Offers</div>
                                     </div>
                                     <div class="feature-item">
                                         <div class="feature-icon">🚀</div>
-                                        <div class="feature-text">Buy Now Option</div>
+                                        <div class="feature-text">Buy Now</div>
+                                    </div>
+                                    <div class="feature-item">
+                                        <div class="feature-icon">⭐</div>
+                                        <div class="feature-text">Watchlist</div>
                                     </div>
                                     <div class="feature-item">
                                         <div class="feature-icon">📱</div>
@@ -2506,28 +2265,20 @@ const welcomeEmail = async (user) => {
                             
                             <div class="account-info">
                                 <div class="info-title">✅ ACCOUNT DETAILS</div>
-                                <p><strong>Username:</strong> ${
-                                  user.username
-                                }</p>
+                                <p><strong>Name:</strong> ${user.firstName || ''} ${user.lastName || ''}</p>
                                 <p><strong>Email:</strong> ${user.email}</p>
-                                <p><strong>Account Type:</strong> ${
-                                  user.userType || "Bidder"
-                                }</p>
+                                <p><strong>Account Type:</strong> ${user.userType || "Bidder"}</p>
                                 <p><strong>Member Since:</strong> ${new Date().toLocaleDateString()}</p>
                             </div>
                             
                             <div class="cta-box">
                                 <div class="cta-title">🚀 READY TO EXPLORE?</div>
-                                <p>Start browsing our premium selection of vehicles or complete your profile to get the most out of your SpeedWays Auto experience.</p>
+                                <p>Start browsing our diverse selection of items or complete your profile to get the most out of your BidNordic experience.</p>
                                 <p style="margin: 15px 0;">
-                                    <a href="${process.env.FRONTEND_URL}/${
-        user?.userType
-      }/profile" class="cta-button">GO TO PROFILE</a>
+                                    <a href="${process.env.FRONTEND_URL}/${user?.userType}/profile" class="cta-button">GO TO PROFILE</a>
                                 </p>
                                 <p style="margin: 15px 0;">
-                                    <a href="${
-                                      process.env.FRONTEND_URL
-                                    }/auctions" class="cta-button" style="background: #ffffff; color: #1e2d3b !important; border: 2px solid #1e2d3b;">BROWSE VEHICLES</a>
+                                    <a href="${process.env.FRONTEND_URL}/auctions" class="cta-button" style="background: #ffffff; color: #1e2d3b !important; border: 2px solid #1e2d3b;">BROWSE AUCTIONS</a>
                                 </p>
                             </div>
                             
@@ -2535,11 +2286,9 @@ const welcomeEmail = async (user) => {
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">Welcome to the SpeedWays Auto community - where your dream car awaits!</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
-                            <p class="footer-text">Questions? Contact us at ${
-                              process.env.EMAIL_USER || "info@speedwaysuk.com"
-                            }</p>
+                            <p class="footer-text">Welcome to the BidNordic community - where your next great find awaits!</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
+                            <p class="footer-text">Questions? Contact us at ${process.env.EMAIL_USER || "admin@bidnordic.com"}</p>
                         </div>
                     </div>
                 </body>
@@ -2555,67 +2304,12 @@ const welcomeEmail = async (user) => {
   }
 };
 
-// const verificationEmail = async (user, verificationUrl) => {
-//     try {
-//         const info = await transporter.sendMail({
-//             from: `"PlaneVault" <${process.env.EMAIL_USER}>`,
-//             to: user.email,
-//             subject: `Verify Your PlaneVault Account`,
-//             html: `
-//                 <!DOCTYPE html>
-//                 <html>
-//                 <head>
-//                     <style>
-//                         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-//                         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-//                         .header { background: #e3f2fd; padding: 20px; border-radius: 5px; text-align: center; margin: 20px 0; }
-//                         .cta-button { background: #000; color: #fff !important; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold; }
-//                         .note { background: #fff3cd; padding: 10px; border-radius: 5px; margin: 15px 0; }
-//                     </style>
-//                 </head>
-//                 <body>
-//                     <div class="container">
-//                         <div class="header">
-//                             <h2>Verify Your Account</h2>
-//                             <p>One more step to complete your registration</p>
-//                         </div>
-
-//                         <p>Dear <strong>${user.firstName || user.username}</strong>,</p>
-
-//                         <p>Thank you for registering with PlaneVault! To complete your registration and access all features, please verify your email address.</p>
-
-//                         <p style="text-align: center; margin: 25px 0;">
-//                             <a href="${verificationUrl}" class="cta-button">Verify Email Address</a>
-//                         </p>
-
-//                         <div class="note">
-//                             <p><strong>Note:</strong> This verification link will expire in 24 hours.</p>
-//                         </div>
-
-//                         <p>If the button doesn't work, copy and paste this link into your browser:</p>
-//                         <p><a href="${verificationUrl}">${verificationUrl}</a></p>
-
-//                         <p>If you didn't create an account with PlaneVault, please ignore this email.</p>
-//                     </div>
-//                 </body>
-//                 </html>
-//             `,
-//         });
-
-//         console.log(`✅ Verification email sent to ${user.email}`);
-//         return !!info;
-//     } catch (error) {
-//         console.error(`❌ Failed to send verification email:`, error);
-//         return false;
-//     }
-// };
-
 const resetPasswordEmail = async (email, url) => {
   try {
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: `🔒 Reset Your SpeedWays Auto Password`,
+      subject: `🔒 Reset Your BidNordic Password`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -2625,6 +2319,7 @@ const resetPasswordEmail = async (email, url) => {
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .security-box { 
@@ -2677,17 +2372,16 @@ const resetPasswordEmail = async (email, url) => {
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
                             <div class="security-box">
                                 <div class="security-title">🔒 PASSWORD RESET REQUEST</div>
-                                <p style="font-size: 18px; color: #1e2d3b;">We received a request to reset your SpeedWays Auto password</p>
+                                <p style="font-size: 18px; color: #1e2d3b;">We received a request to reset your BidNordic password</p>
                             </div>
                             
                             <div class="instruction-box">
@@ -2721,12 +2415,12 @@ const resetPasswordEmail = async (email, url) => {
                                 <p>• Don't reuse passwords from other websites</p>
                             </div>
                             
-                            <p>After resetting your password, you can log in to your SpeedWays Auto account and continue browsing our premium vehicle selection.</p>
+                            <p>After resetting your password, you can log in to your BidNordic account and continue browsing our diverse selection of items.</p>
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">This is an automated security email from SpeedWays Auto.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
+                            <p class="footer-text">This is an automated security email from BidNordic.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
                             <p class="footer-text">If you need further assistance, contact our support team.</p>
                         </div>
                     </div>
@@ -2744,7 +2438,7 @@ const resetPasswordEmail = async (email, url) => {
 const newUserRegistrationEmail = async (adminEmail, user) => {
   try {
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: adminEmail,
       subject: `👤 New User Registration - ${user.userType || "Bidder"}`,
       html: `
@@ -2756,6 +2450,7 @@ const newUserRegistrationEmail = async (adminEmail, user) => {
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .notification-box { 
@@ -2779,16 +2474,8 @@ const newUserRegistrationEmail = async (adminEmail, user) => {
                         .detail-label { color: #666; font-size: 14px; margin-bottom: 5px; }
                         .detail-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
                         .user-type-badge { 
-                            background: ${
-                              (user.userType || "bidder") === "seller"
-                                ? "#edcd1f"
-                                : "#1e2d3b"
-                            }; 
-                            color: ${
-                              (user.userType || "bidder") === "seller"
-                                ? "#1e2d3b"
-                                : "#ffffff"
-                            }; 
+                            background: ${(user.userType || "bidder") === "seller" ? "#edcd1f" : "#1e2d3b"}; 
+                            color: ${(user.userType || "bidder") === "seller" ? "#1e2d3b" : "#ffffff"}; 
                             padding: 6px 15px; 
                             border-radius: 20px; 
                             font-size: 13px; 
@@ -2819,21 +2506,20 @@ const newUserRegistrationEmail = async (adminEmail, user) => {
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
                             <div class="notification-box">
                                 <div class="notification-title">👤 NEW USER REGISTRATION</div>
-                                <p style="font-size: 18px; color: #1e2d3b;">A new user has joined SpeedWays Auto</p>
+                                <p style="font-size: 18px; color: #1e2d3b;">A new user has joined BidNordic</p>
                             </div>
                             
                             <p><strong>Hello Admin,</strong></p>
-                            <p>A new user has successfully registered on SpeedWays Auto. Here are the user details:</p>
+                            <p>A new user has successfully registered on BidNordic. Here are the user details:</p>
                             
                             <div class="user-card">
                                 <div class="user-title">USER INFORMATION</div>
@@ -2841,49 +2527,34 @@ const newUserRegistrationEmail = async (adminEmail, user) => {
                                 <div class="user-details">
                                     <div class="detail-item">
                                         <div class="detail-label">Full Name</div>
-                                        <div class="detail-value">${
-                                          user.firstName || ""
-                                        } ${user.lastName || ""}</div>
+                                        <div class="detail-value">${user.firstName || ""} ${user.lastName || ""}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Username</div>
-                                        <div class="detail-value">${
-                                          user.username
-                                        }</div>
+                                        <div class="detail-value">${user.username}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Email Address</div>
-                                        <div class="detail-value">${
-                                          user.email
-                                        }</div>
+                                        <div class="detail-value">${user.email}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Account Type</div>
                                         <div class="detail-value">
-                                            ${
-                                              (user.userType || "bidder")
-                                                .charAt(0)
-                                                .toUpperCase() +
-                                              (user.userType || "bidder").slice(
-                                                1
-                                              )
-                                            }
-                                            <span class="user-type-badge">${(
-                                              user.userType || "bidder"
-                                            ).toUpperCase()}</span>
+                                            ${(user.userType || "bidder").charAt(0).toUpperCase() + (user.userType || "bidder").slice(1)}
+                                            <span class="user-type-badge">${(user.userType || "bidder").toUpperCase()}</span>
                                         </div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Phone Number</div>
-                                        <div class="detail-value">${
-                                          user.phone || "Not provided"
-                                        }</div>
+                                        <div class="detail-value">${user.phone || "Not provided"}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">Country</div>
+                                        <div class="detail-value">${user.countryName || "Not provided"}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Registration Date</div>
-                                        <div class="detail-value">${new Date(
-                                          user.createdAt || new Date()
-                                        ).toLocaleString()}</div>
+                                        <div class="detail-value">${new Date(user.createdAt || new Date()).toLocaleString()}</div>
                                     </div>
                                 </div>
                             </div>
@@ -2892,16 +2563,14 @@ const newUserRegistrationEmail = async (adminEmail, user) => {
                                 <div class="actions-title">⚡ ADMIN ACTIONS</div>
                                 <p>You can review this user's account, verify their details, or take necessary actions from the admin panel.</p>
                                 <p style="text-align: center;">
-                                    <a href="${
-                                      process.env.FRONTEND_URL
-                                    }/admin/users" class="cta-button" style="background: #1e2d3b; color: #ffffff !important;">GO TO USER MANAGEMENT</a>
+                                    <a href="${process.env.FRONTEND_URL}/admin/users" class="cta-button" style="background: #1e2d3b; color: #ffffff !important;">GO TO USER MANAGEMENT</a>
                                 </p>
                             </div>
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">This is an automated notification from SpeedWays Auto Admin System.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
+                            <p class="footer-text">This is an automated notification from BidNordic Admin System.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
                             <p class="footer-text">You're receiving this email because you're an administrator.</p>
                         </div>
                     </div>
@@ -2910,9 +2579,7 @@ const newUserRegistrationEmail = async (adminEmail, user) => {
             `,
     });
 
-    console.log(
-      `✅ New user registration email sent to admin for ${user.email}`
-    );
+    console.log(`✅ New user registration email sent to admin for ${user.email}`);
     return !!info;
   } catch (error) {
     console.error(`❌ Failed to send new user registration email:`, error);
@@ -2920,16 +2587,12 @@ const newUserRegistrationEmail = async (adminEmail, user) => {
   }
 };
 
-const auctionWonAdminEmail = async (adminEmail, car, buyer) => {
+const auctionWonAdminEmail = async (adminEmail, auction, buyer) => {
   try {
-    const specs = car.specifications
-      ? Object.fromEntries(car.specifications)
-      : {};
-
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: adminEmail,
-      subject: `🏆 Vehicle Sold - ${specs?.year} ${car?.title}`,
+      subject: `🏆 Item Sold - ${auction?.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -2939,6 +2602,7 @@ const auctionWonAdminEmail = async (adminEmail, car, buyer) => {
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .success-box { 
@@ -2955,8 +2619,8 @@ const auctionWonAdminEmail = async (adminEmail, car, buyer) => {
                             color: #155724;
                             margin-bottom: 10px;
                         }
-                        .vehicle-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
-                        .vehicle-title { color: #1e2d3b; font-size: 22px; margin-bottom: 20px; text-align: center; }
+                        .item-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
+                        .item-title { color: #1e2d3b; font-size: 22px; margin-bottom: 20px; text-align: center; }
                         .sale-amount { 
                             font-size: 36px; 
                             font-weight: bold; 
@@ -2965,7 +2629,7 @@ const auctionWonAdminEmail = async (adminEmail, car, buyer) => {
                             text-align: center;
                         }
                         .sale-amount span { color: #edcd1f; }
-                        .vehicle-details { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .item-details { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
                         .detail-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; }
                         .detail-label { color: #666; font-size: 14px; margin-bottom: 5px; }
                         .detail-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
@@ -2998,100 +2662,63 @@ const auctionWonAdminEmail = async (adminEmail, car, buyer) => {
                         .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #e9ecef; margin-top: 25px; }
                         .footer-text { margin: 5px 0; }
                         .highlight { color: #edcd1f; font-weight: bold; }
+                        .specs-section { margin: 25px 0; }
+                        .specs-title { color: #1e2d3b; font-size: 18px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .spec-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
+                        .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+                        .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
                             <div class="success-box">
-                                <div class="success-title">🏆 VEHICLE SOLD!</div>
-                                <p style="font-size: 18px; color: #155724;">A vehicle has been successfully sold on SpeedWays Auto</p>
+                                <div class="success-title">🏆 ITEM SOLD!</div>
+                                <p style="font-size: 18px; color: #155724;">An item has been successfully sold on BidNordic</p>
                             </div>
                             
                             <p><strong>Hello Admin,</strong></p>
-                            <p>A vehicle listing has been successfully completed with a buyer. Here are the transaction details:</p>
+                            <p>An auction listing has been successfully completed with a buyer. Here are the transaction details:</p>
                             
-                            <div class="vehicle-card">
-                                <div class="vehicle-title">${specs?.year} ${
-        car?.title
-      }</div>
+                            <div class="item-card">
+                                <div class="item-title">${auction?.title}</div>
+                                ${auction.subTitle ? `<p style="text-align: center; color: #666; margin-bottom: 15px;">${auction.subTitle}</p>` : ''}
                                 
                                 <div class="sale-amount">
-                                    <span>£${
-                                      car?.finalPrice?.toLocaleString() ||
-                                      car?.startPrice.toLocaleString() ||
-                                      car?.buyNowPrice.toLocaleString()
-                                    }</span>
+                                    <span>${formatNOK(auction?.finalPrice || auction?.startPrice || auction?.buyNowPrice || 0)}</span>
                                 </div>
                                 
-                                <div class="vehicle-details">
+                                ${auction.specifications ? `
+                                <div class="specs-section">
+                                    <div class="specs-title">📋 Item Details</div>
+                                    ${renderSpecifications(auction.specifications)}
+                                </div>
+                                ` : ''}
+                                
+                                <div class="item-details">
                                     <div class="detail-item">
                                         <div class="detail-label">Sale Type</div>
                                         <div class="detail-value">
-                                            ${car?.auctionType}
-                                            <span class="sale-type-badge">${car?.auctionType?.toUpperCase()}</span>
+                                            ${auction?.auctionType}
+                                            <span class="sale-type-badge">${auction?.auctionType?.toUpperCase()}</span>
                                         </div>
                                     </div>
                                     <div class="detail-item">
-                                        <div class="detail-label">Registration</div>
-                                        <div class="detail-value">${
-                                          specs?.registration || 'N/A'
-                                        }</div>
+                                        <div class="detail-label">Categories</div>
+                                        <div class="detail-value">${auction?.categories?.join(', ') || 'N/A'}</div>
                                     </div>
                                     <div class="detail-item">
-                                        <div class="detail-label">Miles</div>
-                                        <div class="detail-value">${
-                                          specs?.miles || 'N/A'
-                                        }</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label">Year</div>
-                                        <div class="detail-value">${
-                                          specs?.year
-                                        }</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label">Body Type</div>
-                                        <div class="detail-value">${
-                                          specs?.bodyTpe || 'N/A'
-                                        }</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label">Fuel Type</div>
-                                        <div class="detail-value">${specs?.fuelType || 'N/A'}</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label">Colour</div>
-                                        <div class="detail-value">${
-                                          specs?.colour || 'N/A'
-                                        }</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label">Cap Clean</div>
-                                        <div class="detail-value">${
-                                          specs?.capClean || 'N/A'
-                                        }</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label">Previous Owners</div>
-                                        <div class="detail-value">${
-                                          specs?.previousOwners || 'N/A'
-                                        }</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label">Total Offers</div>
-                                        <div class="detail-value">${
-                                          car?.offers?.length || 0
-                                        }</div>
+                                        <div class="detail-label">Total Offers/Bids</div>
+                                        <div class="detail-value">${auction?.offers?.length || auction?.bids?.length || 0}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Sale Date</div>
@@ -3103,9 +2730,7 @@ const auctionWonAdminEmail = async (adminEmail, car, buyer) => {
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Payment</div>
-                                        <div class="detail-value">${
-                                          car?.paymentStatus || "Pending"
-                                        }</div>
+                                        <div class="detail-value">${auction?.paymentStatus || "Pending"}</div>
                                     </div>
                                 </div>
                             </div>
@@ -3115,62 +2740,42 @@ const auctionWonAdminEmail = async (adminEmail, car, buyer) => {
                                 <div class="buyer-details">
                                     <div class="detail-item">
                                         <div class="detail-label">Buyer Name</div>
-                                        <div class="detail-value">${
-                                          buyer?.firstName || buyer?.username
-                                        }</div>
+                                        <div class="detail-value">${buyer?.firstName || buyer?.username}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Username</div>
-                                        <div class="detail-value">${
-                                          buyer?.username
-                                        }</div>
+                                        <div class="detail-value">${buyer?.username}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Email Address</div>
-                                        <div class="detail-value">${
-                                          buyer?.email
-                                        }</div>
+                                        <div class="detail-value">${buyer?.email}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Phone Number</div>
-                                        <div class="detail-value">${
-                                          buyer?.phone || "Not provided"
-                                        }</div>
+                                        <div class="detail-value">${buyer?.phone || "Not provided"}</div>
                                     </div>
                                 </div>
                             </div>
                             
                             <div class="seller-card">
                                 <div class="seller-title">🏪 SELLER INFORMATION</div>
-                                <p><strong>Seller:</strong> ${
-                                  car?.seller?.firstName ||
-                                  car?.seller?.username ||
-                                  "N/A"
-                                }</p>
-                                <p><strong>Email:</strong> ${
-                                  car?.seller?.email || "N/A"
-                                }</p>
-                                ${
-                                  car?.seller?.phone
-                                    ? `<p><strong>Phone:</strong> ${car?.seller.phone}</p>`
-                                    : ""
-                                }
+                                <p><strong>Seller:</strong> ${auction?.seller?.firstName || auction?.seller?.username || "N/A"}</p>
+                                <p><strong>Email:</strong> ${auction?.seller?.email || "N/A"}</p>
+                                ${auction?.seller?.phone ? `<p><strong>Phone:</strong> ${auction?.seller?.phone}</p>` : ""}
                             </div>
                             
                             <div class="admin-actions">
                                 <div class="actions-title">⚡ ADMIN ACTIONS</div>
                                 <p>You can review this sale, generate invoices, or manage the transaction from the admin panel.</p>
                                 <p style="text-align: center; margin: 20px 0;">
-                                    <a href="${
-                                      process.env.FRONTEND_URL
-                                    }/admin/auctions/all" class="cta-button">VIEW</a>
+                                    <a href="${process.env.FRONTEND_URL}/admin/auctions/all" class="cta-button">VIEW IN ADMIN</a>
                                 </p>
                             </div>
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">This is an automated notification from SpeedWays Auto Sales System.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
+                            <p class="footer-text">This is an automated notification from BidNordic Sales System.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
                             <p class="footer-text">You're receiving this email because you're an administrator.</p>
                         </div>
                     </div>
@@ -3179,7 +2784,7 @@ const auctionWonAdminEmail = async (adminEmail, car, buyer) => {
             `,
     });
 
-    console.log(`✅ Listing sold admin email sent for vehicle ${car._id}`);
+    console.log(`✅ Listing sold admin email sent for auction ${auction._id}`);
     return !!info;
   } catch (error) {
     console.error(`❌ Failed to send listing sold admin email:`, error);
@@ -3187,56 +2792,60 @@ const auctionWonAdminEmail = async (adminEmail, car, buyer) => {
   }
 };
 
-const auctionEndedAdminEmail = async (adminEmail, car) => {
+const auctionEndedAdminEmail = async (adminEmail, auction) => {
   try {
     const getStatusDetails = (status) => {
       const statusConfig = {
         sold: {
-          subject: "🏆 Vehicle Sold",
+          subject: "🏆 Item Sold",
           headerColor: "#d4edda",
-          headerText: "Vehicle Successfully Sold",
+          headerText: "Item Successfully Sold",
           statusBadge: "SOLD",
           badgeColor: "#28a745",
-          summary: "This vehicle listing has ended successfully with a buyer.",
+          summary: "This auction listing has ended successfully with a buyer.",
+        },
+        sold_buy_now: {
+          subject: "🏆 Item Sold (Buy Now)",
+          headerColor: "#d4edda",
+          headerText: "Item Successfully Sold via Buy Now",
+          statusBadge: "SOLD",
+          badgeColor: "#28a745",
+          summary: "This item was purchased immediately via Buy Now.",
         },
         expired: {
           subject: "📅 Listing Expired",
           headerColor: "#e2e3e5",
-          headerText: "Vehicle Listing Expired",
+          headerText: "Item Listing Expired",
           statusBadge: "EXPIRED",
           badgeColor: "#6c757d",
-          summary: "This vehicle listing has expired without a sale.",
+          summary: "This listing has expired without a sale.",
         },
         cancelled: {
           subject: "❌ Listing Cancelled",
           headerColor: "#f8d7da",
-          headerText: "Vehicle Listing Cancelled",
+          headerText: "Item Listing Cancelled",
           statusBadge: "CANCELLED",
           badgeColor: "#dc3545",
-          summary: "This vehicle listing was cancelled before completion.",
+          summary: "This listing was cancelled before completion.",
         },
-        removed: {
-          subject: "🗑️ Listing Removed",
-          headerColor: "#f8d7da",
-          headerText: "Vehicle Listing Removed",
-          statusBadge: "REMOVED",
-          badgeColor: "#dc3545",
-          summary: "This vehicle listing was removed from the platform.",
-        },
+        reserve_not_met: {
+          subject: "⚠️ Reserve Not Met",
+          headerColor: "#fff3cd",
+          headerText: "Reserve Price Not Met",
+          statusBadge: "RESERVE NOT MET",
+          badgeColor: "#ffc107",
+          summary: "The auction ended but the reserve price was not met.",
+        }
       };
       return statusConfig[status] || statusConfig["expired"];
     };
 
-    const statusDetails = getStatusDetails(car.status);
-
-    const specs = car.specifications
-      ? Object.fromEntries(car.specifications)
-      : {};
+    const statusDetails = getStatusDetails(auction.status);
 
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: adminEmail,
-      subject: `${statusDetails.subject} - ${specs?.year} ${car?.title}`,
+      subject: `${statusDetails.subject} - ${auction?.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -3246,6 +2855,7 @@ const auctionEndedAdminEmail = async (adminEmail, car) => {
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .status-box { 
@@ -3259,11 +2869,7 @@ const auctionEndedAdminEmail = async (adminEmail, car) => {
                         .status-title { 
                             font-size: 26px; 
                             font-weight: bold; 
-                            color: ${
-                              statusDetails.status === "sold"
-                                ? "#155724"
-                                : "#1e2d3b"
-                            };
+                            color: ${auction.status === "sold" || auction.status === "sold_buy_now" ? "#155724" : "#1e2d3b"};
                             margin-bottom: 10px;
                         }
                         .status-badge { 
@@ -3276,8 +2882,8 @@ const auctionEndedAdminEmail = async (adminEmail, car) => {
                             display: inline-block; 
                             margin: 10px 0;
                         }
-                        .vehicle-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
-                        .vehicle-title { color: #1e2d3b; font-size: 24px; margin-bottom: 20px; text-align: center; }
+                        .item-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
+                        .item-title { color: #1e2d3b; font-size: 24px; margin-bottom: 20px; text-align: center; }
                         .sale-price { 
                             font-size: 36px; 
                             font-weight: bold; 
@@ -3286,7 +2892,7 @@ const auctionEndedAdminEmail = async (adminEmail, car) => {
                             text-align: center;
                         }
                         .sale-price span { color: #edcd1f; }
-                        .vehicle-details { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .item-details { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
                         .detail-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; }
                         .detail-label { color: #666; font-size: 14px; margin-bottom: 5px; }
                         .detail-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
@@ -3311,77 +2917,67 @@ const auctionEndedAdminEmail = async (adminEmail, car) => {
                         .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #e9ecef; margin-top: 25px; }
                         .footer-text { margin: 5px 0; }
                         .highlight { color: #edcd1f; font-weight: bold; }
+                        .specs-section { margin: 25px 0; }
+                        .specs-title { color: #1e2d3b; font-size: 18px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .spec-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
+                        .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+                        .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
                             <div class="status-box">
-                                <div class="status-title">${
-                                  statusDetails.headerText
-                                }</div>
-                                <p style="font-size: 18px;">${
-                                  statusDetails.summary
-                                }</p>
-                                <div class="status-badge">${
-                                  statusDetails.statusBadge
-                                }</div>
+                                <div class="status-title">${statusDetails.headerText}</div>
+                                <p style="font-size: 18px;">${statusDetails.summary}</p>
+                                <div class="status-badge">${statusDetails.statusBadge}</div>
                             </div>
                             
                             <p><strong>Hello Admin,</strong></p>
-                            <p>A vehicle listing on SpeedWays Auto has ended. Here are the details:</p>
+                            <p>An auction listing on BidNordic has ended. Here are the details:</p>
                             
-                            <div class="vehicle-card">
-                                <div class="vehicle-title">${specs?.year} ${
-        car.title
-      }</div>
+                            <div class="item-card">
+                                <div class="item-title">${auction.title}</div>
+                                ${auction.subTitle ? `<p style="text-align: center; color: #666; margin-bottom: 15px;">${auction.subTitle}</p>` : ''}
                                 
-                                ${
-                                  car?.finalPrice
-                                    ? `
+                                ${auction?.finalPrice ? `
                                 <div class="sale-price">
-                                    <span>£${car?.finalPrice?.toLocaleString()}</span>
+                                    <span>${formatNOK(auction?.finalPrice)}</span>
                                 </div>
-                                `
-                                    : ""
-                                }
+                                ` : ""}
                                 
-                                <div class="vehicle-details">
+                                ${auction.specifications ? `
+                                <div class="specs-section">
+                                    <div class="specs-title">📋 Item Details</div>
+                                    ${renderSpecifications(auction.specifications)}
+                                </div>
+                                ` : ''}
+                                
+                                <div class="item-details">
                                     <div class="detail-item">
                                         <div class="detail-label">Listing Type</div>
-                                        <div class="detail-value">${
-                                          car?.auctionType
-                                        }</div>
+                                        <div class="detail-value">${auction?.auctionType}</div>
                                     </div>
                                     <div class="detail-item">
-                                        <div class="detail-label">Vehicle Condition</div>
-                                        <div class="detail-value">${
-                                          specs?.condition
-                                        }</div>
+                                        <div class="detail-label">Categories</div>
+                                        <div class="detail-value">${auction?.categories?.join(', ') || 'N/A'}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Original Price</div>
-                                        <div class="detail-value">£${
-                                          car?.startPrice?.toLocaleString() ||
-                                          car?.buyNowPrice?.toLocaleString()
-                                        }</div>
-                                    </div>
-                                    <div class="detail-item">
-                                        <div class="detail-label">Mileage</div>
-                                        <div class="detail-value">${specs.mileage?.toLocaleString()} miles</div>
+                                        <div class="detail-value">${formatNOK(auction?.startPrice || auction?.buyNowPrice || 0)}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Final Status</div>
-                                        <div class="detail-value">${car?.status.toUpperCase()}</div>
+                                        <div class="detail-value">${auction?.status.toUpperCase()}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Ended On</div>
@@ -3392,92 +2988,54 @@ const auctionEndedAdminEmail = async (adminEmail, car) => {
                             
                             <div class="stats-box">
                                 <div class="stats-title">📊 LISTING STATISTICS</div>
-                                <p>• <strong>Total Offers:</strong> ${
-                                  car?.offers?.length || 0
-                                }</p>
-                                <p>• <strong>Total Views:</strong> ${
-                                  car?.views || 0
-                                }</p>
+                                <p>• <strong>Total Offers/Bids:</strong> ${auction?.offers?.length || auction?.bids?.length || 0}</p>
+                                <p>• <strong>Total Views:</strong> ${auction?.views || 0}</p>
                                 <p>• <strong>Listing Duration:</strong> ${Math.ceil(
-                                  (car?.endDate
-                                    ? new Date(car.endDate) -
-                                      new Date(car.createdAt)
+                                  (auction?.endDate
+                                    ? new Date(auction.endDate) -
+                                      new Date(auction.createdAt)
                                     : 0) /
                                     (1000 * 60 * 60 * 24)
                                 )} days</p>
-                                <p>• <strong>Listing ID:</strong> ${
-                                  car?._id
-                                }</p>
+                                <p>• <strong>Listing ID:</strong> ${auction?._id}</p>
                             </div>
                             
-                            ${
-                              car?.seller
-                                ? `
+                            ${auction?.seller ? `
                             <div class="seller-card">
                                 <div class="seller-title">🏪 SELLER INFORMATION</div>
-                                <p><strong>Seller:</strong> ${
-                                  car?.seller?.firstName ||
-                                  car?.seller?.username
-                                }</p>
-                                <p><strong>Email:</strong> ${
-                                  car?.seller?.email
-                                }</p>
-                                ${
-                                  car?.seller?.phone
-                                    ? `<p><strong>Phone:</strong> ${car?.seller?.phone}</p>`
-                                    : ""
-                                }
+                                <p><strong>Seller:</strong> ${auction?.seller?.firstName || auction?.seller?.username}</p>
+                                <p><strong>Email:</strong> ${auction?.seller?.email}</p>
+                                ${auction?.seller?.phone ? `<p><strong>Phone:</strong> ${auction?.seller?.phone}</p>` : ""}
                             </div>
-                            `
-                                : ""
-                            }
+                            ` : ""}
                             
-                            ${
-                              car.winner && car.status === "sold"
-                                ? `
+                            ${auction.winner && (auction.status === "sold" || auction.status === "sold_buy_now") ? `
                             <div class="buyer-card">
                                 <div class="buyer-title">👤 BUYER INFORMATION</div>
-                                <p><strong>Buyer:</strong> ${
-                                  car?.winner?.firstName ||
-                                  car?.winner?.username
-                                }</p>
-                                <p><strong>Email:</strong> ${
-                                  car?.winner?.email
-                                }</p>
-                                ${
-                                  car?.winner?.phone
-                                    ? `<p><strong>Phone:</strong> ${car?.winner?.phone}</p>`
-                                    : ""
-                                }
+                                <p><strong>Buyer:</strong> ${auction?.winner?.firstName || auction?.winner?.username}</p>
+                                <p><strong>Email:</strong> ${auction?.winner?.email}</p>
+                                ${auction?.winner?.phone ? `<p><strong>Phone:</strong> ${auction?.winner?.phone}</p>` : ""}
                             </div>
-                            `
-                                : ""
-                            }
+                            ` : ""}
                             
-                            ${
-                              car?.status !== "sold"
-                                ? `
+                            ${auction?.status !== "sold" && auction?.status !== "sold_buy_now" ? `
                             <div class="action-alert">
                                 <div class="action-title">⚠️ ADMIN ACTION MAY BE REQUIRED</div>
                                 <p>This listing ended without a sale. Consider:</p>
                                 <p>• Contacting the seller about relisting options</p>
                                 <p>• Reviewing pricing strategy</p>
-                                <p>• Analyzing market demand for similar vehicles</p>
+                                <p>• Analyzing market demand for similar items</p>
                             </div>
-                            `
-                                : ""
-                            }
+                            ` : ""}
                             
                             <p style="text-align: center; margin: 25px 0;">
-                                <a href="${
-                                  process.env.FRONTEND_URL
-                                }/admin/auctions/all" class="cta-button" style="background: #1e2d3b; color: #ffffff !important;">ALL LISTINGS</a>
+                                <a href="${process.env.FRONTEND_URL}/admin/auctions/all" class="cta-button" style="background: #1e2d3b; color: #ffffff !important;">VIEW ALL LISTINGS</a>
                             </p>
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">This is an automated notification from SpeedWays Auto Admin System.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
+                            <p class="footer-text">This is an automated notification from BidNordic Admin System.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
                             <p class="footer-text">You're receiving this email because you're an administrator.</p>
                         </div>
                     </div>
@@ -3487,7 +3045,7 @@ const auctionEndedAdminEmail = async (adminEmail, car) => {
     });
 
     console.log(
-      `✅ Listing ended admin email sent for vehicle ${car?._id} (Status: ${car?.status})`
+      `✅ Listing ended admin email sent for auction ${auction?._id} (Status: ${auction?.status})`
     );
     return !!info;
   } catch (error) {
@@ -3500,18 +3058,14 @@ const flaggedCommentAdminEmail = async (
   adminEmail,
   reason,
   comment,
-  car,
+  auction,
   reportedByUser
 ) => {
   try {
-    const specs = car.specifications
-      ? Object.fromEntries(car.specifications)
-      : {};
-
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: adminEmail,
-      subject: `🚩 Flagged Comment - ${specs?.year} ${car?.title}`,
+      subject: `🚩 Flagged Comment - ${auction?.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -3521,6 +3075,7 @@ const flaggedCommentAdminEmail = async (
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .alert-box { 
@@ -3549,8 +3104,8 @@ const flaggedCommentAdminEmail = async (
                         }
                         .reason-box { background: #f8d7da; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #f5c6cb; }
                         .reason-title { color: #721c24; font-size: 16px; margin-bottom: 10px; font-weight: bold; }
-                        .vehicle-card { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
-                        .vehicle-title { color: #1e2d3b; font-size: 20px; margin-bottom: 15px; text-align: center; }
+                        .item-card { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
+                        .item-title { color: #1e2d3b; font-size: 20px; margin-bottom: 15px; text-align: center; }
                         .comment-card { background: #ffffff; padding: 20px; border-radius: 8px; margin: 25px 0; border: 2px solid #dc3545; }
                         .comment-title { color: #dc3545; font-size: 18px; margin-bottom: 15px; font-weight: bold; }
                         .comment-text { 
@@ -3592,11 +3147,10 @@ const flaggedCommentAdminEmail = async (
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
@@ -3612,18 +3166,13 @@ const flaggedCommentAdminEmail = async (
                             </div>
                             
                             <p><strong>Hello Admin,</strong></p>
-                            <p>A comment on a vehicle listing has been flagged by a community member and requires your review.</p>
+                            <p>A comment on an auction listing has been flagged by a community member and requires your review.</p>
                             
-                            <div class="vehicle-card">
-                                <div class="vehicle-title">${specs?.year} ${
-        car?.title
-      }</div>
+                            <div class="item-card">
+                                <div class="item-title">${auction?.title}</div>
                                 <div class="detail-item" style="text-align: center; background: transparent; border: none;">
-                                    <div class="detail-label">Vehicle Listing</div>
-                                    <div class="detail-value">£${
-                                      car?.startPrice?.toLocaleString() ||
-                                      car?.startPrice?.toLocaleString()
-                                    }</div>
+                                    <div class="detail-label">Auction Listing</div>
+                                    <div class="detail-value">${formatNOK(auction?.startPrice || auction?.startPrice || 0)}</div>
                                 </div>
                             </div>
                             
@@ -3633,17 +3182,8 @@ const flaggedCommentAdminEmail = async (
                                     "${comment?.content}"
                                 </div>
                                 <div class="comment-meta">
-                                    Posted: ${new Date(
-                                      comment.createdAt
-                                    ).toLocaleString()}
-                                    ${
-                                      comment?.updatedAt &&
-                                      comment?.updatedAt !== comment?.createdAt
-                                        ? ` | Last Edited: ${new Date(
-                                            comment?.updatedAt
-                                          ).toLocaleString()}`
-                                        : ""
-                                    }
+                                    Posted: ${new Date(comment.createdAt).toLocaleString()}
+                                    ${comment?.updatedAt && comment?.updatedAt !== comment?.createdAt ? ` | Last Edited: ${new Date(comment?.updatedAt).toLocaleString()}` : ""}
                                 </div>
                             </div>
                             
@@ -3652,31 +3192,19 @@ const flaggedCommentAdminEmail = async (
                                 <div class="user-details">
                                     <div class="detail-item">
                                         <div class="detail-label">Name</div>
-                                        <div class="detail-value">${
-                                          comment?.user?.firstName ||
-                                          comment?.userName ||
-                                          "N/A"
-                                        } ${comment?.user?.lastName || ""}</div>
+                                        <div class="detail-value">${comment?.user?.firstName || comment?.userName || "N/A"} ${comment?.user?.lastName || ""}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Username</div>
-                                        <div class="detail-value">${
-                                          comment?.user?.username ||
-                                          comment?.userName ||
-                                          "N/A"
-                                        }</div>
+                                        <div class="detail-value">${comment?.user?.username || comment?.userName || "N/A"}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Email</div>
-                                        <div class="detail-value">${
-                                          comment?.user?.email || "N/A"
-                                        }</div>
+                                        <div class="detail-value">${comment?.user?.email || "N/A"}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Account Type</div>
-                                        <div class="detail-value">${
-                                          comment?.user?.userType || "N/A"
-                                        }</div>
+                                        <div class="detail-value">${comment?.user?.userType || "N/A"}</div>
                                     </div>
                                 </div>
                             </div>
@@ -3686,27 +3214,19 @@ const flaggedCommentAdminEmail = async (
                                 <div class="user-details">
                                     <div class="detail-item">
                                         <div class="detail-label">Name</div>
-                                        <div class="detail-value">${
-                                          reportedByUser?.firstName
-                                        } ${reportedByUser?.lastName}</div>
+                                        <div class="detail-value">${reportedByUser?.firstName} ${reportedByUser?.lastName}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Username</div>
-                                        <div class="detail-value">${
-                                          reportedByUser?.username
-                                        }</div>
+                                        <div class="detail-value">${reportedByUser?.username}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Email</div>
-                                        <div class="detail-value">${
-                                          reportedByUser?.email
-                                        }</div>
+                                        <div class="detail-value">${reportedByUser?.email}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Account Type</div>
-                                        <div class="detail-value">${
-                                          reportedByUser?.userType
-                                        }</div>
+                                        <div class="detail-value">${reportedByUser?.userType}</div>
                                     </div>
                                 </div>
                                 <div class="comment-meta" style="text-align: center; margin-top: 15px;">
@@ -3718,16 +3238,14 @@ const flaggedCommentAdminEmail = async (
                                 <div class="actions-title">⚡ ADMIN ACTIONS REQUIRED</div>
                                 <p>Review this comment and take appropriate action:</p>
                                 <p style="text-align: center; margin: 20px 0;">
-                                    <a href="${
-                                      process.env.FRONTEND_URL
-                                    }/admin/comments" class="cta-button">REVIEW COMMENTS</a>
+                                    <a href="${process.env.FRONTEND_URL}/admin/comments" class="cta-button">REVIEW COMMENTS</a>
                                 </p>
                             </div>
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">This is an automated notification from SpeedWays Auto Moderation System.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
+                            <p class="footer-text">This is an automated notification from BidNordic Moderation System.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
                             <p class="footer-text">You're receiving this email because you're a moderator/administrator.</p>
                         </div>
                     </div>
@@ -3747,16 +3265,12 @@ const flaggedCommentAdminEmail = async (
 };
 
 // Comment emails
-const newCommentSellerEmail = async (seller, car, comment, commentAuthor) => {
+const newCommentSellerEmail = async (seller, auction, comment, commentAuthor) => {
   try {
-    const specs = car.specifications
-      ? Object.fromEntries(car.specifications)
-      : {};
-
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: seller?.email,
-      subject: `💬 New Comment on Your Vehicle: ${specs?.year} ${car.title}`,
+      subject: `💬 New Comment on Your Listing: ${auction.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -3766,6 +3280,7 @@ const newCommentSellerEmail = async (seller, car, comment, commentAuthor) => {
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .notification-box { 
@@ -3782,8 +3297,8 @@ const newCommentSellerEmail = async (seller, car, comment, commentAuthor) => {
                             color: #1e2d3b;
                             margin-bottom: 10px;
                         }
-                        .vehicle-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
-                        .vehicle-title { color: #1e2d3b; font-size: 24px; margin-bottom: 15px; text-align: center; }
+                        .item-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
+                        .item-title { color: #1e2d3b; font-size: 24px; margin-bottom: 15px; text-align: center; }
                         .price-tag { 
                             font-size: 28px; 
                             font-weight: bold; 
@@ -3832,57 +3347,59 @@ const newCommentSellerEmail = async (seller, car, comment, commentAuthor) => {
                         .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #e9ecef; margin-top: 25px; }
                         .footer-text { margin: 5px 0; }
                         .highlight { color: #edcd1f; font-weight: bold; }
+                        .specs-section { margin: 25px 0; }
+                        .specs-title { color: #1e2d3b; font-size: 18px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .spec-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
+                        .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+                        .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
                             <div class="notification-box">
-                                <div class="notification-title">💬 NEW COMMENT ON YOUR VEHICLE</div>
-                                <p style="font-size: 18px; color: #1e2d3b;">Someone has commented on your vehicle listing</p>
+                                <div class="notification-title">💬 NEW COMMENT ON YOUR LISTING</div>
+                                <p style="font-size: 18px; color: #1e2d3b;">Someone has commented on your auction listing</p>
                             </div>
                             
-                            <p>Dear <span class="highlight">${
-                              seller?.firstName || seller?.username
-                            }</span>,</p>
-                            <p>A potential buyer has posted a comment on your vehicle listing. Engaging with comments can help build trust and answer questions.</p>
+                            <p>Dear <span class="highlight">${seller?.firstName || seller?.username}</span>,</p>
+                            <p>A potential buyer has posted a comment on your auction listing. Engaging with comments can help build trust and answer questions.</p>
                             
-                            <div class="vehicle-card">
-                                <div class="vehicle-title">${specs?.year} ${
-        car?.title
-      }</div>
+                            <div class="item-card">
+                                <div class="item-title">${auction?.title}</div>
+                                ${auction.subTitle ? `<p style="text-align: center; color: #666;">${auction.subTitle}</p>` : ''}
                                 <div class="price-tag">
-                                    <span>£${car?.startPrice?.toLocaleString()}</span>
+                                    <span>${formatNOK(auction?.startPrice)}</span>
                                 </div>
+                                
+                                ${auction.specifications ? `
+                                <div class="specs-section">
+                                    <div class="specs-title">📋 Item Details</div>
+                                    ${renderSpecifications(auction.specifications)}
+                                </div>
+                                ` : ''}
                             </div>
                             
                             <div class="comment-card">
                                 <div class="comment-title">💬 NEW COMMENT RECEIVED</div>
                                 <p style="text-align: center; margin-bottom: 15px;">
-                                    <strong>From:</strong> ${
-                                      commentAuthor?.firstName ||
-                                      commentAuthor?.username
-                                    }
-                                    <span class="author-badge">${(
-                                      commentAuthor?.userType || "Buyer"
-                                    ).toUpperCase()}</span>
+                                    <strong>From:</strong> ${commentAuthor?.firstName || commentAuthor?.username}
+                                    <span class="author-badge">${(commentAuthor?.userType || "User").toUpperCase()}</span>
                                 </p>
                                 <div class="comment-text">
                                     "${comment?.content}"
                                 </div>
                                 <div class="comment-meta">
-                                    Posted: ${new Date(
-                                      comment?.createdAt
-                                    ).toLocaleString()}
+                                    Posted: ${new Date(comment?.createdAt).toLocaleString()}
                                 </div>
                             </div>
                             
@@ -3898,11 +3415,7 @@ const newCommentSellerEmail = async (seller, car, comment, commentAuthor) => {
                                 <div class="cta-title">📱 RESPOND TO THE COMMENT</div>
                                 <p>Reply to this comment to provide additional information or answer questions. Your response will be visible to all potential buyers.</p>
                                 <p style="margin: 20px 0;">
-                                    <a href="${
-                                      process.env.FRONTEND_URL
-                                    }/auction/${
-        car?._id
-      }" class="cta-button">VIEW & RESPOND TO COMMENT</a>
+                                    <a href="${process.env.FRONTEND_URL}/auction/${auction?._id}" class="cta-button">VIEW & RESPOND TO COMMENT</a>
                                 </p>
                             </div>
                             
@@ -3910,8 +3423,8 @@ const newCommentSellerEmail = async (seller, car, comment, commentAuthor) => {
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">You're receiving this email because you're the seller of this vehicle listing.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
+                            <p class="footer-text">You're receiving this email because you're the seller of this auction listing.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
                         </div>
                     </div>
                 </body>
@@ -3927,16 +3440,12 @@ const newCommentSellerEmail = async (seller, car, comment, commentAuthor) => {
   }
 };
 
-const newCommentBidderEmail = async (buyer, car, comment, commentAuthor) => {
+const newCommentBidderEmail = async (buyer, auction, comment, commentAuthor) => {
   try {
-    const specs = car.specifications
-      ? Object.fromEntries(car.specifications)
-      : {};
-
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: buyer?.email,
-      subject: `💬 New Activity on Vehicle: ${specs?.year} ${car?.title}`,
+      subject: `💬 New Activity on Auction: ${auction?.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -3946,6 +3455,7 @@ const newCommentBidderEmail = async (buyer, car, comment, commentAuthor) => {
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .activity-box { 
@@ -3962,8 +3472,8 @@ const newCommentBidderEmail = async (buyer, car, comment, commentAuthor) => {
                             color: #1e2d3b;
                             margin-bottom: 10px;
                         }
-                        .vehicle-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
-                        .vehicle-title { color: #1e2d3b; font-size: 24px; margin-bottom: 15px; text-align: center; }
+                        .item-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
+                        .item-title { color: #1e2d3b; font-size: 24px; margin-bottom: 15px; text-align: center; }
                         .price-tag { 
                             font-size: 28px; 
                             font-weight: bold; 
@@ -4018,112 +3528,92 @@ const newCommentBidderEmail = async (buyer, car, comment, commentAuthor) => {
                             font-size: 16px;
                             margin: 10px 0;
                         }
-                        .secondary-button { 
-                            background: #ffffff; 
-                            color: #1e2d3b !important; 
-                            padding: 12px 25px; 
-                            text-decoration: none; 
-                            border-radius: 6px; 
-                            display: inline-block; 
-                            font-weight: bold; 
-                            font-size: 14px;
-                            margin: 10px 5px;
-                            border: 2px solid #edcd1f;
-                        }
                         .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #e9ecef; margin-top: 25px; }
                         .footer-text { margin: 5px 0; }
                         .highlight { color: #edcd1f; font-weight: bold; }
+                        .specs-section { margin: 25px 0; }
+                        .specs-title { color: #1e2d3b; font-size: 18px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .spec-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
+                        .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+                        .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
                             <div class="activity-box">
-                                <div class="activity-title">💬 NEW ACTIVITY ON VEHICLE</div>
-                                <p style="font-size: 18px; color: #1e2d3b;">There's new discussion on a vehicle you're interested in</p>
+                                <div class="activity-title">💬 NEW ACTIVITY ON AUCTION</div>
+                                <p style="font-size: 18px; color: #1e2d3b;">There's new discussion on an auction you're interested in</p>
                             </div>
                             
-                            <p>Dear <span class="highlight">${
-                              buyer?.firstName || buyer?.username
-                            }</span>,</p>
-                            <p>There's new activity on a vehicle you've shown interest in. Staying informed can help you make better purchasing decisions.</p>
+                            <p>Dear <span class="highlight">${buyer?.firstName || buyer?.username}</span>,</p>
+                            <p>There's new activity on an auction you've shown interest in. Staying informed can help you make better purchasing decisions.</p>
                             
-                            <div class="vehicle-card">
-                                <div class="vehicle-title">${specs?.year} ${
-        car?.title
-      }</div>
+                            <div class="item-card">
+                                <div class="item-title">${auction?.title}</div>
+                                ${auction.subTitle ? `<p style="text-align: center; color: #666;">${auction.subTitle}</p>` : ''}
                                 <div class="price-tag">
-                                    <span>£${car?.startPrice?.toLocaleString()}</span>
+                                    <span>${formatNOK(auction?.startPrice)}</span>
                                 </div>
+                                
+                                ${auction.specifications ? `
+                                <div class="specs-section">
+                                    <div class="specs-title">📋 Item Details</div>
+                                    ${renderSpecifications(auction.specifications)}
+                                </div>
+                                ` : ''}
                             </div>
                             
                             <div class="comment-card">
                                 <div class="comment-title">💬 NEW COMMENT ADDED</div>
                                 <p style="text-align: center; margin-bottom: 15px;">
-                                    <strong>From:</strong> ${
-                                      commentAuthor?.firstName ||
-                                      commentAuthor?.username
-                                    }
-                                    <span class="author-badge">${(
-                                      commentAuthor?.userType || "User"
-                                    ).toUpperCase()}</span>
+                                    <strong>From:</strong> ${commentAuthor?.firstName || commentAuthor?.username}
+                                    <span class="author-badge">${(commentAuthor?.userType || "User").toUpperCase()}</span>
                                 </p>
                                 <div class="comment-text">
                                     "${comment?.content}"
                                 </div>
                                 <div class="comment-meta">
-                                    Posted: ${new Date(
-                                      comment?.createdAt
-                                    ).toLocaleString()}
+                                    Posted: ${new Date(comment?.createdAt).toLocaleString()}
                                 </div>
                             </div>
                             
                             <div class="benefits-box">
                                 <div class="benefits-title">✅ WHY CHECK THE COMMENTS?</div>
                                 <p>• Get answers to questions from other potential buyers</p>
-                                <p>• Learn more about the vehicle's condition and history</p>
+                                <p>• Learn more about the item's condition and history</p>
                                 <p>• Understand shipping, delivery, and payment details</p>
                                 <p>• Gauge seller responsiveness and professionalism</p>
                             </div>
                             
-                            ${
-                              car?.endDate &&
-                              new Date(car?.endDate) - new Date() <
-                                24 * 60 * 60 * 1000
-                                ? `
+                            ${auction?.endDate && new Date(auction?.endDate) - new Date() < 24 * 60 * 60 * 1000 ? `
                             <div class="urgency-box">
-                                <div class="urgency-title">⏰ LISTING EXPIRING SOON!</div>
-                                <p>This vehicle listing is ending in less than 24 hours. Don't miss your chance!</p>
+                                <div class="urgency-title">⏰ AUCTION ENDING SOON!</div>
+                                <p>This auction is ending in less than 24 hours. Don't miss your chance!</p>
                             </div>
-                            `
-                                : ""
-                            }
+                            ` : ""}
                             
                             <div class="cta-box">
-                                <div class="cta-title">🚗 TAKE ACTION NOW</div>
-                                <p>Stay engaged with the vehicle community and make informed purchasing decisions!</p>
+                                <div class="cta-title">🎯 TAKE ACTION NOW</div>
+                                <p>Stay engaged with the auction community and make informed purchasing decisions!</p>
                                 <p style="margin: 20px 0;">
-                                    <a href="${
-                                      process.env.FRONTEND_URL
-                                    }/auction/${
-        car?._id
-      }" class="cta-button">VIEW VEHICLE & COMMENTS</a>
+                                    <a href="${process.env.FRONTEND_URL}/auction/${auction?._id}" class="cta-button">VIEW AUCTION & COMMENTS</a>
                                 </p>
                             </div>
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">You're receiving this email because you've shown interest in this vehicle.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
+                            <p class="footer-text">You're receiving this email because you've shown interest in this auction.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
                         </div>
                     </div>
                 </body>
@@ -4139,19 +3629,12 @@ const newCommentBidderEmail = async (buyer, car, comment, commentAuthor) => {
   }
 };
 
-const auctionSubmittedForApprovalEmail = async (adminEmail, car, seller) => {
+const auctionSubmittedForApprovalEmail = async (adminEmail, auction, seller) => {
   try {
-    // Convert Map to object for easier access in template
-    const specs = car.specifications
-      ? Object.fromEntries(car.specifications)
-      : {};
-
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: adminEmail,
-      subject: `📝 New Vehicle Listing for Approval - ${specs.year || "N/A"} ${
-        car.title
-      }`,
+      subject: `📝 New Listing for Approval - ${auction.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -4161,6 +3644,7 @@ const auctionSubmittedForApprovalEmail = async (adminEmail, car, seller) => {
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .approval-box { 
@@ -4187,13 +3671,13 @@ const auctionSubmittedForApprovalEmail = async (adminEmail, car, seller) => {
                             display: inline-block; 
                             margin: 10px 0;
                         }
-                        .vehicle-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
-                        .vehicle-title { color: #1e2d3b; font-size: 24px; margin-bottom: 20px; text-align: center; }
+                        .item-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
+                        .item-title { color: #1e2d3b; font-size: 24px; margin-bottom: 20px; text-align: center; }
                         .pricing-details { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
                         .price-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
                         .price-label { color: #666; font-size: 14px; margin-bottom: 5px; }
                         .price-value { font-weight: bold; color: #1e2d3b; font-size: 18px; }
-                        .vehicle-specs { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .item-specs { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
                         .detail-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; }
                         .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
                         .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
@@ -4210,7 +3694,7 @@ const auctionSubmittedForApprovalEmail = async (adminEmail, car, seller) => {
                             text-decoration: none; 
                             border-radius: 6px; 
                             display: inline-block; 
-                            weight: bold; 
+                            font-weight: bold; 
                             margin: 5px;
                         }
                         .description-box { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0; border: 1px solid #e9ecef; }
@@ -4229,201 +3713,136 @@ const auctionSubmittedForApprovalEmail = async (adminEmail, car, seller) => {
                             font-size: 12px; 
                             font-weight: bold; 
                         }
+                        .specs-section { margin: 25px 0; }
+                        .specs-title { color: #1e2d3b; font-size: 18px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .spec-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
+                        .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+                        .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
                             <div class="approval-box">
                                 <div class="approval-title">📝 NEW LISTING AWAITING APPROVAL</div>
-                                <p style="font-size: 18px; color: #1e2d3b;">A seller has submitted a new vehicle listing for review</p>
+                                <p style="font-size: 18px; color: #1e2d3b;">A seller has submitted a new listing for review</p>
                                 <div class="status-badge">AWAITING ADMIN APPROVAL</div>
                             </div>
                             
                             <p><strong>Hello Admin,</strong></p>
-                            <p>A new vehicle listing has been submitted and requires your approval before it can go live.</p>
+                            <p>A new auction listing has been submitted and requires your approval before it can go live.</p>
                             
-                            <div class="vehicle-card">
-                                <div class="vehicle-title">${
-                                  specs.year || "N/A"
-                                } ${car.title}</div>
+                            <div class="item-card">
+                                <div class="item-title">${auction.title}</div>
+                                ${auction.subTitle ? `<p style="text-align: center; color: #666;">${auction.subTitle}</p>` : ''}
                                 
                                 <div class="listing-options">
-                                    ${
-                                      car?.auctionType
-                                        ? `<span class="option-badge">${car.auctionType.toUpperCase()}</span>`
-                                        : ""
-                                    }
-                                    ${
-                                      car?.allowOffers
-                                        ? `<span class="option-badge" style="background: #edcd1f; color: #1e2d3b;">OFFERS ALLOWED</span>`
-                                        : ""
-                                    }
-                                    ${
-                                      car?.buyNowPrice
-                                        ? `<span class="option-badge" style="background: #28a745;">BUY NOW @ £${car.buyNowPrice.toLocaleString()}</span>`
-                                        : ""
-                                    }
+                                    ${auction?.auctionType ? `<span class="option-badge">${auction.auctionType.toUpperCase()}</span>` : ""}
+                                    ${auction?.allowOffers ? `<span class="option-badge" style="background: #edcd1f; color: #1e2d3b;">OFFERS ALLOWED</span>` : ""}
+                                    ${auction?.buyNowPrice ? `<span class="option-badge" style="background: #28a745;">BUY NOW @ ${formatNOK(auction.buyNowPrice)}</span>` : ""}
                                 </div>
                                 
                                 <div class="pricing-details">
                                     <div class="price-item">
                                         <div class="price-label">Starting Price</div>
-                                        <div class="price-value">£${car.startPrice.toLocaleString()}</div>
+                                        <div class="price-value">${formatNOK(auction.startPrice)}</div>
                                     </div>
-                                    ${
-                                      car.buyNowPrice
-                                        ? `
+                                    ${auction.buyNowPrice ? `
                                     <div class="price-item">
                                         <div class="price-label">Buy Now Price</div>
-                                        <div class="price-value" style="color: #28a745;">£${car.buyNowPrice.toLocaleString()}</div>
+                                        <div class="price-value" style="color: #28a745;">${formatNOK(auction.buyNowPrice)}</div>
                                     </div>
-                                    `
-                                        : ""
-                                    }
+                                    ` : ""}
                                 </div>
                                 
-                                <div class="vehicle-specs">
-                                    <div class="spec-item">
-                                        <div class="spec-label">Registration</div>
-                                        <div class="spec-value">${
-                                          specs?.registration || 'N/A'
-                                        }</div>
+                                <div class="item-specs">
+                                    <div class="detail-item">
+                                        <div class="spec-label">Categories</div>
+                                        <div class="spec-value">${auction?.categories?.join(', ') || 'N/A'}</div>
                                     </div>
-                                    <div class="spec-item">
-                                        <div class="spec-label">Miles</div>
-                                        <div class="spec-value">${
-                                          specs?.miles || 'N/A'
-                                        }</div>
-                                    </div>
-                                    <div class="spec-item">
-                                        <div class="spec-label">Year</div>
-                                        <div class="spec-value">${
-                                          specs?.year
-                                        }</div>
-                                    </div>
-                                    <div class="spec-item">
-                                        <div class="spec-label">Body Type</div>
-                                        <div class="spec-value">${
-                                          specs?.bodyTpe || 'N/A'
-                                        }</div>
-                                    </div>
-                                    <div class="spec-item">
-                                        <div class="spec-label">Fuel Type</div>
-                                        <div class="spec-value">${specs?.fuelType || 'N/A'}</div>
-                                    </div>
-                                    <div class="spec-item">
-                                        <div class="spec-label">Colour</div>
-                                        <div class="spec-value">${
-                                          specs?.colour || 'N/A'
-                                        }</div>
-                                    </div>
-                                    <div class="spec-item">
-                                        <div class="spec-label">Cap Clean</div>
-                                        <div class="spec-value">${
-                                          specs?.capClean || 'N/A'
-                                        }</div>
-                                    </div>
-                                    <div class="spec-item">
-                                        <div class="spec-label">Previous Owners</div>
-                                        <div class="spec-value">${
-                                          specs?.previousOwners || 'N/A'
-                                        }</div>
+                                    <div class="detail-item">
+                                        <div class="spec-label">Location</div>
+                                        <div class="spec-value">${auction?.location || 'Not specified'}</div>
                                     </div>
                                 </div>
+                                
+                                ${auction.specifications ? `
+                                <div class="specs-section">
+                                    <div class="specs-title">📋 Item Specifications</div>
+                                    ${renderSpecifications(auction.specifications)}
+                                </div>
+                                ` : ''}
                             </div>
                             
-                            ${
-                              car.description
-                                ? `
+                            ${auction.description ? `
                             <div class="description-box">
-                                <div class="description-title">📝 VEHICLE DESCRIPTION</div>
-                                <p>${car.description.substring(0, 200)}${
-                                    car.description.length > 200 ? "..." : ""
-                                  }</p>
+                                <div class="description-title">📝 ITEM DESCRIPTION</div>
+                                <p>${auction.description.substring(0, 200)}${auction.description.length > 200 ? "..." : ""}</p>
                             </div>
-                            `
-                                : ""
-                            }
+                            ` : ""}
                             
                             <div class="seller-card">
                                 <div class="seller-title">👤 SELLER INFORMATION</div>
-                                <div class="vehicle-specs">
-                                    <div class="spec-item">
+                                <div class="item-specs">
+                                    <div class="detail-item">
                                         <div class="spec-label">Seller Name</div>
-                                        <div class="spec-value">${
-                                          seller.firstName || seller.username
-                                        } ${seller.lastName || ""}</div>
+                                        <div class="spec-value">${seller.firstName || seller.username} ${seller.lastName || ""}</div>
                                     </div>
-                                    <div class="spec-item">
+                                    <div class="detail-item">
                                         <div class="spec-label">Username</div>
-                                        <div class="spec-value">${
-                                          seller.username
-                                        }</div>
+                                        <div class="spec-value">${seller.username}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="spec-label">Email</div>
+                                        <div class="spec-value">${seller.email}</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="spec-label">Phone</div>
+                                        <div class="spec-value">${seller.phone || 'Not provided'}</div>
                                     </div>
                                 </div>
                             </div>
                             
                             <div class="checklist-box">
                                 <div class="checklist-title">✅ APPROVAL CHECKLIST</div>
-                                <p>• Verify vehicle information accuracy</p>
+                                <p>• Verify listing information accuracy</p>
                                 <p>• Check photo quality and quantity</p>
                                 <p>• Review pricing appropriateness</p>
-                                <p>• Confirm vehicle condition classification</p>
+                                <p>• Confirm item condition classification</p>
                                 <p>• Ensure seller compliance with terms</p>
                                 <p>• Validate listing type and options</p>
                             </div>
                             
-                            ${
-                              car.startPrice > 50000 ||
-                              specs.condition === "new"
-                                ? `
+                            ${auction.startPrice > 50000 ? `
                             <div class="priority-box">
                                 <div class="priority-title">⚠️ PRIORITY REVIEW RECOMMENDED</div>
-                                <p>This listing may require additional attention due to:</p>
-                                <p>• ${
-                                  car.startPrice > 50000
-                                    ? `High value (£${car.startPrice.toLocaleString()})`
-                                    : "New vehicle condition"
-                                }</p>
-                                ${
-                                  car.buyNowPrice
-                                    ? "<p>• Buy Now option available</p>"
-                                    : ""
-                                }
-                                ${
-                                  car.allowOffers
-                                    ? "<p>• Offers enabled</p>"
-                                    : ""
-                                }
+                                <p>This listing may require additional attention due to high value (${formatNOK(auction.startPrice)})</p>
+                                ${auction.buyNowPrice ? "<p>• Buy Now option available</p>" : ""}
+                                ${auction.allowOffers ? "<p>• Offers enabled</p>" : ""}
                             </div>
-                            `
-                                : ""
-                            }
+                            ` : ""}
                             
                             <div class="admin-actions">
                                 <div class="actions-title">⚡ ADMIN ACTIONS REQUIRED</div>
                                 <p>Please review this listing within 24 hours to ensure timely activation.</p>
                                 <p style="text-align: center; margin: 20px 0;">
-                                    <a href="${
-                                      process.env.FRONTEND_URL
-                                    }/admin/auctions/all" class="cta-button">REVIEW LISTINGS</a>
+                                    <a href="${process.env.FRONTEND_URL}/admin/auctions/all" class="cta-button">REVIEW LISTINGS</a>
                                 </p>
                             </div>
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">This is an automated notification from SpeedWays Auto Listing Approval System.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
+                            <p class="footer-text">This is an automated notification from BidNordic Listing Approval System.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
                             <p class="footer-text">You're receiving this email because you're an administrator.</p>
                         </div>
                     </div>
@@ -4433,7 +3852,7 @@ const auctionSubmittedForApprovalEmail = async (adminEmail, car, seller) => {
     });
 
     console.log(
-      `✅ Listing submission email sent to admin for vehicle ${car._id}`
+      `✅ Listing submission email sent to admin for auction ${auction._id}`
     );
     return !!info;
   } catch (error) {
@@ -4442,16 +3861,12 @@ const auctionSubmittedForApprovalEmail = async (adminEmail, car, seller) => {
   }
 };
 
-const auctionApprovedEmail = async (seller, car) => {
+const auctionApprovedEmail = async (seller, auction) => {
   try {
-    const specs = car.specifications
-      ? Object.fromEntries(car.specifications)
-      : {};
-
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: seller.email,
-      subject: `✅ Your Vehicle Listing is Live: ${specs?.year} ${car?.title}`,
+      subject: `✅ Your Listing is Live: ${auction?.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -4461,6 +3876,7 @@ const auctionApprovedEmail = async (seller, car) => {
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .approved-box { 
@@ -4477,8 +3893,8 @@ const auctionApprovedEmail = async (seller, car) => {
                             color: #155724;
                             margin-bottom: 10px;
                         }
-                        .vehicle-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
-                        .vehicle-title { color: #1e2d3b; font-size: 24px; margin-bottom: 15px; text-align: center; }
+                        .item-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
+                        .item-title { color: #1e2d3b; font-size: 24px; margin-bottom: 15px; text-align: center; }
                         .listing-options { display: flex; justify-content: center; gap: 15px; margin: 15px 0; flex-wrap: wrap; }
                         .option-badge { 
                             background: #1e2d3b; 
@@ -4520,79 +3936,68 @@ const auctionApprovedEmail = async (seller, car) => {
                         .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #e9ecef; margin-top: 25px; }
                         .footer-text { margin: 5px 0; }
                         .highlight { color: #edcd1f; font-weight: bold; }
+                        .specs-section { margin: 25px 0; }
+                        .specs-title { color: #1e2d3b; font-size: 18px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .spec-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
+                        .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+                        .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
                             <div class="approved-box">
                                 <div class="approved-title">✅ LISTING APPROVED & LIVE!</div>
-                                <p style="font-size: 18px; color: #155724;">Your vehicle is now visible to thousands of potential buyers</p>
+                                <p style="font-size: 18px; color: #155724;">Your item is now visible to thousands of potential buyers</p>
                             </div>
                             
-                            <p>Dear <span class="highlight">${
-                              seller?.firstName || seller?.username
-                            }</span>,</p>
-                            <p>Great news! Your vehicle listing has been approved and is now live on SpeedWays Auto.</p>
+                            <p>Dear <span class="highlight">${seller?.firstName || seller?.username}</span>,</p>
+                            <p>Great news! Your listing has been approved and is now live on BidNordic.</p>
                             
-                            <div class="vehicle-card">
-                                <div class="vehicle-title">${specs?.year} ${
-        car?.title
-      }</div>
+                            <div class="item-card">
+                                <div class="item-title">${auction?.title}</div>
+                                ${auction.subTitle ? `<p style="text-align: center; color: #666;">${auction.subTitle}</p>` : ''}
                                 
                                 <div class="listing-options">
-                                    ${
-                                      car?.auctionType
-                                        ? `<span class="option-badge">${car?.auctionType.toUpperCase()}</span>`
-                                        : ""
-                                    }
-                                    ${
-                                      car?.allowOffers
-                                        ? `<span class="option-badge" style="background: #edcd1f; color: #1e2d3b;">OFFERS ALLOWED</span>`
-                                        : ""
-                                    }
-                                    ${
-                                      car?.buyNowPrice
-                                        ? `<span class="option-badge" style="background: #28a745;">BUY NOW AVAILABLE</span>`
-                                        : ""
-                                    }
+                                    ${auction?.auctionType ? `<span class="option-badge">${auction?.auctionType.toUpperCase()}</span>` : ""}
+                                    ${auction?.allowOffers ? `<span class="option-badge" style="background: #edcd1f; color: #1e2d3b;">OFFERS ALLOWED</span>` : ""}
+                                    ${auction?.buyNowPrice ? `<span class="option-badge" style="background: #28a745;">BUY NOW AVAILABLE</span>` : ""}
                                 </div>
                                 
                                 <div class="pricing-details">
                                     <div class="price-item">
                                         <div class="price-label">Listing Price</div>
-                                        <div class="price-value">£${car?.startPrice?.toLocaleString()}</div>
+                                        <div class="price-value">${formatNOK(auction?.startPrice)}</div>
                                     </div>
-                                    ${
-                                      car?.buyNowPrice
-                                        ? `
+                                    ${auction?.buyNowPrice ? `
                                     <div class="price-item">
                                         <div class="price-label">Buy Now Price</div>
-                                        <div class="price-value" style="color: #28a745;">£${car?.buyNowPrice?.toLocaleString()}</div>
+                                        <div class="price-value" style="color: #28a745;">${formatNOK(auction?.buyNowPrice)}</div>
                                     </div>
-                                    `
-                                        : ""
-                                    }
+                                    ` : ""}
                                 </div>
+                                
+                                ${auction.specifications ? `
+                                <div class="specs-section">
+                                    <div class="specs-title">📋 Item Details</div>
+                                    ${renderSpecifications(auction.specifications)}
+                                </div>
+                                ` : ''}
                             </div>
                             
                             <div class="listing-url">
                                 <strong>Your Listing URL:</strong><br>
-                                <a href="${process.env.FRONTEND_URL}/auction/${
-        car?._id
-      }" style="color: #edcd1f; text-decoration: none; font-weight: bold;">
-                                    ${process.env.FRONTEND_URL}/auction/${
-        car?._id
-      }
+                                <a href="${process.env.FRONTEND_URL}/auction/${auction?._id}" style="color: #edcd1f; text-decoration: none; font-weight: bold;">
+                                    ${process.env.FRONTEND_URL}/auction/${auction?._id}
                                 </a>
                             </div>
                             
@@ -4606,24 +4011,20 @@ const auctionApprovedEmail = async (seller, car) => {
                             
                             <div class="cta-box">
                                 <div class="cta-title">📱 VIEW YOUR LIVE LISTING</div>
-                                <p>Check out how your vehicle appears to potential buyers and start managing inquiries.</p>
+                                <p>Check out how your item appears to potential buyers and start managing inquiries.</p>
                                 <p style="margin: 20px 0;">
-                                    <a href="${
-                                      process.env.FRONTEND_URL
-                                    }/auction/${
-        car?._id
-      }" class="cta-button">VIEW YOUR LIVE LISTING</a>
+                                    <a href="${process.env.FRONTEND_URL}/auction/${auction?._id}" class="cta-button">VIEW YOUR LIVE LISTING</a>
                                 </p>
                             </div>
                             
-                            <p>Your vehicle is now searchable and visible to our entire buyer community. We wish you a quick and successful sale!</p>
+                            <p>Your item is now searchable and visible to our entire buyer community. We wish you a quick and successful sale!</p>
                             
                             <p>For any questions about the selling process or if you need assistance, our seller support team is here to help.</p>
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">This is an automated notification from SpeedWays Auto.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
+                            <p class="footer-text">This is an automated notification from BidNordic.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
                             <p class="footer-text">Need assistance? Contact our seller support team.</p>
                         </div>
                     </div>
@@ -4640,50 +4041,37 @@ const auctionApprovedEmail = async (seller, car) => {
   }
 };
 
-const newAuctionNotificationEmail = async (buyer, car, seller) => {
+const newAuctionNotificationEmail = async (buyer, auction, seller) => {
   try {
     // Determine listing status and appropriate wording
-    const isLive = car?.status === "active" || car?.status === "approved";
+    const isLive = auction?.status === "active" || auction?.status === "approved";
     const listingStatus = isLive ? "Live Now" : "Coming Soon";
     const statusColor = isLive ? "#28a745" : "#17a2b8";
 
     // Determine available actions based on listing type
     let primaryAction = "View Details";
     let primaryColor = "#1e2d3b";
-    let secondaryAction = "";
-    let tertiaryAction = "";
 
     if (isLive) {
-      if (car.auctionType === "buy_now" && car?.buyNowPrice) {
+      if (auction.auctionType === "buy_now" && auction?.buyNowPrice) {
         primaryAction = "Buy Now";
         primaryColor = "#28a745";
-        secondaryAction = "Make Offer";
-      } else if (car.allowOffers) {
+      } else if (auction.allowOffers) {
         primaryAction = "Make Offer";
         primaryColor = "#edcd1f";
-        secondaryAction = "Contact Seller";
       } else {
         primaryAction = "View Details";
       }
-      tertiaryAction = "Save to Watchlist";
-    } else {
-      primaryAction = "Save to Watchlist";
-      primaryColor = "#edcd1f";
-      secondaryAction = "Set Reminder";
     }
 
-    const timeInfo = car?.endDate
-      ? `Ends: ${new Date(car.endDate).toLocaleString()}`
+    const timeInfo = auction?.endDate
+      ? `Ends: ${new Date(auction.endDate).toLocaleString()}`
       : "No end date set";
 
-    const specs = car?.specifications
-      ? Object.fromEntries(car.specifications)
-      : {};
-
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: buyer.email,
-      subject: `🚗 New Vehicle: ${specs?.year} ${car?.title}`,
+      subject: `🎯 New Auction: ${auction?.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -4693,6 +4081,7 @@ const newAuctionNotificationEmail = async (buyer, car, seller) => {
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 30px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 18px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 30px; }
                         .listing-badge { 
@@ -4705,14 +4094,14 @@ const newAuctionNotificationEmail = async (buyer, car, seller) => {
                             display: inline-block; 
                             margin: 15px 0;
                         }
-                        .vehicle-card { 
+                        .item-card { 
                             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); 
                             padding: 30px; 
                             border-radius: 12px; 
                             margin: 25px 0; 
                             border: 2px solid #edcd1f;
                         }
-                        .vehicle-title { 
+                        .item-title { 
                             color: #1e2d3b; 
                             font-size: 28px; 
                             margin-bottom: 15px; 
@@ -4733,7 +4122,7 @@ const newAuctionNotificationEmail = async (buyer, car, seller) => {
                             color: #28a745; 
                             margin: 10px 0;
                         }
-                        .vehicle-details { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 25px 0; }
+                        .item-details { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 25px 0; }
                         .detail-box { background: #ffffff; padding: 20px; border-radius: 8px; border: 1px solid #e9ecef; text-align: center; }
                         .detail-label { color: #666; font-size: 14px; margin-bottom: 8px; display: block; }
                         .detail-value { font-weight: bold; color: #1e2d3b; font-size: 18px; }
@@ -4746,12 +4135,10 @@ const newAuctionNotificationEmail = async (buyer, car, seller) => {
                             font-size: 13px; 
                             font-weight: bold; 
                         }
-                        .action-buttons { display: flex; justify-content: center; gap: 15px; margin: 30px 0; flex-wrap: wrap; }
+                        .action-buttons { display: flex; justify-content: center; margin: 30px 0; }
                         .action-button { 
                             background: ${primaryColor}; 
-                            color: ${
-                              primaryColor === "#edcd1f" ? "#1e2d3b" : "#ffffff"
-                            } !important; 
+                            color: ${primaryColor === "#edcd1f" ? "#1e2d3b" : "#ffffff"} !important; 
                             padding: 16px 32px; 
                             text-decoration: none; 
                             border-radius: 8px; 
@@ -4759,32 +4146,7 @@ const newAuctionNotificationEmail = async (buyer, car, seller) => {
                             font-weight: bold; 
                             font-size: 16px;
                             text-align: center;
-                            min-width: 180px;
-                        }
-                        .secondary-button { 
-                            background: #ffffff; 
-                            color: #1e2d3b !important; 
-                            padding: 14px 28px; 
-                            text-decoration: none; 
-                            border-radius: 8px; 
-                            display: inline-block; 
-                            font-weight: bold; 
-                            font-size: 15px;
-                            border: 2px solid #1e2d3b;
-                            text-align: center;
-                            min-width: 160px;
-                        }
-                        .tertiary-button { 
-                            background: #f8f9fa; 
-                            color: #1e2d3b !important; 
-                            padding: 12px 24px; 
-                            text-decoration: none; 
-                            border-radius: 8px; 
-                            display: inline-block; 
-                            font-weight: bold; 
-                            font-size: 14px;
-                            border: 1px solid #e9ecef;
-                            text-align: center;
+                            min-width: 200px;
                         }
                         .urgency-box { 
                             background: #fff3cd; 
@@ -4817,193 +4179,118 @@ const newAuctionNotificationEmail = async (buyer, car, seller) => {
                         .footer { background: #f8f9fa; padding: 25px; text-align: center; color: #666; font-size: 14px; border-top: 1px solid #e9ecef; margin-top: 30px; }
                         .footer-text { margin: 8px 0; }
                         .highlight { color: #edcd1f; font-weight: bold; }
+                        .specs-section { margin: 25px 0; }
+                        .specs-title { color: #1e2d3b; font-size: 18px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .spec-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
+                        .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+                        .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                             <div class="listing-badge">${listingStatus}</div>
                         </div>
                         
                         <div class="content">
-                            <p>Dear <span class="highlight">${
-                              buyer?.firstName || buyer?.username
-                            }</span>,</p>
-                            <p>We're excited to let you know about a new vehicle listing on SpeedWays Auto that matches your interests!</p>
+                            <p>Dear <span class="highlight">${buyer?.firstName || buyer?.username}</span>,</p>
+                            <p>We're excited to let you know about a new auction listing on BidNordic that matches your interests!</p>
                             
-                            <div class="vehicle-card">
-                                <div class="vehicle-title">${specs?.year} ${
-        car?.title
-      }</div>
+                            <div class="item-card">
+                                <div class="item-title">${auction?.title}</div>
+                                ${auction.subTitle ? `<p style="text-align: center; color: #666;">${auction.subTitle}</p>` : ''}
                                 
                                 <div class="listing-options">
-                                    ${
-                                      car?.auctionType
-                                        ? `<span class="option-badge">${car?.auctionType?.toUpperCase()}</span>`
-                                        : ""
-                                    }
-                                    ${
-                                      car?.allowOffers
-                                        ? `<span class="option-badge" style="background: #edcd1f; color: #1e2d3b;">OFFERS ALLOWED</span>`
-                                        : ""
-                                    }
-                                    ${
-                                      car?.buyNowPrice
-                                        ? `<span class="option-badge" style="background: #28a745;">BUY NOW AVAILABLE</span>`
-                                        : ""
-                                    }
+                                    ${auction?.auctionType ? `<span class="option-badge">${auction?.auctionType?.toUpperCase()}</span>` : ""}
+                                    ${auction?.allowOffers ? `<span class="option-badge" style="background: #edcd1f; color: #1e2d3b;">OFFERS ALLOWED</span>` : ""}
+                                    ${auction?.buyNowPrice ? `<span class="option-badge" style="background: #28a745;">BUY NOW AVAILABLE</span>` : ""}
                                 </div>
                                 
                                 <div class="price-section">
                                     <div class="listing-price">
-                                        <span>£${car?.startPrice?.toLocaleString()}</span>
+                                        <span>${formatNOK(auction?.startPrice)}</span>
                                     </div>
-                                    ${
-                                      car?.buyNowPrice
-                                        ? `
+                                    ${auction?.buyNowPrice ? `
                                     <div class="buy-now-price">
-                                        Buy Now: £${car?.buyNowPrice?.toLocaleString()}
+                                        Buy Now: ${formatNOK(auction?.buyNowPrice)}
                                     </div>
-                                    `
-                                        : ""
-                                    }
+                                    ` : ""}
                                 </div>
                                 
-                                <div class="vehicle-details">
+                                <div class="item-details">
                                     <div class="detail-box">
-                                        <div class="spec-label">Registration</div>
-                                        <div class="spec-value">${
-                                          specs?.registration || 'N/A'
-                                        }</div>
+                                        <div class="detail-label">Categories</div>
+                                        <div class="detail-value">${auction?.categories?.join(', ') || 'N/A'}</div>
                                     </div>
                                     <div class="detail-box">
-                                        <div class="spec-label">Miles</div>
-                                        <div class="spec-value">${
-                                          specs?.miles || 'N/A'
-                                        }</div>
-                                    </div>
-                                    <div class="detail-box">
-                                        <div class="spec-label">Year</div>
-                                        <div class="spec-value">${
-                                          specs?.year
-                                        }</div>
-                                    </div>
-                                    <div class="detail-box">
-                                        <div class="spec-label">Body Type</div>
-                                        <div class="spec-value">${
-                                          specs?.bodyTpe || 'N/A'
-                                        }</div>
-                                    </div>
-                                    <div class="detail-box">
-                                        <div class="spec-label">Fuel Type</div>
-                                        <div class="spec-value">${specs?.fuelType || 'N/A'}</div>
-                                    </div>
-                                    <div class="detail-box">
-                                        <div class="spec-label">Colour</div>
-                                        <div class="spec-value">${
-                                          specs?.colour || 'N/A'
-                                        }</div>
-                                    </div>
-                                    <div class="detail-box">
-                                        <div class="spec-label">Cap Clean</div>
-                                        <div class="spec-value">${
-                                          specs?.capClean || 'N/A'
-                                        }</div>
-                                    </div>
-                                    <div class="detail-box">
-                                        <div class="spec-label">Previous Owners</div>
-                                        <div class="spec-value">${
-                                          specs?.previousOwners || 'N/A'
-                                        }</div>
+                                        <div class="detail-label">Location</div>
+                                        <div class="detail-value">${auction?.location || 'Not specified'}</div>
                                     </div>
                                 </div>
+                                
+                                ${auction.specifications ? `
+                                <div class="specs-section">
+                                    <div class="specs-title">📋 Item Specifications</div>
+                                    ${renderSpecifications(auction.specifications)}
+                                </div>
+                                ` : ''}
                             </div>
                             
-                            ${
-                              car?.description
-                                ? `
+                            ${auction?.description ? `
                             <div class="description-preview">
-                                <div class="description-title">📝 VEHICLE DESCRIPTION</div>
-                                <p>${car?.description.substring(0, 200)}${
-                                    car?.description.length > 200 ? "..." : ""
-                                  }</p>
+                                <div class="description-title">📝 ITEM DESCRIPTION</div>
+                                <p>${auction?.description.substring(0, 200)}${auction?.description.length > 200 ? "..." : ""}</p>
                             </div>
-                            `
-                                : ""
-                            }
+                            ` : ""}
                             
-                            ${
-                              isLive
-                                ? `
+                            ${isLive ? `
                             <div class="urgency-box">
-                                <div class="urgency-title">🚗 AVAILABLE NOW!</div>
-                                <p>This vehicle is ready for purchase. ${
-                                  car?.buyNowPrice
-                                    ? "Use Buy Now to secure it immediately or make an offer."
-                                    : car?.allowOffers
-                                    ? "Make an offer to start negotiations."
-                                    : "Contact the seller for more details."
-                                }</p>
+                                <div class="urgency-title">🎯 AVAILABLE NOW!</div>
+                                <p>This item is ready for bidding. ${auction?.buyNowPrice ? "Use Buy Now to secure it immediately or place a bid." : auction?.allowOffers ? "Make an offer to start negotiations." : "Place a bid to compete for this item."}</p>
                             </div>
-                            `
-                                : `
+                            ` : `
                             <div class="urgency-box">
                                 <div class="urgency-title">📅 COMING SOON!</div>
-                                <p>This vehicle will be available shortly. Save it to your watchlist to get notified when it goes live.</p>
+                                <p>This item will be available shortly. Save it to your watchlist to get notified when it goes live.</p>
                             </div>
-                            `
-                            }
+                            `}
                             
-                            ${
-                              car?.endDate
-                                ? `
+                            ${auction?.endDate ? `
                             <div class="time-box">
                                 ⏰ ${timeInfo}
                             </div>
-                            `
-                                : ""
-                            }
+                            ` : ""}
                             
                             <div class="seller-info">
                                 <div class="seller-title">👤 SELLER INFORMATION</div>
-                                <p><strong>Seller:</strong> ${
-                                  seller?.username
-                                }</p>
+                                <p><strong>Seller:</strong> ${seller?.username}</p>
                                 <p>Check the seller's profile for ratings and reviews from previous buyers.</p>
                             </div>
                             
                             <div class="action-buttons">
-                                <a href="${process.env.FRONTEND_URL}/auction/${
-        car?._id
-      }" class="action-button">
+                                <a href="${process.env.FRONTEND_URL}/auction/${auction?._id}" class="action-button">
                                     ${primaryAction}
                                 </a>
                             </div>
                             
-                            <p><strong>Why this vehicle might be perfect for you:</strong></p>
+                            <p><strong>Why this item might be perfect for you:</strong></p>
                             <ul>
                                 <li>Matches your saved preferences and search criteria</li>
                                 <li>Competitively priced in the current market</li>
-                                <li>From a verified seller on SpeedWays Auto</li>
-                                <li>${
-                                  car?.buyNowPrice
-                                    ? "Available for immediate purchase with Buy Now"
-                                    : car?.allowOffers
-                                    ? "Open to offers and negotiations"
-                                    : "Available for direct purchase"
-                                }</li>
+                                <li>From a verified seller on BidNordic</li>
+                                <li>${auction?.buyNowPrice ? "Available for immediate purchase with Buy Now" : auction?.allowOffers ? "Open to offers and negotiations" : "Available for bidding"}</li>
                             </ul>
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">You're receiving this email because you're a registered buyer on SpeedWays Auto.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. Premium Vehicle Auctions.</p>
+                            <p class="footer-text">You're receiving this email because you're a registered buyer on BidNordic.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. Nordic Online Auctions.</p>
                         </div>
                     </div>
                 </body>
@@ -5012,7 +4299,7 @@ const newAuctionNotificationEmail = async (buyer, car, seller) => {
     });
 
     console.log(
-      `✅ New listing notification sent to buyer ${buyer?.email} for vehicle ${car?._id}`
+      `✅ New listing notification sent to buyer ${buyer?.email} for auction ${auction?._id}`
     );
     return !!info;
   } catch (error) {
@@ -5022,14 +4309,13 @@ const newAuctionNotificationEmail = async (buyer, car, seller) => {
 };
 
 // Bulk notification function for multiple bidders
-
-const sendBulkAuctionNotifications = async (buyers, car, seller) => {
+const sendBulkAuctionNotifications = async (buyers, auction, seller) => {
   try {
     const notificationPromises = buyers?.map(async (buyer) => {
       try {
         // Check if buyer has notifications enabled for new listings
         if (buyer?.preferences) {
-          await newAuctionNotificationEmail(buyer, car, seller);
+          await newAuctionNotificationEmail(buyer, auction, seller);
           return { success: true, email: buyer.email };
         }
         return {
@@ -5078,7 +4364,7 @@ const sendBulkAuctionNotifications = async (buyers, car, seller) => {
 const newBidNotificationEmail = async (seller, auction, bidAmount, bidder) => {
   try {
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: seller.email,
       subject: `💰 New Bid Received - ${auction.title}`,
       html: `
@@ -5090,6 +4376,7 @@ const newBidNotificationEmail = async (seller, auction, bidAmount, bidder) => {
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .notification-box { 
@@ -5136,17 +4423,22 @@ const newBidNotificationEmail = async (seller, auction, bidAmount, bidder) => {
                         .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #e9ecef; margin-top: 25px; }
                         .footer-text { margin: 5px 0; }
                         .highlight { color: #edcd1f; font-weight: bold; }
+                        .specs-section { margin: 25px 0; }
+                        .specs-title { color: #1e2d3b; font-size: 18px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .spec-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
+                        .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+                        .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
@@ -5155,58 +4447,44 @@ const newBidNotificationEmail = async (seller, auction, bidAmount, bidder) => {
                                 <p style="font-size: 18px; color: #155724;">Your auction is gaining interest</p>
                             </div>
                             
-                            <p>Dear <span class="highlight">${
-                              seller.firstName || seller.username
-                            }</span>,</p>
+                            <p>Dear <span class="highlight">${seller.firstName || seller.username}</span>,</p>
                             <p>Great news! Your auction has received a new bid.</p>
                             
                             <div class="bid-amount">
-                                <span>£${bidAmount.toLocaleString()}</span>
+                                <span>${formatNOK(bidAmount)}</span>
                             </div>
                             
                             <div class="auction-details">
                                 <div class="detail-item">
                                     <span class="detail-label">Current Price:</span>
-                                    <span class="detail-value">£${auction.currentPrice?.toLocaleString()}</span>
+                                    <span class="detail-value">${formatNOK(auction.currentPrice || 0)}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Total Bids:</span>
-                                    <span class="detail-value">${(
-                                      auction.bidCount || 0
-                                    ).toLocaleString()}</span>
+                                    <span class="detail-value">${(auction.bidCount || 0).toLocaleString()}</span>
                                 </div>
-                                ${
-                                  auction.endDate
-                                    ? `
+                                ${auction.endDate ? `
                                 <div class="detail-item">
                                     <span class="detail-label">Time Remaining:</span>
-                                    <span class="detail-value">${
-                                      auction.timeRemainingFormatted ||
-                                      "Ending soon"
-                                    }</span>
+                                    <span class="detail-value">${getTimeRemaining(auction.endDate)}</span>
                                 </div>
-                                `
-                                    : ""
-                                }
+                                ` : ""}
                             </div>
                             
-                            ${
-                              bidder
-                                ? `
+                            ${auction.specifications ? `
+                            <div class="specs-section">
+                                <div class="specs-title">📋 Item Details</div>
+                                ${renderSpecifications(auction.specifications)}
+                            </div>
+                            ` : ''}
+                            
+                            ${bidder ? `
                             <div class="bidder-info">
                                 <div class="bidder-title">👤 BIDDER INFORMATION</div>
-                                <p><strong>Bidder:</strong> ${
-                                  bidder.username
-                                }</p>
-                                ${
-                                  bidder.rating
-                                    ? `<p><strong>Bidder Rating:</strong> ${bidder.rating}/5 ⭐</p>`
-                                    : ""
-                                }
+                                <p><strong>Bidder:</strong> ${bidder.username}</p>
+                                ${bidder.rating ? `<p><strong>Bidder Rating:</strong> ${bidder.rating}/5 ⭐</p>` : ""}
                             </div>
-                            `
-                                : ""
-                            }
+                            ` : ""}
                             
                             <div class="tips-box">
                                 <div class="tips-title">💡 TIPS FOR SUCCESS</div>
@@ -5217,11 +4495,7 @@ const newBidNotificationEmail = async (seller, auction, bidAmount, bidder) => {
                             </div>
                             
                             <p style="text-align: center; margin: 25px 0;">
-                                <a href="${
-                                  process.env.FRONTEND_URL
-                                }/seller/auctions/${
-        auction._id
-      }" class="cta-button">VIEW AUCTION DETAILS</a>
+                                <a href="${process.env.FRONTEND_URL}/seller/auctions/${auction._id}" class="cta-button">VIEW AUCTION DETAILS</a>
                             </p>
                             
                             <p>Your auction is moving in the right direction! Keep up the momentum.</p>
@@ -5229,7 +4503,7 @@ const newBidNotificationEmail = async (seller, auction, bidAmount, bidder) => {
                         
                         <div class="footer">
                             <p class="footer-text">You're receiving this email because you're the seller of this auction.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
                         </div>
                     </div>
                 </body>
@@ -5245,16 +4519,13 @@ const newBidNotificationEmail = async (seller, auction, bidAmount, bidder) => {
   }
 };
 
-const newOfferNotificationEmail = async (seller, car, offerAmount, buyer) => {
+// Offer emails
+const newOfferNotificationEmail = async (seller, auction, offerAmount, buyer) => {
   try {
-    const specs = car.specifications
-      ? Object.fromEntries(car.specifications)
-      : {};
-
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: seller?.email,
-      subject: `💰 New Offer Received - ${specs?.year} ${car?.title}`,
+      subject: `💰 New Offer Received - ${auction?.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -5264,6 +4535,7 @@ const newOfferNotificationEmail = async (seller, car, offerAmount, buyer) => {
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .offer-box { 
@@ -5329,68 +4601,74 @@ const newOfferNotificationEmail = async (seller, car, offerAmount, buyer) => {
                         .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #e9ecef; margin-top: 25px; }
                         .footer-text { margin: 5px 0; }
                         .highlight { color: #edcd1f; font-weight: bold; }
+                        .specs-section { margin: 25px 0; }
+                        .specs-title { color: #1e2d3b; font-size: 18px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .spec-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
+                        .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+                        .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
                             <div class="offer-box">
                                 <div class="offer-title">💰 NEW OFFER RECEIVED</div>
-                                <p style="font-size: 18px; color: #0d47a1;">A potential buyer has made an offer on your vehicle</p>
+                                <p style="font-size: 18px; color: #0d47a1;">A potential buyer has made an offer on your item</p>
                             </div>
                             
-                            <p>Dear <span class="highlight">${
-                              seller?.firstName || seller?.username
-                            }</span>,</p>
-                            <p>Great news! You've received a new offer on your vehicle listing.</p>
+                            <p>Dear <span class="highlight">${seller?.firstName || seller?.username}</span>,</p>
+                            <p>Great news! You've received a new offer on your auction listing.</p>
                             
                             <div class="offer-amount">
-                                <span>£${offerAmount?.toLocaleString()}</span>
+                                <span>${formatNOK(offerAmount)}</span>
                             </div>
                             
                             <div class="price-comparison">
                                 <div class="price-item">
                                     <div class="price-label">Offer Amount</div>
-                                    <div class="price-value" style="color: #edcd1f;">£${offerAmount?.toLocaleString()}</div>
+                                    <div class="price-value" style="color: #edcd1f;">${formatNOK(offerAmount)}</div>
+                                </div>
+                                <div class="price-item">
+                                    <div class="price-label">Listing Price</div>
+                                    <div class="price-value">${formatNOK(auction?.startPrice || auction?.buyNowPrice || 0)}</div>
                                 </div>
                             </div>
                             
                             <div class="offer-details">
                                 <div class="detail-grid">
                                     <div class="detail-item">
-                                        <div class="detail-label">Vehicle</div>
-                                        <div class="detail-value">${
-                                          specs?.year
-                                        } ${car?.title}</div>
+                                        <div class="detail-label">Item</div>
+                                        <div class="detail-value">${auction?.title}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Offer Received</div>
                                         <div class="detail-value">${new Date().toLocaleString()}</div>
                                     </div>
                                 </div>
+                                
+                                ${auction.specifications ? `
+                                <div class="specs-section">
+                                    <div class="specs-title">📋 Item Details</div>
+                                    ${renderSpecifications(auction.specifications)}
+                                </div>
+                                ` : ''}
                             </div>
                             
-                            ${
-                              buyer
-                                ? `
+                            ${buyer ? `
                             <div class="buyer-info">
                                 <div class="buyer-title">👤 BUYER INFORMATION</div>
-                                <p><strong>Buyer:</strong> ${
-                                  buyer?.firstName || buyer?.username
-                                }</p>
+                                <p><strong>Buyer:</strong> ${buyer?.firstName || buyer?.username}</p>
                             </div>
-                            `
-                                : ""
-                            }
+                            ` : ""}
                             
                             <div class="response-time">
                                 <div class="response-title">⏰ RESPOND WITHIN 48 HOURS</div>
@@ -5398,19 +4676,18 @@ const newOfferNotificationEmail = async (seller, car, offerAmount, buyer) => {
                             </div>
                             
                             <div class="action-buttons">
-                                <a href="${
-                                  process.env.FRONTEND_URL
-                                }/admin/offers" class="action-button">REVIEW OFFERS</a>
+                                <a href="${process.env.FRONTEND_URL}/seller/offers" class="action-button">REVIEW OFFERS</a>
                             </div>
                             
                             <p><strong>Available Actions:</strong></p>
                             <p>• <strong>Accept</strong> - Complete the sale at the offered price</p>
                             <p>• <strong>Decline</strong> - Politely decline the offer</p>
+                            <p>• <strong>Counter</strong> - Propose a different price</p>
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">You're receiving this email because you're the seller of this vehicle.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
+                            <p class="footer-text">You're receiving this email because you're the seller of this item.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
                             <p class="footer-text">Respond quickly to maximize your chances of a successful sale!</p>
                         </div>
                     </div>
@@ -5431,17 +4708,15 @@ const offerCanceledEmail = async (
   buyerEmail,
   buyerName,
   seller,
-  car,
+  auction,
   offerAmount,
   offerId
 ) => {
   try {
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: buyerEmail,
-      subject: `❌ Offer Canceled - ${car?.specifications?.get("year") || ""} ${
-        car?.title
-      }`,
+      subject: `❌ Offer Canceled - ${auction?.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -5451,6 +4726,7 @@ const offerCanceledEmail = async (
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .canceled-box { 
@@ -5477,8 +4753,8 @@ const offerCanceledEmail = async (
                             display: inline-block; 
                             margin: 10px 0;
                         }
-                        .vehicle-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
-                        .vehicle-title { color: #1e2d3b; font-size: 22px; margin-bottom: 15px; text-align: center; }
+                        .item-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
+                        .item-title { color: #1e2d3b; font-size: 22px; margin-bottom: 15px; text-align: center; }
                         .offer-details { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
                         .detail-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
                         .detail-label { color: #666; font-size: 14px; margin-bottom: 5px; }
@@ -5523,17 +4799,22 @@ const offerCanceledEmail = async (
                         .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #e9ecef; margin-top: 25px; }
                         .footer-text { margin: 5px 0; }
                         .highlight { color: #edcd1f; font-weight: bold; }
+                        .specs-section { margin: 25px 0; }
+                        .specs-title { color: #1e2d3b; font-size: 18px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .spec-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
+                        .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+                        .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
@@ -5544,16 +4825,22 @@ const offerCanceledEmail = async (
                             </div>
                             
                             <p>Dear <span class="highlight">${buyerName}</span>,</p>
-                            <p>We wanted to inform you that your offer has been canceled by the seller. This could be due to various reasons such as the vehicle being sold to another buyer, the seller changing their mind, or other circumstances.</p>
+                            <p>We wanted to inform you that your offer has been canceled by the seller. This could be due to various reasons such as the item being sold to another buyer, the seller changing their mind, or other circumstances.</p>
                             
-                            <div class="vehicle-card">
-                                <div class="vehicle-title">${
-                                  car?.specifications?.get("year") || ""
-                                } ${car?.title}</div>
+                            <div class="item-card">
+                                <div class="item-title">${auction?.title}</div>
+                                ${auction.subTitle ? `<p style="text-align: center; color: #666;">${auction.subTitle}</p>` : ''}
                                 
                                 <div class="offer-amount">
-                                    <span>£${offerAmount?.toLocaleString()}</span>
+                                    <span>${formatNOK(offerAmount)}</span>
                                 </div>
+                                
+                                ${auction.specifications ? `
+                                <div class="specs-section">
+                                    <div class="specs-title">📋 Item Details</div>
+                                    ${renderSpecifications(auction.specifications)}
+                                </div>
+                                ` : ''}
                                 
                                 <div class="offer-details">
                                     <div class="detail-item">
@@ -5566,10 +4853,7 @@ const offerCanceledEmail = async (
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Listing Price</div>
-                                        <div class="detail-value">£${
-                                          car?.buyNowPrice.toLocaleString() ||
-                                          car?.startPrice.toLocaleString()
-                                        }</div>
+                                        <div class="detail-value">${formatNOK(auction?.buyNowPrice || auction?.startPrice || 0)}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Status</div>
@@ -5580,43 +4864,35 @@ const offerCanceledEmail = async (
                             
                             <div class="seller-info">
                                 <div class="seller-title">🏪 SELLER INFORMATION</div>
-                                <p><strong>Seller:</strong> ${
-                                  seller?.firstName || seller?.username
-                                }</p>
-                                <p>The seller has chosen to cancel your offer on their vehicle.</p>
+                                <p><strong>Seller:</strong> ${seller?.firstName || seller?.username}</p>
+                                <p>The seller has chosen to cancel your offer on their item.</p>
                             </div>
                             
                             <div class="next-steps">
                                 <div class="steps-title">🔄 NEXT STEPS</div>
-                                <p>Don't worry - there are plenty of other great vehicles available!</p>
-                                <p>• You can make a new offer on this vehicle if the seller relists it</p>
-                                <p>• Browse similar vehicles in the same category</p>
-                                <p>• Use our search filters to find your perfect vehicle</p>
+                                <p>Don't worry - there are plenty of other great items available!</p>
+                                <p>• You can make a new offer on this item if the seller relists it</p>
+                                <p>• Browse similar items in the same categories</p>
+                                <p>• Use our search filters to find your perfect item</p>
                             </div>
                             
                             <div class="cta-box">
-                                <div class="cta-title">🚗 FIND ANOTHER VEHICLE</div>
-                                <p>Continue your search for the perfect vehicle. SpeedWays Auto has thousands of vehicles waiting for you.</p>
+                                <div class="cta-title">🎯 FIND ANOTHER ITEM</div>
+                                <p>Continue your search for the perfect item. BidNordic has thousands of auctions waiting for you.</p>
                                 <p style="margin: 20px 0;">
-                                    <a href="${
-                                      process.env.FRONTEND_URL
-                                    }/auctions" class="cta-button">BROWSE ALL VEHICLES</a>
+                                    <a href="${process.env.FRONTEND_URL}/auctions" class="cta-button">BROWSE ALL AUCTIONS</a>
                                 </p>
                                 <div>
-                                    <a href="${
-                                      process.env.FRONTEND_URL
-                                    }/auctions?category=${
-        car?.category
-      }" class="secondary-button">SIMILAR VEHICLES</a>
+                                    <a href="${process.env.FRONTEND_URL}/auctions?category=${auction?.categories?.[0]}" class="secondary-button">SIMILAR ITEMS</a>
                                 </div>
                             </div>
                             
-                            <p>Thank you for using SpeedWays Auto. We're here to help you find your dream vehicle!</p>
+                            <p>Thank you for using BidNordic. We're here to help you find your next great find!</p>
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">This is an automated notification from SpeedWays Auto.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
+                            <p class="footer-text">This is an automated notification from BidNordic.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
                             <p class="footer-text">If you have questions about this cancellation, please contact our support team.</p>
                         </div>
                     </div>
@@ -5637,19 +4913,15 @@ const offerAcceptedEmail = async (
   buyerEmail,
   buyerName,
   seller,
-  car,
+  auction,
   offerAmount,
   offerId
 ) => {
   try {
-    const specs = car.specifications
-      ? Object.fromEntries(car.specifications)
-      : {};
-
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: buyerEmail,
-      subject: `✅ Offer Accepted - ${specs?.year || ""} ${car?.title}`,
+      subject: `✅ Offer Accepted - ${auction?.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -5659,6 +4931,7 @@ const offerAcceptedEmail = async (
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .accepted-box { 
@@ -5685,8 +4958,8 @@ const offerAcceptedEmail = async (
                             display: inline-block; 
                             margin: 10px 0;
                         }
-                        .vehicle-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
-                        .vehicle-title { color: #1e2d3b; font-size: 24px; margin-bottom: 15px; text-align: center; }
+                        .item-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
+                        .item-title { color: #1e2d3b; font-size: 24px; margin-bottom: 15px; text-align: center; }
                         .offer-amount { 
                             font-size: 36px; 
                             font-weight: bold; 
@@ -5734,17 +5007,22 @@ const offerAcceptedEmail = async (
                         .highlight { color: #edcd1f; font-weight: bold; }
                         .contact-link { color: #1e2d3b; text-decoration: none; font-weight: bold; }
                         .contact-link:hover { color: #edcd1f; text-decoration: underline; }
+                        .specs-section { margin: 25px 0; }
+                        .specs-title { color: #1e2d3b; font-size: 18px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .spec-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
+                        .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+                        .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
@@ -5755,24 +5033,27 @@ const offerAcceptedEmail = async (
                             </div>
                             
                             <p>Dear <span class="highlight">${buyerName}</span>,</p>
-                            <p>Great news! The seller has accepted your offer. Your vehicle purchase has been confirmed and you're now ready to proceed with the sale.</p>
+                            <p>Great news! The seller has accepted your offer. Your purchase has been confirmed and you're now ready to proceed with the transaction.</p>
                             
-                            <div class="vehicle-card">
-                                <div class="vehicle-title">${
-                                  specs?.year || ""
-                                } ${car?.title}</div>
+                            <div class="item-card">
+                                <div class="item-title">${auction?.title}</div>
+                                ${auction.subTitle ? `<p style="text-align: center; color: #666;">${auction.subTitle}</p>` : ''}
                                 
                                 <div class="offer-amount">
-                                    <span>£${offerAmount?.toLocaleString()}</span>
+                                    <span>${formatNOK(offerAmount)}</span>
                                 </div>
+                                
+                                ${auction.specifications ? `
+                                <div class="specs-section">
+                                    <div class="specs-title">📋 Item Details</div>
+                                    ${renderSpecifications(auction.specifications)}
+                                </div>
+                                ` : ''}
                                 
                                 <div class="deal-summary">
                                     <div class="deal-item">
                                         <div class="deal-label">Original Price</div>
-                                        <div class="deal-value">£${
-                                          car?.buyNowPrice?.toLocaleString() ||
-                                          car?.startPrice?.toLocaleString()
-                                        }</div>
+                                        <div class="deal-value">${formatNOK(auction?.buyNowPrice || auction?.startPrice || 0)}</div>
                                     </div>
                                     <div class="deal-item">
                                         <div class="deal-label">Offer ID</div>
@@ -5787,22 +5068,13 @@ const offerAcceptedEmail = async (
                             
                             <div class="seller-info">
                                 <div class="seller-title">🏪 SELLER CONTACT INFORMATION</div>
-                                <p>Contact the seller within 24 hours to arrange payment and vehicle collection:</p>
+                                <p>Contact the seller within 24 hours to arrange payment and item collection/delivery:</p>
                                 
                                 <div class="contact-box">
-                                    <p><strong>Seller:</strong> ${
-                                      seller?.firstName || seller?.username
-                                    }</p>
-                                    ${
-                                      seller?.email
-                                        ? `<p><strong>Email:</strong> <a href="mailto:${seller?.email}" class="contact-link">${seller?.email}</a></p>`
-                                        : ""
-                                    }
-                                    ${
-                                      seller?.phone
-                                        ? `<p><strong>Phone:</strong> <a href="tel:${seller?.phone}" class="contact-link">${seller?.phone}</a></p>`
-                                        : ""
-                                    }
+                                    <p><strong>Seller:</strong> ${seller?.firstName || seller?.username}</p>
+                                    ${seller?.email ? `<p><strong>Email:</strong> <a href="mailto:${seller?.email}" class="contact-link">${seller?.email}</a></p>` : ""}
+                                    ${seller?.phone ? `<p><strong>Phone:</strong> <a href="tel:${seller?.phone}" class="contact-link">${seller?.phone}</a></p>` : ""}
+                                    ${auction?.location ? `<p><strong>Location:</strong> ${auction?.location}</p>` : ""}
                                 </div>
                             </div>
                             
@@ -5810,17 +5082,15 @@ const offerAcceptedEmail = async (
                                 <div class="steps-title">📝 NEXT STEPS TO COMPLETE PURCHASE</div>
                                 <p>1. <strong>Contact the seller</strong> within 24 hours to arrange payment method</p>
                                 <p>2. <strong>Complete payment</strong> as agreed with the seller</p>
-                                <p>3. <strong>Schedule collection</strong> of the vehicle</p>
-                                <p>4. <strong>Transfer ownership</strong> with DVLA paperwork</p>
+                                <p>3. <strong>Schedule collection/delivery</strong> of the item</p>
+                                <p>4. <strong>Complete handover</strong> and any required documentation</p>
                             </div>
                             
                             <div class="cta-box">
-                                <div class="cta-title">🚗 COMPLETE YOUR PURCHASE</div>
-                                <p>Access your purchase details, download your invoice, and contact the seller from your dashboard.</p>
+                                <div class="cta-title">📦 COMPLETE YOUR PURCHASE</div>
+                                <p>Access your purchase details, download invoices, and contact the seller from your dashboard.</p>
                                 <p style="margin: 20px 0;">
-                                    <a href="${
-                                      process.env.FRONTEND_URL
-                                    }/bidder/auctions/won" class="cta-button">VIEW PURCHASE</a>
+                                    <a href="${process.env.FRONTEND_URL}/buyer/offers/accepted" class="cta-button">VIEW PURCHASE</a>
                                 </p>
                             </div>
                             
@@ -5828,11 +5098,9 @@ const offerAcceptedEmail = async (
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">Congratulations on your successful purchase! This is an automated confirmation from SpeedWays Auto.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
-                            <p class="footer-text">Need assistance? Contact support at ${
-                              process.env.EMAIL_USER || "info@speedwaysuk.com"
-                            }</p>
+                            <p class="footer-text">Congratulations on your successful purchase! This is an automated confirmation from BidNordic.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
+                            <p class="footer-text">Need assistance? Contact support at ${process.env.EMAIL_USER || "admin@bidnordic.com"}</p>
                         </div>
                     </div>
                 </body>
@@ -5852,20 +5120,16 @@ const offerRejectedEmail = async (
   buyerEmail,
   buyerName,
   seller,
-  car,
+  auction,
   offerAmount,
   offerId,
   reason
 ) => {
   try {
-    const specs = car.specifications
-      ? Object.fromEntries(car.specifications)
-      : {};
-
     const info = await transporter.sendMail({
-      from: `"SpeedWays Auto" <${process.env.EMAIL_USER}>`,
+      from: `"BidNordic" <${process.env.EMAIL_USER}>`,
       to: buyerEmail,
-      subject: `❌ Offer Declined - ${specs?.year || ""} ${car?.title}`,
+      subject: `❌ Offer Declined - ${auction?.title}`,
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -5875,6 +5139,7 @@ const offerRejectedEmail = async (
                         .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
                         .header { background: #1e2d3b; padding: 25px 20px; text-align: center; }
                         .logo-container { margin-bottom: 15px; }
+                        .brand-name { color: #edcd1f; font-size: 28px; font-weight: bold; letter-spacing: 1px; margin: 10px 0; }
                         .tagline { color: #ffffff; font-size: 16px; margin: 5px 0 0 0; opacity: 0.9; }
                         .content { padding: 25px; }
                         .rejected-box { 
@@ -5903,8 +5168,8 @@ const offerRejectedEmail = async (
                         }
                         .reason-box { background: #fff3cd; padding: 20px; border-radius: 8px; margin: 25px 0; border: 1px solid #ffeaa7; }
                         .reason-title { color: #856404; font-size: 18px; margin-bottom: 15px; font-weight: bold; }
-                        .vehicle-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
-                        .vehicle-title { color: #1e2d3b; font-size: 22px; margin-bottom: 15px; text-align: center; }
+                        .item-card { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #edcd1f; }
+                        .item-title { color: #1e2d3b; font-size: 22px; margin-bottom: 15px; text-align: center; }
                         .offer-details { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
                         .detail-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
                         .detail-label { color: #666; font-size: 14px; margin-bottom: 5px; }
@@ -5949,17 +5214,22 @@ const offerRejectedEmail = async (
                         .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #e9ecef; margin-top: 25px; }
                         .footer-text { margin: 5px 0; }
                         .highlight { color: #edcd1f; font-weight: bold; }
+                        .specs-section { margin: 25px 0; }
+                        .specs-title { color: #1e2d3b; font-size: 18px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+                        .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+                        .spec-item { background: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e9ecef; text-align: center; }
+                        .spec-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+                        .spec-value { font-weight: bold; color: #1e2d3b; font-size: 16px; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
                             <div class="logo-container">
-                                <img src="${
-                                  process.env.FRONTEND_URL
-                                }/logo.png" alt="SpeedWays Auto Logo" class="logo">
+                                <img src="${process.env.FRONTEND_URL}/logo.png" alt="BidNordic Logo" class="logo">
                             </div>
-                            <div class="tagline">Premium Vehicle Auctions</div>
+                            <div class="brand-name">BidNordic</div>
+                            <div class="tagline">Nordic Online Auctions</div>
                         </div>
                         
                         <div class="content">
@@ -5970,27 +5240,29 @@ const offerRejectedEmail = async (
                             </div>
                             
                             <p>Dear <span class="highlight">${buyerName}</span>,</p>
-                            <p>We wanted to inform you that the seller has decided not to accept your offer on their vehicle. This is a normal part of the negotiation process on SpeedWays Auto.</p>
+                            <p>We wanted to inform you that the seller has decided not to accept your offer on their item. This is a normal part of the negotiation process on BidNordic.</p>
                             
-                            ${
-                              reason
-                                ? `
+                            ${reason ? `
                             <div class="reason-box">
                                 <div class="reason-title">📝 SELLER'S RESPONSE</div>
                                 <p>"${reason}"</p>
                             </div>
-                            `
-                                : ""
-                            }
+                            ` : ""}
                             
-                            <div class="vehicle-card">
-                                <div class="vehicle-title">${
-                                  specs?.year || ""
-                                } ${car?.title}</div>
+                            <div class="item-card">
+                                <div class="item-title">${auction?.title}</div>
+                                ${auction.subTitle ? `<p style="text-align: center; color: #666;">${auction.subTitle}</p>` : ''}
                                 
                                 <div class="offer-amount">
-                                    <span>£${offerAmount?.toLocaleString()}</span>
+                                    <span>${formatNOK(offerAmount)}</span>
                                 </div>
+                                
+                                ${auction.specifications ? `
+                                <div class="specs-section">
+                                    <div class="specs-title">📋 Item Details</div>
+                                    ${renderSpecifications(auction.specifications)}
+                                </div>
+                                ` : ''}
                                 
                                 <div class="offer-details">
                                     <div class="detail-item">
@@ -6003,10 +5275,7 @@ const offerRejectedEmail = async (
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Listing Price</div>
-                                        <div class="detail-value">£${
-                                          car?.buyNowPrice?.toLocaleString() ||
-                                          car?.startPrice?.toLocaleString()
-                                        }</div>
+                                        <div class="detail-value">${formatNOK(auction?.buyNowPrice || auction?.startPrice || 0)}</div>
                                     </div>
                                     <div class="detail-item">
                                         <div class="detail-label">Status</div>
@@ -6017,45 +5286,35 @@ const offerRejectedEmail = async (
                             
                             <div class="seller-info">
                                 <div class="seller-title">🏪 SELLER INFORMATION</div>
-                                <p><strong>Seller:</strong> ${
-                                  seller?.firstName || seller?.username
-                                }</p>
+                                <p><strong>Seller:</strong> ${seller?.firstName || seller?.username}</p>
                                 <p>The seller has chosen to decline your offer at this time. They may be open to a different offer amount or terms.</p>
                             </div>
                             
                             <div class="next-steps">
                                 <div class="steps-title">🔄 NEXT STEPS & OPTIONS</div>
                                 <p>• <strong>Make a new offer</strong> - Try a different amount or terms</p>
-                                <p>• <strong>Browse other vehicles</strong> - Find similar options that might be a better fit</p>
+                                <p>• <strong>Browse other items</strong> - Find similar options that might be a better fit</p>
                                 <p>• <strong>Use Buy Now option</strong> - If available, purchase immediately at the listed price</p>
                             </div>
                             
                             <div class="cta-box">
-                                <div class="cta-title">🚗 KEEP SHOPPING</div>
-                                <p>Don't be discouraged - negotiation is part of the car buying process. Explore other options or try a different approach.</p>
+                                <div class="cta-title">🎯 KEEP SHOPPING</div>
+                                <p>Don't be discouraged - negotiation is part of the auction process. Explore other options or try a different approach.</p>
                                 <p style="margin: 20px 0;">
-                                    <a href="${
-                                      process.env.FRONTEND_URL
-                                    }/auctions" class="cta-button">BROWSE OTHER VEHICLES</a>
+                                    <a href="${process.env.FRONTEND_URL}/auctions" class="cta-button">BROWSE OTHER AUCTIONS</a>
                                 </p>
                                 <div>
-                                    <a href="${
-                                      process.env.FRONTEND_URL
-                                    }/auction/${
-        car._id
-      }" class="secondary-button">MAKE NEW OFFER</a>
-                                    <a href="${
-                                      process.env.FRONTEND_URL
-                                    }/bidder/offers" class="secondary-button">MY OFFERS</a>
+                                    <a href="${process.env.FRONTEND_URL}/auction/${auction._id}" class="secondary-button">MAKE NEW OFFER</a>
+                                    <a href="${process.env.FRONTEND_URL}/buyer/offers" class="secondary-button">MY OFFERS</a>
                                 </div>
                             </div>
                             
-                            <p><strong>Remember:</strong> Each seller has their own criteria for accepting offers. Your next offer on a different vehicle might be accepted!</p>
+                            <p><strong>Remember:</strong> Each seller has their own criteria for accepting offers. Your next offer on a different item might be accepted!</p>
                         </div>
                         
                         <div class="footer">
-                            <p class="footer-text">This is an automated notification from SpeedWays Auto.</p>
-                            <p class="footer-text">© ${new Date().getFullYear()} SpeedWays Auto. All rights reserved.</p>
+                            <p class="footer-text">This is an automated notification from BidNordic.</p>
+                            <p class="footer-text">© ${new Date().getFullYear()} BidNordic. All rights reserved.</p>
                             <p class="footer-text">If you have questions about this decision, you can contact the seller directly.</p>
                         </div>
                     </div>
@@ -6070,6 +5329,12 @@ const offerRejectedEmail = async (
     console.error(`❌ Failed to send offer rejected email:`, error);
     return false;
   }
+};
+
+// Note: sendOfferOutbidNotifications is not needed as offers cannot be outbid
+const sendOfferOutbidNotifications = async () => {
+  console.log("sendOfferOutbidNotifications is deprecated - offers cannot be outbid");
+  return false;
 };
 
 export {
@@ -6097,8 +5362,9 @@ export {
   newBidNotificationEmail, // tested
   newOfferNotificationEmail, // tested
   newAuctionNotificationEmail, // tested
-  sendOfferOutbidNotifications, // Not tested, we do not need it I think because offers can not be outbid
+  sendOfferOutbidNotifications, // Not needed
   paymentCompletedEmail, // tested
+  paymentCompletedSellerEmail,
   paymentSuccessEmail, // No need to test now
   offerCanceledEmail, // tested
   offerAcceptedEmail, // tested

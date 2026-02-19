@@ -1,6 +1,7 @@
 import { model, Schema } from "mongoose";
 import mongoose from "mongoose";
 import agendaService from "../services/agendaService.js";
+import { calculateCommission } from "../utils/commissionCalculator.js";
 
 // Create a separate schema for offers
 
@@ -149,7 +150,7 @@ const auctionSchema = new Schema(
     },
     auctionType: {
       type: String,
-      enum: ["standard", "reserve", "buy_now"], // ADDED 'buy_now'
+      enum: ["standard", "reserve", "buy_now", "giveaway"], // ADDED 'giveaway'
       required: true,
     },
     allowOffers: {
@@ -253,8 +254,16 @@ const auctionSchema = new Schema(
     finalPrice: {
       type: Number,
     },
-
     commissionAmount: {
+      type: Number,
+      default: 0,
+    },
+    commissionType: {
+      type: String,
+      enum: ["fixed", "percentage", null],
+      default: null,
+    },
+    commissionValue: {
       type: Number,
       default: 0,
     },
@@ -341,6 +350,18 @@ auctionSchema.index({ "offers.expiresAt": 1 }); // NEW: Index for offer expiry
 auctionSchema.virtual("timeRemaining").get(function () {
   if (this.status !== "active") return 0;
   return Math.max(0, this.endDate - new Date());
+});
+
+// Add this virtual to your auction schema
+auctionSchema.virtual('isTimedAuction').get(function () {
+  // Only standard and reserve auctions have timers
+  return this.auctionType === 'standard' || this.auctionType === 'reserve';
+});
+
+// Also add this for convenience
+auctionSchema.virtual('isAlwaysAvailable').get(function () {
+  // Buy now and giveaway are always available until purchased
+  return this.auctionType === 'buy_now' || this.auctionType === 'giveaway';
 });
 
 // Check if auction is about to end
@@ -444,6 +465,55 @@ auctionSchema.methods.placeBid = async function (
 };
 
 // NEW: Method to buy now
+// auctionSchema.methods.buyNow = async function (buyerId, buyerUsername) {
+//   const now = new Date();
+
+//   if (this.status !== "active") {
+//     throw new Error("Auction is not active");
+//   }
+
+//   if (!this.buyNowPrice) {
+//     throw new Error("Buy Now is not available for this auction");
+//   }
+
+//   if (now >= this.endDate) {
+//     throw new Error("Auction has ended");
+//   }
+
+//   // Add buy now as a bid with special flag
+//   this.bids.push({
+//     bidder: buyerId,
+//     bidderUsername: buyerUsername,
+//     amount: this.buyNowPrice,
+//     timestamp: now,
+//     isBuyNow: true,
+//   });
+
+//   // Set auction as sold
+//   this.currentPrice = this.buyNowPrice;
+//   this.currentBidder = buyerId;
+//   // this.bidCount += 1;
+//   this.winner = buyerId;
+//   this.finalPrice = this.buyNowPrice;
+//   this.status = "sold";
+//   this.endDate = now; // End auction immediately
+
+//   // Reject all pending offers (if any)
+//   this.offers.forEach((offer) => {
+//     if (offer.status === "pending") {
+//       offer.status = "rejected";
+//       offer.sellerResponse = "Offer rejected - item purchased via Buy Now";
+//     }
+//   });
+
+//   // Cancel any scheduled jobs
+//   await agendaService.cancelAuctionJobs(this._id);
+
+//   return this.save();
+// };
+
+// In auction.model.js - find the buyNow method and update it
+
 auctionSchema.methods.buyNow = async function (buyerId, buyerUsername) {
   const now = new Date();
 
@@ -451,11 +521,16 @@ auctionSchema.methods.buyNow = async function (buyerId, buyerUsername) {
     throw new Error("Auction is not active");
   }
 
-  if (!this.buyNowPrice) {
-    throw new Error("Buy Now is not available for this auction");
+  // MODIFIED: Allow giveaways to proceed without buyNowPrice
+  if (this.auctionType !== "giveaway") {
+    // Only check buyNowPrice for non-giveaway auctions
+    if (!this.buyNowPrice) {
+      throw new Error("Buy Now is not available for this auction");
+    }
   }
 
-  if (now >= this.endDate) {
+  if (now >= this.endDate && this.auctionType !== "giveaway") {
+    // Giveaways don't have end date restrictions
     throw new Error("Auction has ended");
   }
 
@@ -463,19 +538,26 @@ auctionSchema.methods.buyNow = async function (buyerId, buyerUsername) {
   this.bids.push({
     bidder: buyerId,
     bidderUsername: buyerUsername,
-    amount: this.buyNowPrice,
+    amount: this.auctionType === "giveaway" ? 0 : this.buyNowPrice,
     timestamp: now,
     isBuyNow: true,
   });
 
   // Set auction as sold
-  this.currentPrice = this.buyNowPrice;
+  this.currentPrice = this.auctionType === "giveaway" ? 0 : this.buyNowPrice;
   this.currentBidder = buyerId;
-  // this.bidCount += 1;
   this.winner = buyerId;
-  this.finalPrice = this.buyNowPrice;
+  this.finalPrice = this.auctionType === "giveaway" ? 0 : this.buyNowPrice;
   this.status = "sold";
   this.endDate = now; // End auction immediately
+
+  // Calculate and store commission (only for non-giveaway)
+  if (this.auctionType !== "giveaway") {
+    const commissionData = await calculateCommission(this.finalPrice);
+    this.commissionAmount = commissionData.commissionAmount;
+    this.commissionType = commissionData.commissionType;
+    this.commissionValue = commissionData.commissionValue;
+  }
 
   // Reject all pending offers (if any)
   this.offers.forEach((offer) => {
@@ -572,6 +654,12 @@ auctionSchema.methods.respondToOffer = async function (
       this.status = "sold";
       this.endDate = new Date(); // End auction immediately
 
+      // Calculate and store commission
+      const commissionData = await calculateCommission(this.finalPrice);
+      this.commissionAmount = commissionData.commissionAmount;
+      this.commissionType = commissionData.commissionType;
+      this.commissionValue = commissionData.commissionValue;
+
       // Reject all other pending offers
       this.offers.forEach((o) => {
         if (o.status === "pending" && o._id.toString() !== offerId) {
@@ -633,6 +721,12 @@ auctionSchema.methods.respondToCounterOffer = async function (offerId, accept) {
     this.finalPrice = offer.counterOffer.amount;
     this.status = "sold";
     this.endDate = new Date();
+
+    // Calculate and store commission
+    const commissionData = await calculateCommission(this.finalPrice);
+    this.commissionAmount = commissionData.commissionAmount;
+    this.commissionType = commissionData.commissionType;
+    this.commissionValue = commissionData.commissionValue;
 
     // Reject all other pending offers
     this.offers.forEach((o) => {
@@ -714,8 +808,6 @@ auctionSchema.methods.reactivateAndAcceptOffer = async function (
     isAdmin ? "admin" : "seller"
   } on ${new Date().toLocaleDateString()}`;
   offer.reactivatedAt = new Date();
-  // Optionally disable future reactivation if you want
-  // offer.canBeReactivated = false;
 
   // Update auction details
   this.currentPrice = offer.amount;
@@ -724,6 +816,12 @@ auctionSchema.methods.reactivateAndAcceptOffer = async function (
   this.finalPrice = offer.amount;
   this.status = "sold";
   this.endDate = new Date();
+
+  // Calculate and store commission
+  const commissionData = await calculateCommission(this.finalPrice);
+  this.commissionAmount = commissionData.commissionAmount;
+  this.commissionType = commissionData.commissionType;
+  this.commissionValue = commissionData.commissionValue;
 
   // Reject all other pending offers
   this.offers.forEach((o) => {
@@ -801,22 +899,48 @@ auctionSchema.methods.isReserveMet = function () {
 };
 
 // Method to end auction
-// auctionSchema.methods.endAuction = function () {
-//   if (this.status !== "active") return;
+// auctionSchema.methods.endAuction = async function () {
+//   if (this.status !== "active") return this;
 
-//   this.status = "ended";
+//   const now = new Date();
+//   let wasSold = false;
 
 //   // For standard auctions OR reserve auctions that met reserve
-//   if (
-//     this.bidCount > 0 &&
-//     (this.auctionType === "standard" || this.isReserveMet())
-//   ) {
-//     this.status = "sold";
-//     this.winner = this.currentBidder;
-//     this.finalPrice = this.currentPrice;
-//   } else if (this.auctionType === "reserve" && !this.isReserveMet()) {
-//     this.status = "reserve_not_met";
+//   if (this.bidCount > 0) {
+//     if (this.auctionType === "standard") {
+//       // Standard auction with bids - sold
+//       this.status = "sold";
+//       this.winner = this.currentBidder;
+//       this.finalPrice = this.currentPrice;
+//       wasSold = true;
+//     } else if (this.auctionType === "reserve") {
+//       // Reserve auction - check if reserve is met
+//       if (this.isReserveMet()) {
+//         this.status = "sold";
+//         this.winner = this.currentBidder;
+//         this.finalPrice = this.currentPrice;
+//         wasSold = true;
+//       } else {
+//         this.status = "reserve_not_met";
+//       }
+//     } else if (this.auctionType === "buy_now") {
+//       // Buy Now auction that ended normally (not via Buy Now)
+//       if (this.bidCount > 0) {
+//         this.status = "sold";
+//         this.winner = this.currentBidder;
+//         this.finalPrice = this.currentPrice;
+//         wasSold = true;
+//       } else {
+//         this.status = "ended";
+//       }
+//     }
+//   } else {
+//     // No bids - just end it
+//     this.status = "ended";
 //   }
+
+//   // Set actual end time
+//   this.endDate = now;
 
 //   // Also reject any pending offers when auction ends
 //   this.offers.forEach((offer) => {
@@ -826,10 +950,17 @@ auctionSchema.methods.isReserveMet = function () {
 //     }
 //   });
 
-//   return this.save();
+//   await this.save();
+
+//   // Return result object
+//   return {
+//     wasSold,
+//     winner: this.winner,
+//     finalPrice: this.finalPrice,
+//     newStatus: this.status,
+//   };
 // };
 
-// Update the endAuction method in auction.model.js
 auctionSchema.methods.endAuction = async function () {
   if (this.status !== "active") return this;
 
@@ -844,6 +975,12 @@ auctionSchema.methods.endAuction = async function () {
       this.winner = this.currentBidder;
       this.finalPrice = this.currentPrice;
       wasSold = true;
+
+      // Calculate and store commission
+      const commissionData = await calculateCommission(this.finalPrice);
+      this.commissionAmount = commissionData.commissionAmount;
+      this.commissionType = commissionData.commissionType;
+      this.commissionValue = commissionData.commissionValue;
     } else if (this.auctionType === "reserve") {
       // Reserve auction - check if reserve is met
       if (this.isReserveMet()) {
@@ -851,6 +988,12 @@ auctionSchema.methods.endAuction = async function () {
         this.winner = this.currentBidder;
         this.finalPrice = this.currentPrice;
         wasSold = true;
+
+        // Calculate and store commission
+        const commissionData = await calculateCommission(this.finalPrice);
+        this.commissionAmount = commissionData.commissionAmount;
+        this.commissionType = commissionData.commissionType;
+        this.commissionValue = commissionData.commissionValue;
       } else {
         this.status = "reserve_not_met";
       }
@@ -861,6 +1004,12 @@ auctionSchema.methods.endAuction = async function () {
         this.winner = this.currentBidder;
         this.finalPrice = this.currentPrice;
         wasSold = true;
+
+        // Calculate and store commission
+        const commissionData = await calculateCommission(this.finalPrice);
+        this.commissionAmount = commissionData.commissionAmount;
+        this.commissionType = commissionData.commissionType;
+        this.commissionValue = commissionData.commissionValue;
       } else {
         this.status = "ended";
       }
@@ -889,6 +1038,7 @@ auctionSchema.methods.endAuction = async function () {
     winner: this.winner,
     finalPrice: this.finalPrice,
     newStatus: this.status,
+    commissionAmount: this.commissionAmount,
   };
 };
 

@@ -9,16 +9,6 @@ import axiosInstance from "../utils/axiosInstance";
 // Car filters that apply to ALL categories
 const carFilters = {
     'ALL': {
-        basic: [
-            { name: 'make', label: 'Make', type: 'text', placeholder: 'e.g., Toyota, BMW, Tesla' },
-            { name: 'model', label: 'Model', type: 'text', placeholder: 'e.g., Camry, 3 Series, Model S' },
-            { name: 'yearRange', label: 'Year Range', type: 'range', min: 1900, max: 2025, fields: ['yearMin', 'yearMax'] }
-        ],
-        details: [
-            { name: 'transmission', label: 'Transmission', type: 'select', options: ['', 'Manual', 'Automatic', 'Dual-Clutch', 'CVT', 'Semi-Automatic'] },
-            { name: 'fuelType', label: 'Fuel Type', type: 'select', options: ['', 'Gasoline', 'Diesel', 'Hybrid', 'Electric'] },
-            { name: 'condition', label: 'Condition', type: 'select', options: ['', 'Excellent', 'Good', 'Fair', 'Project', 'Modified'] }
-        ],
         auction: [
             { name: 'auctionType', label: 'Auction Type', type: 'select', options: ['', 'standard', 'reserve', 'buy_now'] },
             { name: 'allowOffers', label: 'Accepts Offers', type: 'select', options: ['', 'true', 'false'] }
@@ -29,6 +19,7 @@ const carFilters = {
 // FiltersSection Component
 const FiltersSection = ({
     uiFilters,
+    setUiFilters,  // Add this
     categories,
     loadingCategories,
     handleFilterChange,
@@ -36,10 +27,74 @@ const FiltersSection = ({
     resetFilters,
     toggleFilterSection,
     activeFilterSections,
-    setShowMobileFilters
+    setShowMobileFilters,
+    parentCategories,
+    subCategories,
+    selectedParent,
+    setSelectedParent,
+    updateFilters,  // Add this
+    location  // Add this
 }) => {
     const getCurrentCategoryFilters = () => {
         return carFilters['ALL'] || {};
+    };
+
+    // Handle parent category selection
+    const handleParentChange = (e) => {
+        const parentSlug = e.target.value;
+        setSelectedParent(parentSlug);
+
+        // Update filters with parent category only
+        const newFilters = {
+            ...uiFilters,
+            categories: parentSlug ? [parentSlug] : [], // Set categories array with parent
+            category: '' // Clear subcategory selection
+        };
+
+        setUiFilters(newFilters);
+        updateFilters(newFilters);
+
+        // Update URL
+        const searchParams = new URLSearchParams(location.search);
+        if (parentSlug) {
+            searchParams.set('category', parentSlug);
+            searchParams.delete('subcategory');
+        } else {
+            searchParams.delete('category');
+            searchParams.delete('subcategory');
+        }
+        const newUrl = `${location.pathname}?${searchParams.toString()}`;
+        window.history.replaceState(null, '', newUrl);
+    };
+
+    // Handle subcategory selection
+    const handleSubcategoryChange = (e) => {
+        const subcategorySlug = e.target.value;
+
+        // Update filters based on selection
+        const newFilters = {
+            ...uiFilters,
+            categories: subcategorySlug ?
+                [selectedParent, subcategorySlug] : // Both parent and subcategory
+                (selectedParent ? [selectedParent] : []), // Only parent or empty
+            category: subcategorySlug
+        };
+
+        setUiFilters(newFilters);
+        updateFilters(newFilters);
+
+        // Update URL
+        const searchParams = new URLSearchParams(location.search);
+        if (selectedParent) {
+            searchParams.set('category', selectedParent);
+            if (subcategorySlug) {
+                searchParams.set('subcategory', subcategorySlug);
+            } else {
+                searchParams.delete('subcategory');
+            }
+        }
+        const newUrl = `${location.pathname}?${searchParams.toString()}`;
+        window.history.replaceState(null, '', newUrl);
     };
 
     const renderFilterInput = (filter) => {
@@ -114,8 +169,8 @@ const FiltersSection = ({
     };
 
     const statusOptions = [
-        { value: "", label: "All Status" },
         { value: "active", label: "Active" },
+        { value: "", label: "All Status" },
         { value: "approved", label: "Upcoming" },
         { value: "ended", label: "Ended" },
         { value: "sold", label: "Sold" }
@@ -149,27 +204,46 @@ const FiltersSection = ({
                     </div>
                 </div>
 
-                {/* Category Filter */}
+                {/* Category Filter - Updated for Parent/Subcategory */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+
+                    {/* Parent Category Dropdown */}
+                    <select
+                        name="parentCategory"
+                        value={selectedParent}
+                        onChange={handleParentChange} // Use the new handler
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent mb-2"
+                        disabled={loadingCategories}
+                    >
+                        <option value="">Select Category</option>
+                        {parentCategories.map(parent => (
+                            <option key={parent.slug} value={parent.slug}>
+                                {parent.name}
+                            </option>
+                        ))}
+                    </select>
+
+                    {/* Subcategory Dropdown */}
                     <select
                         name="category"
                         value={uiFilters.category}
-                        onChange={handleFilterChange}
+                        onChange={handleSubcategoryChange} // Use the new handler
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        disabled={loadingCategories}
+                        disabled={!selectedParent || loadingCategories}
                     >
-                        <option value="">All Categories</option>
-                        {loadingCategories ? (
-                            <option value="" disabled>Loading categories...</option>
-                        ) : (
-                            categories.map(category => (
-                                <option key={category.slug} value={category.slug}>
-                                    {category.name}
-                                </option>
-                            ))
-                        )}
+                        <option value="">All Subcategories</option>
+                        {subCategories.map(sub => (
+                            <option key={sub.slug} value={sub.slug}>
+                                {sub.name}
+                            </option>
+                        ))}
                     </select>
+
+                    {/* Show loading state */}
+                    {loadingCategories && (
+                        <p className="text-xs text-gray-500 mt-1">Loading categories...</p>
+                    )}
                 </div>
 
                 {/* Status Filter */}
@@ -227,34 +301,43 @@ const FiltersSection = ({
                 </div>
 
                 {/* Car-specific Filters (Always shown since all auctions are cars) */}
-                <div className="border-t pt-6">
-                    <h3 className="font-semibold text-gray-800 mb-4">Car Filters</h3>
+                {/* Auction Filters */}
+                <div className="">
+                    {/* Auction Type */}
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Auction Type
+                        </label>
+                        <select
+                            name="auctionType"
+                            value={uiFilters.auctionType || ''}
+                            onChange={handleFilterChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        >
+                            <option value="">All Types</option>
+                            <option value="standard">Standard Auction</option>
+                            <option value="reserve">Reserve Auction</option>
+                            <option value="buy_now">Buy Now Auction</option>
+                            <option value="giveaway">Free Giveaway</option>
+                        </select>
+                    </div>
 
-                    {Object.entries(currentFilters).map(([section, filters]) => (
-                        <div key={section} className="mb-4">
-                            <button
-                                onClick={() => toggleFilterSection(section)}
-                                className="flex items-center justify-between w-full text-left font-medium text-gray-700 mb-2"
-                            >
-                                <span>{section.charAt(0).toUpperCase() + section.slice(1)}</span>
-                                <ChevronDown
-                                    size={16}
-                                    className={`transform transition-transform ${activeFilterSections[section] ? 'rotate-180' : ''}`}
-                                />
-                            </button>
-
-                            <div className={`space-y-3 ${activeFilterSections[section] ? 'block' : 'hidden'}`}>
-                                {filters.map(filter => (
-                                    <div key={filter.name}>
-                                        <label className="block text-sm text-gray-600 mb-1">
-                                            {filter.label}
-                                        </label>
-                                        {renderFilterInput(filter)}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
+                    {/* Allow Offers */}
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Accepts Offers
+                        </label>
+                        <select
+                            name="allowOffers"
+                            value={uiFilters.allowOffers || ''}
+                            onChange={handleFilterChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                        >
+                            <option value="">All</option>
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -293,46 +376,136 @@ function Auctions() {
         sortOrder: "desc",
         auctionType: "",
         allowOffers: "",
-        make: "",
-        model: "",
-        yearMin: "",
-        yearMax: "",
-        transmission: "",
-        fuelType: "",
-        condition: ""
     });
 
     const [categories, setCategories] = useState([]);
-    const [loadingCategories, setLoadingCategories] = useState(false);
     const location = useLocation();
     const [showMobileFilters, setShowMobileFilters] = useState(false);
     const [activeFilterSections, setActiveFilterSections] = useState({});
     const [debounceTimer, setDebounceTimer] = useState(null);
     const [viewMode, setViewMode] = useState("grid"); // "grid" or "list"
+    const [parentCategories, setParentCategories] = useState([]);
+    const [subCategories, setSubCategories] = useState([]);
+    const [selectedParent, setSelectedParent] = useState('');
+    const [loadingCategories, setLoadingCategories] = useState(false);
 
-    // Fetch categories on component mount
+    // Read URL parameters on page load
+useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const categoryParam = searchParams.get('category');
+    const subcategoryParam = searchParams.get('subcategory');
+    const statusParam = searchParams.get('status');
+
+    const newFilters = { ...uiFilters };
+    
+    // Build categories array from URL params
+    if (categoryParam || subcategoryParam) {
+        const categorySlugs = [];
+        
+        if (categoryParam) {
+            categorySlugs.push(categoryParam);
+            setSelectedParent(categoryParam);
+        }
+        
+        if (subcategoryParam) {
+            categorySlugs.push(subcategoryParam);
+            newFilters.category = subcategoryParam;
+        }
+        
+        newFilters.categories = categorySlugs;
+    }
+    
+    // IMPORTANT: Only set status from URL if it exists, otherwise keep 'active'
+    if (statusParam) {
+        newFilters.status = statusParam;
+    } else {
+        newFilters.status = 'active'; // Default to active
+    }
+
+    setUiFilters(newFilters);
+
+    // Only update API filters if we have parameters
+    if (categoryParam || subcategoryParam || statusParam) {
+        updateFilters(newFilters);
+    }
+}, [location.search]);
+
+    // Fetch parent categories on mount
     useEffect(() => {
-        fetchCategories();
+        const fetchParentCategories = async () => {
+            try {
+                setLoadingCategories(true);
+                const { data } = await axiosInstance.get('/api/v1/categories/public/parents');
+                if (data.success) {
+                    setParentCategories(data.data);
+                }
+            } catch (error) {
+                console.error('Error fetching parent categories:', error);
+            } finally {
+                setLoadingCategories(false);
+            }
+        };
+
+        fetchParentCategories();
     }, []);
 
-    const fetchCategories = async () => {
-        try {
-            setLoadingCategories(true);
-            const response = await axiosInstance.get('/api/v1/admin/categories/public/active');
-
-            if (response.data.success) {
-                // Filter out "Explore" category
-                const apiCategories = response.data.data.filter(cat =>
-                    !cat.isExplore && cat.name && cat.slug
-                );
-                setCategories(apiCategories);
+    useEffect(() => {
+        const fetchSubCategories = async () => {
+            if (!selectedParent) {
+                setSubCategories([]);
+                return;
             }
-        } catch (err) {
-            console.error('Error fetching categories:', err);
-        } finally {
-            setLoadingCategories(false);
+
+            try {
+                setLoadingCategories(true);
+                const { data } = await axiosInstance.get(`/api/v1/categories/public/${selectedParent}/children`);
+                if (data.success) {
+                    setSubCategories(data.data.subcategories);
+                }
+            } catch (error) {
+                console.error('Error fetching subcategories:', error);
+                setSubCategories([]);
+            } finally {
+                setLoadingCategories(false);
+            }
+        };
+
+        fetchSubCategories();
+    }, [selectedParent]);
+
+    // After subcategories load, set the category filter if we have a subcategory param
+    useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const categoryParam = searchParams.get('category');
+        const subcategoryParam = searchParams.get('subcategory');
+
+        if (subcategoryParam && subCategories.length > 0) {
+            // Check if the subcategory exists in the loaded subcategories
+            const subcategoryExists = subCategories.some(sub => sub.slug === subcategoryParam);
+
+            if (subcategoryExists) {
+                // Build complete categories array
+                const categorySlugs = [];
+                if (categoryParam) {
+                    categorySlugs.push(categoryParam);
+                }
+                categorySlugs.push(subcategoryParam);
+
+                setUiFilters(prev => ({
+                    ...prev,
+                    categories: categorySlugs,
+                    category: subcategoryParam
+                }));
+
+                // Update API filters
+                updateFilters({
+                    ...uiFilters,
+                    categories: categorySlugs,
+                    category: subcategoryParam
+                });
+            }
         }
-    };
+    }, [subCategories, location.search]);
 
     // Sync UI filters with API filters
     useEffect(() => {
@@ -444,8 +617,8 @@ function Auctions() {
                 {/* Header */}
                 <div className="bg-white border-b border-gray-200 px-8 py-8">
                     <div className="container mx-auto">
-                        <h1 className="text-3xl font-bold text-gray-900">Car Auctions</h1>
-                        <p className="text-gray-600 mt-2">Browse through our selection of premium vehicles across all categories</p>
+                        <h1 className="text-3xl font-bold text-gray-900">All Auctions</h1>
+                        <p className="text-gray-600 mt-2">Browse through our selection of premium machinery and equipment across all categories.</p>
                     </div>
                 </div>
 
@@ -456,6 +629,7 @@ function Auctions() {
                         <div className="hidden lg:block lg:w-1/4 xl:w-1/5">
                             <FiltersSection
                                 uiFilters={uiFilters}
+                                setUiFilters={setUiFilters}  // Add this line
                                 categories={categories}
                                 loadingCategories={loadingCategories}
                                 handleFilterChange={handleFilterChange}
@@ -464,6 +638,12 @@ function Auctions() {
                                 toggleFilterSection={toggleFilterSection}
                                 activeFilterSections={activeFilterSections}
                                 setShowMobileFilters={setShowMobileFilters}
+                                parentCategories={parentCategories}
+                                subCategories={subCategories}
+                                selectedParent={selectedParent}
+                                setSelectedParent={setSelectedParent}
+                                updateFilters={updateFilters}  // Add this line
+                                location={location}  // Add this line
                             />
                         </div>
 
@@ -492,7 +672,6 @@ function Auctions() {
                             </div>
 
                             {/* Results Count and Sort */}
-                            {/* Results Count and Sort */}
                             <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-3">
                                 <p className="text-gray-600">
                                     {loading ? "Loading auctions..." : `Showing ${auctions.length} of ${pagination?.totalAuctions || 0} auctions`}
@@ -506,14 +685,14 @@ function Auctions() {
                                             className={`p-2 rounded transition-colors ${viewMode === "grid" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
                                             title="Grid View"
                                         >
-                                            <Grid size={18} className={viewMode === "grid" ? "text-blue-600" : "text-gray-500"} />
+                                            <Grid size={18} className={viewMode === "grid" ? "text-orange-500" : "text-gray-500"} />
                                         </button>
                                         <button
                                             onClick={() => setViewMode("list")}
                                             className={`p-2 rounded transition-colors ${viewMode === "list" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
                                             title="List View"
                                         >
-                                            <List size={18} className={viewMode === "list" ? "text-blue-600" : "text-gray-500"} />
+                                            <List size={18} className={viewMode === "list" ? "text-orange-500" : "text-gray-500"} />
                                         </button>
                                     </div>
 
@@ -656,14 +835,21 @@ function Auctions() {
                         <div className="absolute left-0 top-0 h-full w-4/5 max-w-sm bg-white overflow-y-auto p-6">
                             <FiltersSection
                                 uiFilters={uiFilters}
-                                categories={categories}
-                                loadingCategories={loadingCategories}
-                                handleFilterChange={handleFilterChange}
-                                handleRangeChange={handleRangeChange}
-                                resetFilters={resetFilters}
-                                toggleFilterSection={toggleFilterSection}
-                                activeFilterSections={activeFilterSections}
-                                setShowMobileFilters={setShowMobileFilters}
+                setUiFilters={setUiFilters}  // Add this line
+                categories={categories}
+                loadingCategories={loadingCategories}
+                handleFilterChange={handleFilterChange}
+                handleRangeChange={handleRangeChange}
+                resetFilters={resetFilters}
+                toggleFilterSection={toggleFilterSection}
+                activeFilterSections={activeFilterSections}
+                setShowMobileFilters={setShowMobileFilters}
+                parentCategories={parentCategories}
+                subCategories={subCategories}
+                selectedParent={selectedParent}
+                setSelectedParent={setSelectedParent}
+                updateFilters={updateFilters}  // Add this line
+                location={location}  // Add this line
                             />
                         </div>
                     </div>

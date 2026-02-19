@@ -4,7 +4,7 @@ import {
     User, Mail, Phone, MapPin, Camera, Edit, Save, X, Shield, Lock,
     Upload, Award, Gavel, Heart, Star, TrendingUp, Bell, Newspaper,
     Clock,
-    PoundSterling,
+    Banknote,
     Hand
 } from "lucide-react";
 import axiosInstance from "../../utils/axiosInstance";
@@ -238,7 +238,7 @@ function Profile() {
                             <p className="text-red-600">Failed to load profile data</p>
                             <button
                                 onClick={fetchUserData}
-                                className="mt-4 bg-[#edcd1f] text-black px-4 py-2 rounded-lg hover:bg-[#edcd1f]/90"
+                                className="mt-4 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 px-4 py-2 rounded-lg"
                             >
                                 Try Again
                             </button>
@@ -279,7 +279,7 @@ function Profile() {
                                             key={section.id}
                                             onClick={() => setActiveSection(section.id)}
                                             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeSection === section.id
-                                                ? `text-black bg-[#edcd1f] font-medium`
+                                                ? `text-white bg-orange-500 font-medium`
                                                 : "text-secondary hover:bg-gray-100"
                                                 }`}
                                         >
@@ -306,7 +306,7 @@ function Profile() {
                                                     <button
                                                         onClick={handleSave}
                                                         disabled={saving}
-                                                        className="flex items-center gap-2 bg-[#edcd1f] text-black px-4 py-2 rounded-lg hover:bg-black/90 transition-colors disabled:opacity-50"
+                                                        className="flex items-center gap-2 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
                                                     >
                                                         <Save size={16} />
                                                         {saving ? 'Saving...' : 'Save Changes'}
@@ -323,7 +323,7 @@ function Profile() {
                                             ) : (
                                                 <button
                                                     onClick={() => setIsEditing(true)}
-                                                    className="flex items-center gap-2 bg-[#edcd1f] text-black px-4 py-2 rounded-lg hover:bg-[#edcd1f]/90 transition-colors"
+                                                    className="flex items-center gap-2 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 px-4 py-2 rounded-lg transition-colors"
                                                 >
                                                     <Edit size={16} />
                                                     Edit
@@ -443,7 +443,7 @@ function Profile() {
                                                     <label className="block text-sm font-medium text-secondary">Member Since</label>
                                                     <input
                                                         type="text"
-                                                        value={new Date(userData.createdAt).toLocaleDateString()}
+                                                        value={new Date(userData.createdAt).toLocaleDateString('nb-NO')}
                                                         disabled
                                                         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-100"
                                                     />
@@ -652,7 +652,7 @@ function Profile() {
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-500">Total Bids</p>
-                                            <p className="font-semibold text-lg">{stats.totalBids || 0}</p>
+                                            <p className="font-semibold text-lg">{stats.totalBids?.toLocaleString('nb-NO') || 0}</p>
                                         </div>
                                     </div> */}
                                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-center">
@@ -661,7 +661,7 @@ function Profile() {
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-500">Total Offers</p>
-                                            <p className="font-semibold text-lg">{stats.totalOffers || 0}</p>
+                                            <p className="font-semibold text-lg">{stats.totalOffers?.toLocaleString('nb-NO') || 0}</p>
                                         </div>
                                     </div>
                                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-center">
@@ -670,7 +670,7 @@ function Profile() {
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-500">Auctions Won</p>
-                                            <p className="font-semibold text-lg">{stats.wonAuctions || 0}</p>
+                                            <p className="font-semibold text-lg">{stats.wonAuctions?.toLocaleString('nb-NO') || 0}</p>
                                         </div>
                                     </div>
                                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-center">
@@ -679,17 +679,17 @@ function Profile() {
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-500">Success Rate</p>
-                                            <p className="font-semibold text-lg">{stats.successRate || 0}%</p>
+                                            <p className="font-semibold text-lg">{stats.successRate?.toLocaleString('nb-NO') || 0}%</p>
                                         </div>
                                     </div>
-                                    {/* Additional bidder stats */}
+                                    {/* Additional bidder stats */}?.toLocaleString('nb-NO')
                                     {/* <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-center">
                                         <div className="p-3 rounded-lg mr-4 bg-purple-100">
                                             <Clock size={20} className="text-purple-600" />
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-500">Active Bids</p>
-                                            <p className="font-semibold text-lg">{stats.activeBids || 0}</p>
+                                            <p className="font-semibold text-lg">{stats.activeBids?.toLocaleString('nb-NO') || 0}</p>
                                         </div>
                                     </div> */}
                                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-center">
@@ -698,7 +698,7 @@ function Profile() {
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-500">Active Offers</p>
-                                            <p className="font-semibold text-lg">{stats.activeOffers || 0}</p>
+                                            <p className="font-semibold text-lg">{stats.activeOffers?.toLocaleString('nb-NO') || 0}</p>
                                         </div>
                                     </div>
                                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-center">
@@ -707,21 +707,21 @@ function Profile() {
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-500">Watchlist Items</p>
-                                            <p className="font-semibold text-lg">{stats.watchlistCount || 0}</p>
+                                            <p className="font-semibold text-lg">{stats.watchlistCount?.toLocaleString('nb-NO') || 0}</p>
                                         </div>
                                     </div>
                                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-center">
                                         <div className="p-3 rounded-lg mr-4 bg-indigo-100">
-                                            <PoundSterling size={20} className="text-indigo-600" />
+                                            <Banknote size={20} className="text-indigo-600" />
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-500">Total Spent</p>
                                             <p className="font-semibold text-lg">
-                                                {new Intl.NumberFormat('en-US', {
+                                                {new Intl.NumberFormat('nb-NO', {
                                                     style: 'currency',
-                                                    currency: 'GBP',
+                                                    currency: 'NOK',
                                                     minimumFractionDigits: 0
-                                                }).format(stats.totalSpent) || 0}
+                                                }).format(stats.totalSpent?.toLocaleString('nb-NO')) || 0}
                                             </p>
                                         </div>
                                     </div>
@@ -830,7 +830,7 @@ const PasswordChangeForm = ({ onChangePassword, saving }) => {
                 <button
                     type="submit"
                     disabled={saving}
-                    className="bg-[#edcd1f] text-black px-6 py-3 rounded-lg hover:bg-[#edcd1f]/90 transition-colors disabled:opacity-50"
+                    className="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 px-6 py-3 rounded-lg transition-colors disabled:opacity-50"
                 >
                     {saving ? 'Changing Password...' : 'Change Password'}
                 </button>

@@ -225,7 +225,7 @@ function Profile() {
                             <p className="text-red-600">Failed to load profile data</p>
                             <button
                                 onClick={fetchUserData}
-                                className="mt-4 bg-[#edcd1f] text-black px-4 py-2 rounded-lg hover:bg-[#edcd1f]/90"
+                                className="mt-4 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 px-4 py-2 rounded-lg"
                             >
                                 Try Again
                             </button>
@@ -265,7 +265,7 @@ function Profile() {
                                             key={section.id}
                                             onClick={() => setActiveSection(section.id)}
                                             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeSection === section.id
-                                                ? `text-black bg-[#edcd1f] font-medium`
+                                                ? `bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 font-medium`
                                                 : "text-secondary hover:bg-gray-100"
                                                 }`}
                                         >
@@ -292,7 +292,7 @@ function Profile() {
                                                     <button
                                                         onClick={handleSave}
                                                         disabled={saving}
-                                                        className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-black/90 transition-colors disabled:opacity-50"
+                                                        className="flex items-center gap-2 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
                                                     >
                                                         <Save size={16} />
                                                         {saving ? 'Saving...' : 'Save Changes'}
@@ -309,7 +309,7 @@ function Profile() {
                                             ) : (
                                                 <button
                                                     onClick={() => setIsEditing(true)}
-                                                    className="flex items-center gap-2 bg-[#edcd1f] text-black px-4 py-2 rounded-lg hover:bg-black/90 transition-colors"
+                                                    className="flex items-center gap-2 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 px-4 py-2 rounded-lg transition-colors"
                                                 >
                                                     <Edit size={16} />
                                                     Edit
@@ -416,7 +416,7 @@ function Profile() {
                                                     <label className="block text-sm font-medium text-secondary">Member Since</label>
                                                     <input
                                                         type="text"
-                                                        value={new Date(userData.createdAt).toLocaleDateString()}
+                                                        value={new Date(userData.createdAt).toLocaleDateString('nb-NO')}
                                                         disabled
                                                         className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-100"
                                                     />
@@ -698,7 +698,7 @@ const PasswordChangeForm = ({ onChangePassword, saving }) => {
                 <button
                     type="submit"
                     disabled={saving}
-                    className="bg-[#edcd1f] text-black px-6 py-3 rounded-lg hover:bg-[#edcd1f]/90 transition-colors disabled:opacity-50"
+                    className="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 px-6 py-3 rounded-lg transition-colors disabled:opacity-50"
                 >
                     {saving ? 'Changing Password...' : 'Change Password'}
                 </button>

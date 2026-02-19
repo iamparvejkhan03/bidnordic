@@ -41,7 +41,7 @@ const ForgotPasswordModal = ({ isOpen, onClose }) => {
                     <button onClick={onClose} className="border border-gray-200 rounded-lg px-4 py-2 text-gray-600 hover:text-gray-800">
                         Cancel
                     </button>
-                    <button className="px-4 py-2 bg-[#edcd1f] text-black rounded-lg hover:bg-[#edcd1f]-dark text-center flex justify-center items-center">
+                    <button className="px-4 py-2 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-500 hover:via-orange-600 hover:to-orange-600 text-center flex justify-center items-center">
                         {
                             isSending ? <Loader className="animate-spin-slow" /> : 'Send Reset Link'
                         }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, User, Phone, ChevronDown } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, Phone, ChevronDown, Gavel, Store, Handshake } from 'lucide-react';
 import { darkLogo } from '../assets';
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -13,7 +13,7 @@ const Register = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [userType, setUserType] = useState('');
+    const [userType, setUserType] = useState('bidder');
     const navigate = useNavigate();
     const { setUser, setLoading, user } = useAuth();
     const countriesAPI = useCountryStates();
@@ -177,7 +177,7 @@ const Register = () => {
                                                 }
                                             })}
                                             className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                                            placeholder="e.g., 01234567890 or +441234567890"
+                                            placeholder="e.g., +471234567890"
                                         />
                                         {errors.phone && (
                                             <p className="text-red-500 text-sm mt-1 absolute">{errors.phone.message}</p>
@@ -330,7 +330,7 @@ const Register = () => {
                                 </div>
 
                                 {/* Dealership Name field */}
-                                <div className={`${errors.dealershipName && 'mb-3'}`}>
+                                {/* <div className={`${errors.dealershipName && 'mb-3'}`}>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Dealership Name
                                     </label>
@@ -343,10 +343,10 @@ const Register = () => {
                                     {errors.dealershipName && (
                                         <p className="text-red-500 text-sm mt-1 absolute">{errors.dealershipName.message}</p>
                                     )}
-                                </div>
+                                </div> */}
 
                                 {/* Building Name/No field - spans full width on mobile, half on desktop */}
-                                <div className="md:col-span-1">
+                                {/* <div className="md:col-span-1">
                                     <div className={`${errors.buildingNameNo && 'mb-3'}`}>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                             Building Name/No
@@ -363,10 +363,10 @@ const Register = () => {
                                             <p className="text-red-500 text-sm mt-1 absolute">{errors.buildingNameNo.message}</p>
                                         )}
                                     </div>
-                                </div>
+                                </div> */}
 
                                 {/* Street field - spans full width on mobile, half on desktop */}
-                                <div className="md:col-span-1">
+                                {/* <div className="md:col-span-1">
                                     <div className={`${errors.street && 'mb-3'}`}>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                             Street
@@ -383,10 +383,10 @@ const Register = () => {
                                             <p className="text-red-500 text-sm mt-1 absolute">{errors.street.message}</p>
                                         )}
                                     </div>
-                                </div>
+                                </div> */}
 
                                 {/* City field */}
-                                <div className={`${errors.city && 'mb-3'}`}>
+                                {/* <div className={`${errors.city && 'mb-3'}`}>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         City
                                     </label>
@@ -401,10 +401,10 @@ const Register = () => {
                                     {errors.city && (
                                         <p className="text-red-500 text-sm mt-1 absolute">{errors.city.message}</p>
                                     )}
-                                </div>
+                                </div> */}
 
                                 {/* County field */}
-                                <div className={`${errors.county && 'mb-3'}`}>
+                                {/* <div className={`${errors.county && 'mb-3'}`}>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         County
                                     </label>
@@ -419,10 +419,10 @@ const Register = () => {
                                     {errors.county && (
                                         <p className="text-red-500 text-sm mt-1 absolute">{errors.county.message}</p>
                                     )}
-                                </div>
+                                </div> */}
 
                                 {/* Post Code field */}
-                                <div className={`${errors.postCode && 'mb-3'}`}>
+                                {/* <div className={`${errors.postCode && 'mb-3'}`}>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Post Code
                                     </label>
@@ -437,7 +437,7 @@ const Register = () => {
                                     {errors.postCode && (
                                         <p className="text-red-500 text-sm mt-1 absolute">{errors.postCode.message}</p>
                                     )}
-                                </div>
+                                </div> */}
 
                                 {/* Country field - spans full width on mobile, half on desktop */}
                                 <div className="md:col-span-1">
@@ -468,7 +468,7 @@ const Register = () => {
                         </div>
 
                         {/* User Type Selection */}
-                        {/* <div className={`border-t pt-6 ${errors.email && 'mb-3'}`}>
+                        <div className={`border-t pt-6 ${errors.email && 'mb-3'}`}>
                             <label className="text-sm font-medium leading-none text-gray-700 flex items-center gap-2 mb-4">
                                 <User size={20} />
                                 <span>User Type</span>
@@ -486,7 +486,7 @@ const Register = () => {
                                         className="hidden"
                                         onChange={() => handleUserTypeChange('bidder')}
                                     />
-                                    <Gavel size={40} className={`flex-shrink-0 p-2 rounded ${userType === 'bidder' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
+                                    <Gavel size={40} className={`flex-shrink-0 p-2 rounded ${userType === 'bidder' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-600'
                                         }`} />
                                     <div>
                                         <p className="text-sm font-semibold">I'm a bidder</p>
@@ -505,18 +505,37 @@ const Register = () => {
                                         className="hidden"
                                         onChange={() => handleUserTypeChange('seller')}
                                     />
-                                    <Store size={40} className={`flex-shrink-0 p-2 rounded ${userType === 'seller' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
+                                    <Store size={40} className={`flex-shrink-0 p-2 rounded ${userType === 'seller' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-600'
                                         }`} />
                                     <div>
                                         <p className="text-sm font-semibold">I'm a seller</p>
                                         <p className="text-sm text-gray-600">I want to list things on the platform.</p>
                                     </div>
                                 </label>
+
+                                <label
+                                    className={`flex items-center gap-5 border py-3 px-5 rounded cursor-pointer transition-colors ${userType === 'broker' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                                        }`}
+                                >
+                                    <input
+                                        type="radio"
+                                        value="broker"
+                                        {...register('userType', { required: 'Please select user type' })}
+                                        className="hidden"
+                                        onChange={() => handleUserTypeChange('broker')}
+                                    />
+                                    <Handshake size={40} className={`flex-shrink-0 p-2 rounded ${userType === 'broker' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-600'
+                                        }`} />
+                                    <div>
+                                        <p className="text-sm font-semibold">I'm a broker</p>
+                                        <p className="text-sm text-gray-600">I want to list things on behalf of others.</p>
+                                    </div>
+                                </label>
                             </div>
                             {errors.userType && (
                                 <p className="text-red-500 text-sm mt-1 absolute">{errors.userType.message}</p>
                             )}
-                        </div> */}
+                        </div>
 
                         <div className={`${errors.termsConditions && 'mb-3'}`}>
                             <label className='flex items-center gap-2'>
@@ -525,7 +544,7 @@ const Register = () => {
                                     {...register('termsConditions', { required: 'Accepting terms of use is required for registration.' })}
                                 />
 
-                                <p className="text-sm text-gray-600">By registering, I agree to SpeedWays Auto's <Link className='text-blue-600 underline' to={`/terms-of-use`}>Terms of Use</Link>. My information will be used as described in the <Link to={`/privacy-policy`} className='text-blue-600 underline'>Privacy Policy</Link>.</p>
+                                <p className="text-sm text-gray-600">By registering, I agree to BidNordic's <Link className='text-blue-600 underline' to={`/terms-of-use`}>Terms of Use</Link>. My information will be used as described in the <Link to={`/privacy-policy`} className='text-blue-600 underline'>Privacy Policy</Link>.</p>
                             </label>
                             {errors.termsConditions && (
                                 <p className="text-red-500 text-sm mt-1">{errors.termsConditions.message}</p>
@@ -536,7 +555,7 @@ const Register = () => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-[#edcd1f] hover:bg-[#edcd1f]/90 text-black py-3 px-4 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+                            className="w-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:via-amber-600 hover:to-amber-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
                         >
                             {isLoading ? 'Creating account...' : 'Create Account'}
                         </button>
@@ -556,7 +575,7 @@ const Register = () => {
                 {/* Footer */}
                 <div className="bg-white px-4 pb-4 text-center">
                     <p className="text-xs text-gray-500">
-                        © {new Date().getFullYear()} SpeedWays Auto. All rights reserved.
+                        © {new Date().getFullYear()} BidNordic. All rights reserved.
                     </p>
                 </div>
             </div>

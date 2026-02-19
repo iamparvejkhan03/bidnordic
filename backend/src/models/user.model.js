@@ -44,7 +44,7 @@ const userSchema = new Schema(
     // User Type
     userType: {
       type: String,
-      enum: ["bidder", "seller", "admin"],
+      enum: ["bidder", "seller", "broker", "admin"],
       required: true,
     },
 
@@ -91,7 +91,7 @@ const userSchema = new Schema(
     },
     isActive: {
       type: Boolean,
-      default: false,
+      default: true,
     },
 
     // Tokens

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, Filter, Calendar, Download, BarChart3, User, PoundSterling, TrendingUp, CreditCard, Shield, AlertCircle, CheckCircle, Cloc, PoundSterlingk, XCircle } from "lucide-react";
+import { Search, Filter, Calendar, Download, BarChart3, User, Banknote, TrendingUp, CreditCard, Shield, AlertCircle, CheckCircle, Cloc, XCircle } from "lucide-react";
 import axiosInstance from "../../utils/axiosInstance.js";
 import { toast } from "react-hot-toast";
 import { AdminContainer, AdminHeader, AdminSidebar, LoadingSpinner } from "../../components/index.js";
@@ -60,7 +60,7 @@ function Transactions() {
             // Search filter
             if (filters.search) {
                 const searchTerm = filters.search.toLowerCase();
-                filtered = filtered.filter(transaction => 
+                filtered = filtered.filter(transaction =>
                     transaction.transactionId.toLowerCase().includes(searchTerm) ||
                     transaction.paymentIntentId.toLowerCase().includes(searchTerm) ||
                     transaction.auction.title.toLowerCase().includes(searchTerm) ||
@@ -84,8 +84,8 @@ function Transactions() {
             if (filters.dateRange !== "all") {
                 const now = new Date();
                 let startDate;
-                
-                switch(filters.dateRange) {
+
+                switch (filters.dateRange) {
                     case 'today':
                         startDate = new Date(now.setHours(0, 0, 0, 0));
                         break;
@@ -99,9 +99,9 @@ function Transactions() {
                         startDate = new Date(now.setFullYear(now.getFullYear() - 1));
                         break;
                 }
-                
+
                 if (startDate) {
-                    filtered = filtered.filter(transaction => 
+                    filtered = filtered.filter(transaction =>
                         new Date(transaction.createdAt) >= startDate
                     );
                 }
@@ -109,7 +109,7 @@ function Transactions() {
 
             // Apply sorting
             filtered.sort((a, b) => {
-                switch(filters.sortBy) {
+                switch (filters.sortBy) {
                     case "recent":
                         return new Date(b.createdAt) - new Date(a.createdAt);
                     case "oldest":
@@ -134,7 +134,7 @@ function Transactions() {
         if (allTransactions.length > 0) {
             const filtered = applyFilters();
             setFilteredTransactions(filtered);
-            
+
             // Update selected transaction if it's no longer in filtered list
             if (selectedTransaction && !filtered.find(t => t.id === selectedTransaction.id)) {
                 setSelectedTransaction(filtered.length > 0 ? filtered[0] : null);
@@ -168,33 +168,32 @@ function Transactions() {
         }
     };
 
-    // Helper functions
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
-
     const formatTime = (dateString) => {
-        return new Date(dateString).toLocaleTimeString('en-US', {
+        return new Date(dateString).toLocaleTimeString('nb-NO', {
             hour: '2-digit',
             minute: '2-digit'
         });
     };
 
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('nb-NO', {
             style: 'currency',
-            currency: 'GBP',
+            currency: 'NOK',
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         }).format(amount);
     };
 
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('nb-NO', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
     const getStatusIcon = (status) => {
-        switch(status) {
+        switch (status) {
             case 'succeeded':
                 return <CheckCircle size={16} className="text-green-600" />;
             case 'created':
@@ -234,7 +233,7 @@ function Transactions() {
             title: "Total Revenue",
             value: formatCurrency(stats.overall?.totalRevenue || 0),
             change: "All Time",
-            icon: <PoundSterling size={24} />,
+            icon: <Banknote size={24} />,
             color: "green"
         },
         {
@@ -402,9 +401,8 @@ function Transactions() {
                                     {filteredTransactions.map(transaction => (
                                         <div
                                             key={transaction.id}
-                                            className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${
-                                                selectedTransaction?.id === transaction.id ? 'bg-blue-50 border-blue-200' : ''
-                                            }`}
+                                            className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${selectedTransaction?.id === transaction.id ? 'bg-blue-50 border-blue-200' : ''
+                                                }`}
                                             onClick={() => setSelectedTransaction(transaction)}
                                         >
                                             <div className="flex items-start justify-between">

@@ -6,7 +6,7 @@ const BidHistory = ({ bids, auction }) => {
     if (!timestamp) return 'Unknown time';
 
     const date = new Date(timestamp);
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat('nb-NO', {
       month: '2-digit',
       day: '2-digit',
       year: 'numeric',

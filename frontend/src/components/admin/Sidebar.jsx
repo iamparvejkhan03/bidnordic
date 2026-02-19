@@ -76,11 +76,11 @@ const navigation = [
         path: '/admin/support/inquiries',
         icon: <MessageSquare size={20} />,
     },
-    // {
-    //     name: 'Commissions',
-    //     path: '/admin/commissions',
-    //     icon: <Settings size={20} />,
-    // },
+    {
+        name: 'Commissions',
+        path: '/admin/commissions',
+        icon: <Settings size={20} />,
+    },
     // {
     //     name: 'Notifications',
     //     path: '/admin/notifications',
@@ -146,7 +146,7 @@ function Sidebar() {
             {/* Mobile menu button */}
             <button
                 onClick={toggleSidebar}
-                className={`md:hidden ${isOpen && isMobile ? 'hidden' : 'fixed'} top-4 left-4 z-30 sm:z-40 p-2 rounded-md bg-[#1e2d3b] text-white`}
+                className={`md:hidden ${isOpen && isMobile ? 'hidden' : 'fixed'} top-4 left-4 z-30 sm:z-40 p-2 rounded-md bg-slate-900 text-white`}
             >
                 {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -161,14 +161,14 @@ function Sidebar() {
 
             {/* Sidebar */}
             <aside className={`
-                fixed md:relative w-64 bg-gradient-to-b from-[#1e2d3b] to-[#1e2d3b] text-white h-screen md:h-auto md:min-h-screen overflow-y-auto z-50 p-4 flex flex-col 
+                fixed md:relative w-64 bg-slate-900 text-white h-screen md:h-auto md:min-h-screen overflow-y-auto z-50 p-4 flex flex-col 
                 transform transition-transform duration-300 ease-in-out
                 ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
             `}>
                 {/* Logo/Brand */}
                 <div className="px-4 mb-8 flex items-center justify-between pb-2 border-b border-gray-700">
                     <Link to={'/'}>
-                        <img src={logo} className="h-12 md:h-14" alt="logo" />
+                        <img src={logo} className="h-10 md:h-12" alt="logo" />
                     </Link>
                     <button
                         onClick={() => setIsOpen(false)}
@@ -180,7 +180,7 @@ function Sidebar() {
 
                 {/* Admin Badge */}
                 <div className="px-4 mb-6">
-                    <div className="bg-gradient-to-r from-[#edcd1f]/90 via-[#edcd1f]/75 to-[#edcd1f]/60 rounded-lg p-3 text-center">
+                    <div className="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 rounded-lg p-3 text-center">
                         <div className="flex items-center justify-center gap-2">
                             <Shield size={16} />
                             <span className="text-sm font-medium">Administrator</span>
@@ -243,8 +243,8 @@ function Sidebar() {
                                         onClick={() => isMobile && setIsOpen(false)}
                                         className={({ isActive }) =>
                                             `flex items-center p-3 rounded-lg transition-all duration-200 ${isActive
-                                                ? 'bg-[#edcd1f] text-black shadow-lg'
-                                                : 'text-white hover:bg-[#edcd1f] hover:text-black'
+                                                ? 'bg-orange-500 text-white shadow-lg'
+                                                : 'text-white hover:bg-orange-600 hover:text-white'
                                             }`
                                         }
                                     >

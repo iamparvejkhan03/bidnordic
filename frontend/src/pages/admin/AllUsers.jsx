@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AdminContainer, AdminHeader, AdminSidebar, LoadingSpinner } from "../../components";
-import { Search, Filter, Mail, Phone, MapPin, Calendar, Award, Gavel, Shield, User, Edit, MoreVertical, UserX, Trash2, TrendingUp, Eye, Hand, Building, Home, PoundSterling } from "lucide-react";
+import { Search, Filter, Mail, Phone, MapPin, Calendar, Award, Gavel, Shield, User, Edit, MoreVertical, UserX, Trash2, TrendingUp, Eye, Hand, Building, Home, Banknote } from "lucide-react";
 import { about, dummyUserImg } from "../../assets";
 import toast from "react-hot-toast";
 import axiosInstance from "../../utils/axiosInstance";
@@ -163,7 +163,8 @@ function AllUsers() {
         const config = {
             admin: { color: "bg-purple-100 text-purple-800", text: "Admin" },
             seller: { color: "bg-blue-100 text-blue-800", text: "Seller" },
-            bidder: { color: "bg-green-100 text-green-800", text: "Bidder" }
+            bidder: { color: "bg-green-100 text-green-800", text: "Bidder" },
+            broker: { color: "bg-orange-100 text-orange-800", text: "Broker" },
         };
         const { color, text } = config[type];
         return <span className={`px-2 py-1 rounded-full text-xs font-medium ${color}`}>{text}</span>;
@@ -178,16 +179,16 @@ function AllUsers() {
     };
 
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('nb-NO', {
             style: 'currency',
-            currency: 'GBP',
+            currency: 'NOK',
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         }).format(amount);
     };
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
+        return new Date(dateString).toLocaleDateString('nb-NO', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
@@ -278,6 +279,7 @@ function AllUsers() {
                                         <option value="admin">Admins</option>
                                         <option value="seller">Sellers</option>
                                         <option value="bidder">Bidders</option>
+                                        <option value="broker">Brokers</option>
                                     </select>
                                 </div>
                             </div>
@@ -568,7 +570,32 @@ function AllUsers() {
                                                 {selectedUser.userType === 'seller' && selectedUser.stats && (
                                                     <>
                                                         <div className="flex items-center gap-3">
-                                                            <PoundSterling size={18} className="text-green-500" />
+                                                            <Banknote size={18} className="text-green-500" />
+                                                            <div>
+                                                                <div className="text-sm text-gray-500">Total Sales</div>
+                                                                <div className="font-medium">{formatCurrency(selectedUser.stats.totalSales || 0)}</div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                            <Gavel size={18} className="text-blue-500" />
+                                                            <div>
+                                                                <div className="text-sm text-gray-500">Active Listings</div>
+                                                                <div className="font-medium">{selectedUser.stats.activeListings || 0}</div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                            <TrendingUp size={18} className="text-green-500" />
+                                                            <div>
+                                                                <div className="text-sm text-gray-500">Total Auctions</div>
+                                                                <div className="font-medium">{selectedUser.stats.totalAuctions || 0}</div>
+                                                            </div>
+                                                        </div>
+                                                    </>
+                                                )}
+                                                {selectedUser.userType === 'broker' && selectedUser.stats && (
+                                                    <>
+                                                        <div className="flex items-center gap-3">
+                                                            <Banknote size={18} className="text-green-500" />
                                                             <div>
                                                                 <div className="text-sm text-gray-500">Total Sales</div>
                                                                 <div className="font-medium">{formatCurrency(selectedUser.stats.totalSales || 0)}</div>
@@ -653,7 +680,7 @@ function AllUsers() {
                                                 handleDeactivateUser(selectedUser._id, `${selectedUser.firstName} ${selectedUser.lastName}`, selectedUser.isActive);
                                                 closeUserModal();
                                             }}
-                                            className="flex-1 bg-amber-600 text-white py-2 px-4 rounded-lg hover:bg-amber-700 transition-colors"
+                                            className={`flex-1 ${selectedUser.isActive ? 'bg-amber-600 hover:bg-amber-700' : 'bg-green-600 hover:bg-freen-700'} text-white py-2 px-4 rounded-lg transition-colors`}
                                         >
                                             {selectedUser.isActive ? 'Deactivate User' : 'Activate User'}
                                         </button>

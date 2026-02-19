@@ -54,7 +54,7 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen pt-32 pb-16 bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="min-h-screen pt-32 pb-16 bg-orange-50 flex items-center justify-center p-4">
             <ForgotPasswordModal isOpen={showForgotPasswordModel} onClose={() => setShowForgotPasswordModal(false)} />
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
                 {/* Header */}
@@ -132,7 +132,7 @@ const Login = () => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-[#edcd1f] hover:bg-[#edcd1f]/90 text-black py-3 px-4 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:via-amber-600 hover:to-amber-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isLoading ? 'Signing in...' : 'Sign In'}
                         </button>
@@ -144,7 +144,7 @@ const Login = () => {
                             <div className="w-full border-t border-gray-300" />
                         </div>
                         <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-white text-secondary">New to SpeedWays Auto?</span>
+                            <span className="px-2 bg-white text-secondary">New to BidNordic?</span>
                         </div>
                     </div>
 
@@ -162,7 +162,7 @@ const Login = () => {
                 {/* Footer */}
                 <div className="bg-white px-4 pb-4 text-center">
                     <p className="text-xs text-secondary">
-                        © {new Date().getFullYear()} SpeedWays Auto. All rights reserved.
+                        © {new Date().getFullYear()} BidNordic. All rights reserved.
                     </p>
                 </div>
             </div>

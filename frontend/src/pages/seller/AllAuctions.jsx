@@ -21,6 +21,8 @@ function AllAuctions() {
     const [searchTerm, setSearchTerm] = useState("");
     const [categoryFilter, setCategoryFilter] = useState("all");
     const [sortBy, setSortBy] = useState("newest");
+    const [parentCategories, setParentCategories] = useState([]);
+    const [subCategories, setSubCategories] = useState([]);
 
     const [isLowerReserveModalOpen, setIsLowerReserveModalOpen] = useState(false);
     const [lowerReserveCurrentAuction, setLowerReserveCurrentAuction] = useState(false);
@@ -50,6 +52,30 @@ function AllAuctions() {
         setLowerReserveCurrentAuction(auction);
         setIsLowerReserveModalOpen(true);
     }
+
+    useEffect(() => {
+        const fetchCategoriesForFilter = async () => {
+            try {
+                const [parentsRes, subsRes] = await Promise.all([
+                    axiosInstance.get('/api/v1/categories/public/parents'),
+                    axiosInstance.get('/api/v1/categories/public/subcategories/all')
+                ]);
+
+                if (parentsRes.data.success) setParentCategories(parentsRes.data.data);
+                if (subsRes.data.success) {
+                    const formattedSubs = subsRes.data.data.map(sub => ({
+                        ...sub,
+                        parentSlug: sub.parentCategory?.slug
+                    }));
+                    setSubCategories(formattedSubs);
+                }
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            }
+        };
+
+        fetchCategoriesForFilter();
+    }, []);
 
     // Fetch user stats (keep as is since it's working)
     // const fetchUserStats = async () => {
@@ -119,10 +145,17 @@ function AllAuctions() {
                 auction.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 auction.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
-            // Category filter
-            const matchesCategory = categoryFilter === "all" || auction.category === categoryFilter;
-
-            // Status filter - FIXED VERSION
+            // Category filter - Show all auctions under a parent category
+            const matchesCategory = categoryFilter === "all" ||
+                (Array.isArray(auction.categories) &&
+                    (auction.categories.includes(categoryFilter) || // Exact match
+                        auction.categories.some(cat => { // Check if any category is a subcategory of this parent
+                            const subcategory = subCategories.find(sub => sub.slug === cat);
+                            return subcategory?.parentSlug === categoryFilter;
+                        })
+                    )
+                );
+            // Status filter
             const now = new Date();
             const end = new Date(auction.endDate);
             const start = new Date(auction.startDate);
@@ -135,16 +168,16 @@ function AllAuctions() {
                     matchesStatus = diffHours < 24 && diffHours > 0 && hasStarted;
                     break;
                 case "active":
-                    matchesStatus = hasStarted && diffHours > 0; // Auction has started and not ended
+                    matchesStatus = hasStarted && diffHours > 0;
                     break;
                 case "upcoming":
-                    matchesStatus = !hasStarted; // Auction hasn't started yet
+                    matchesStatus = !hasStarted;
                     break;
                 case "pending":
                     matchesStatus = auction.status === 'draft' || auction.status === 'pending';
                     break;
-                default: // "all"
-                    matchesStatus = true; // Show all auctions
+                default:
+                    matchesStatus = true;
             }
 
             return matchesSearch && matchesCategory && matchesStatus;
@@ -184,7 +217,7 @@ function AllAuctions() {
     };
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
+        return new Date(dateString).toLocaleDateString('nb-NO', {
             year: 'numeric',
             month: 'short',
             day: 'numeric'
@@ -272,20 +305,30 @@ function AllAuctions() {
                             </div>
 
                             <div className="flex flex-col sm:flex-row gap-3">
-                                <div className="flex items-center gap-2">
+                                {/* <div className="flex items-center gap-2">
                                     <Filter size={18} className="text-gray-500" />
                                     <select
-                                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[200px]"
                                         value={categoryFilter}
                                         onChange={(e) => setCategoryFilter(e.target.value)}
                                     >
-                                        {categories.map(category => (
-                                            <option key={category} value={category}>
-                                                {category === "all" ? "All Categories" : category}
-                                            </option>
+                                        <option value="all">All Categories</option>
+
+                                        {parentCategories.map(parent => (
+                                            <optgroup key={parent.slug} label={parent.name}>
+                                                <option value={parent.slug}>All {parent.name}</option>
+                                                {subCategories
+                                                    .filter(sub => sub.parentSlug === parent.slug)
+                                                    .map(sub => (
+                                                        <option key={sub.slug} value={sub.slug}>
+                                                            &nbsp;&nbsp;↳ {sub.name}
+                                                        </option>
+                                                    ))
+                                                }
+                                            </optgroup>
                                         ))}
                                     </select>
-                                </div>
+                                </div> */}
 
                                 <div className="flex items-center gap-2">
                                     <SortAsc size={18} className="text-gray-500" />
@@ -308,7 +351,7 @@ function AllAuctions() {
                         <div className="flex flex-wrap gap-3">
                             <button
                                 onClick={() => setFilter("all")}
-                                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === "all" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === "all" ? "bg-orange-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                             >
                                 All
                             </button>
@@ -383,10 +426,10 @@ function AllAuctions() {
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className="py-4 px-6 text-sm text-gray-900">${auction.startPrice?.toLocaleString()}</td>
+                                                    <td className="py-4 px-6 text-sm text-gray-900">${auction.startPrice?.toLocaleString('nb-NO')}</td>
                                                     <td className="py-4 px-6 text-sm font-medium text-green-600">
-                                                        {/* ${auction.currentPrice?.toLocaleString()} */}
-                                                        {auction.bids?.length > 0 ? auction.currentPrice?.toLocaleString() : 'No Bids'}
+                                                        {/* ${auction.currentPrice?.toLocaleString('nb-NO')} */}
+                                                        {auction.bids?.length > 0 ? auction.currentPrice?.toLocaleString('nb-NO') : 'No Bids'}
                                                     </td>
                                                     <td className="py-4 px-6 text-sm text-gray-900">
                                                         <div className="flex items-center">

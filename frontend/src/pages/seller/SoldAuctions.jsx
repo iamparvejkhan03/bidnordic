@@ -64,31 +64,29 @@ function SoldAuctions() {
         fetchSoldAuctions();
     }, []);
 
-    const formatDate = (dateString) => {
-        if (!dateString) return "N/A";
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
-
     const formatTime = (dateString) => {
         if (!dateString) return "N/A";
-        return new Date(dateString).toLocaleTimeString('en-US', {
+        return new Date(dateString).toLocaleTimeString('nb-NO', {
             hour: '2-digit',
             minute: '2-digit'
         });
     };
 
     const formatCurrency = (amount) => {
-        if (!amount) return "$0";
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('nb-NO', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'NOK',
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         }).format(amount);
+    };
+
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('nb-NO', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
     };
 
     const openUserModal = (user) => {
@@ -147,7 +145,7 @@ function SoldAuctions() {
                                 <p>{error}</p>
                                 <button
                                     onClick={fetchSoldAuctions}
-                                    className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                                    className="mt-4 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-500"
                                 >
                                     Try Again
                                 </button>
@@ -285,10 +283,10 @@ function SoldAuctions() {
                                             <div className="h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
                                                 {
                                                     selectedAuction.winner.image
-                                                    ?
-                                                    <img src={selectedAuction.winner.image} alt="winner image" className="object-cover" />
-                                                    :
-                                                    <User size={24} className="text-blue-600" />
+                                                        ?
+                                                        <img src={selectedAuction.winner.image} alt="winner image" className="object-cover" />
+                                                        :
+                                                        <User size={24} className="text-blue-600" />
                                                 }
                                             </div>
                                         </div>
@@ -305,7 +303,7 @@ function SoldAuctions() {
                                         <div>
                                             <button
                                                 onClick={() => openUserModal(selectedAuction.winner)}
-                                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
+                                                className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center"
                                             >
                                                 <User size={16} className="mr-2" />
                                                 Contact Winner
@@ -388,10 +386,10 @@ function SoldAuctions() {
                                         <div className="h-16 w-16 flex-shrink-0 overflow-hidden bg-blue-100 rounded-full flex items-center justify-center">
                                             {
                                                 selectedUser?.image
-                                                ?
-                                                <img src={selectedUser?.image} alt="userimage" />
-                                                :
-                                                <User size={24} className="text-blue-600" />
+                                                    ?
+                                                    <img src={selectedUser?.image} alt="userimage" />
+                                                    :
+                                                    <User size={24} className="text-blue-600" />
                                             }
                                         </div>
                                         <div className="ml-4">

@@ -183,7 +183,7 @@ function Notifications() {
     };
 
     const archiveSelected = () => {
-        setNotifications(notifications.filter(notification => 
+        setNotifications(notifications.filter(notification =>
             !selectedNotifications.includes(notification.id)
         ));
         setSelectedNotifications([]);
@@ -271,12 +271,20 @@ function Notifications() {
     };
 
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('nb-NO', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'NOK',
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         }).format(amount);
+    };
+
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('nb-NO', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
     };
 
     const formatTime = (timestamp) => {
@@ -290,16 +298,16 @@ function Notifications() {
         if (diffMins < 60) return `${diffMins}m ago`;
         if (diffHours < 24) return `${diffHours}h ago`;
         if (diffDays < 7) return `${diffDays}d ago`;
-        return notificationTime.toLocaleDateString();
+        return notificationTime.toLocaleDateString('nb-NO');
     };
 
     return (
         <section className="flex min-h-screen bg-gray-50">
             <SellerSidebar />
-            
+
             <div className="w-full relative">
                 <SellerHeader />
-                
+
                 <SellerContainer>
                     {/* Header Section */}
                     <div className="max-w-full pt-16 pb-7 md:pt-0">
@@ -324,7 +332,7 @@ function Notifications() {
                                         {actionRequiredCount} actions needed
                                     </span>
                                 )}
-                                <button 
+                                <button
                                     onClick={() => setShowSettings(!showSettings)}
                                     className="p-2 border border-gray-300 rounded-lg hover:bg-white"
                                 >
@@ -411,51 +419,47 @@ function Notifications() {
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
                         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                             <div className="flex flex-wrap gap-3">
-                                <button 
+                                <button
                                     onClick={() => setFilter("all")}
-                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                                        filter === "all" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                    }`}
+                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === "all" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                        }`}
                                 >
                                     All Notifications
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => setFilter("unread")}
-                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                                        filter === "unread" ? "bg-red-100 text-red-800 border border-red-200" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                    }`}
+                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === "unread" ? "bg-red-100 text-red-800 border border-red-200" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                        }`}
                                 >
                                     Unread ({unreadCount})
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => setFilter("action_required")}
-                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                                        filter === "action_required" ? "bg-amber-100 text-amber-800 border border-amber-200" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                    }`}
+                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === "action_required" ? "bg-amber-100 text-amber-800 border border-amber-200" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                        }`}
                                 >
                                     Action Required ({actionRequiredCount})
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => setFilter("financial")}
-                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                                        filter === "financial" ? "bg-green-100 text-green-800 border border-green-200" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                    }`}
+                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === "financial" ? "bg-green-100 text-green-800 border border-green-200" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                        }`}
                                 >
                                     Financial ({financialCount})
                                 </button>
                             </div>
-                            
+
                             <div className="flex gap-3">
                                 {selectedNotifications.length > 0 && (
                                     <>
-                                        <button 
+                                        <button
                                             onClick={archiveSelected}
                                             className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
                                         >
                                             <Archive size={16} />
                                             Archive ({selectedNotifications.length})
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => setSelectedNotifications([])}
                                             className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
                                         >
@@ -464,7 +468,7 @@ function Notifications() {
                                         </button>
                                     </>
                                 )}
-                                <button 
+                                <button
                                     onClick={markAllAsRead}
                                     className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
                                 >
@@ -480,9 +484,8 @@ function Notifications() {
                                 <button
                                     key={type}
                                     onClick={() => setFilter(type)}
-                                    className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
-                                        filter === type ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                    }`}
+                                    className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${filter === type ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                        }`}
                                 >
                                     {type.replace(/_/g, ' ')}
                                 </button>
@@ -503,8 +506,8 @@ function Notifications() {
                                         className="rounded border-gray-300"
                                     />
                                     <span className="text-sm text-gray-600">
-                                        {selectedNotifications.length > 0 
-                                            ? `${selectedNotifications.length} selected` 
+                                        {selectedNotifications.length > 0
+                                            ? `${selectedNotifications.length} selected`
                                             : "Select all notifications"
                                         }
                                     </span>
@@ -512,11 +515,10 @@ function Notifications() {
 
                                 {/* Notifications */}
                                 {filteredNotifications.map((notification) => (
-                                    <div 
+                                    <div
                                         key={notification.id}
-                                        className={`bg-white rounded-xl shadow-sm border transition-all duration-200 hover:shadow-md ${
-                                            notification.read ? 'border-gray-200' : 'border-blue-200 bg-blue-50'
-                                        } ${selectedNotifications.includes(notification.id) ? 'ring-2 ring-blue-500' : ''}`}
+                                        className={`bg-white rounded-xl shadow-sm border transition-all duration-200 hover:shadow-md ${notification.read ? 'border-gray-200' : 'border-blue-200 bg-blue-50'
+                                            } ${selectedNotifications.includes(notification.id) ? 'ring-2 ring-blue-500' : ''}`}
                                     >
                                         <div className="p-4">
                                             <div className="flex gap-4">
@@ -527,12 +529,12 @@ function Notifications() {
                                                     onChange={() => toggleSelect(notification.id)}
                                                     className="mt-1 rounded border-gray-300"
                                                 />
-                                                
+
                                                 {/* Icon */}
                                                 <div className="flex-shrink-0">
                                                     {getNotificationIcon(notification.type)}
                                                 </div>
-                                                
+
                                                 {/* Content */}
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-start justify-between mb-2">
@@ -558,7 +560,7 @@ function Notifications() {
                                                             </span>
                                                             <div className="flex gap-1">
                                                                 {!notification.read && (
-                                                                    <button 
+                                                                    <button
                                                                         onClick={() => markAsRead(notification.id)}
                                                                         className="p-1 text-gray-400 hover:text-green-600"
                                                                         title="Mark as read"
@@ -566,7 +568,7 @@ function Notifications() {
                                                                         <Check size={16} />
                                                                     </button>
                                                                 )}
-                                                                <button 
+                                                                <button
                                                                     onClick={() => deleteNotification(notification.id)}
                                                                     className="p-1 text-gray-400 hover:text-red-600"
                                                                     title="Delete"
@@ -576,9 +578,9 @@ function Notifications() {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    
+
                                                     <p className="text-gray-600 mb-3">{notification.message}</p>
-                                                    
+
                                                     {/* Additional Info */}
                                                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-3">
                                                         {notification.auctionTitle && (
@@ -605,7 +607,7 @@ function Notifications() {
                                                             </span>
                                                         )}
                                                     </div>
-                                                    
+
                                                     <div className="flex items-center gap-3">
                                                         {getActionButton(notification)}
                                                         <button className="flex items-center gap-2 px-3 py-1 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50">
@@ -630,13 +632,13 @@ function Notifications() {
                                 <BellOff size={64} className="mx-auto text-gray-300 mb-4" />
                                 <h3 className="text-2xl font-semibold text-gray-700 mb-2">No notifications</h3>
                                 <p className="text-gray-500 mb-6">
-                                    {filter === "all" 
+                                    {filter === "all"
                                         ? "You're all caught up! No new seller notifications."
                                         : `No notifications match the "${filter.replace(/_/g, ' ')}" filter.`
                                     }
                                 </p>
                                 {filter !== "all" && (
-                                    <button 
+                                    <button
                                         onClick={() => setFilter("all")}
                                         className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
                                     >

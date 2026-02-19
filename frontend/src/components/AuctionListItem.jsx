@@ -1,4 +1,4 @@
-import { Heart, Eye, Clock, Shield, Zap, File, Gauge, Settings, MapPin, Users, Gavel } from "lucide-react";
+import { Heart, Eye, Clock, Shield, Zap, File, Gauge, Settings, MapPin, Users, Gavel, ShoppingCart, HandHelping, HandGrab } from "lucide-react";
 import { heroImg } from "../assets";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -20,7 +20,7 @@ function AuctionListItem({ auction }) {
 
     // Check if reserve is met
     const isReserveMet = auction.currentPrice >= auction.reservePrice;
-    const isAuctionActive = auction.status === 'active' && !auctionTime.completed;
+    const isAuctionActive = auction.status === 'active' && auctionTime?.status === 'counting-down';
 
     // Calculate status badges
     const getStatusBadges = () => {
@@ -45,6 +45,22 @@ function AuctionListItem({ auction }) {
                 label: 'No Reserve',
                 icon: Shield,
                 color: 'bg-green-100 text-green-700 border-green-200'
+            });
+        }
+
+        if (auction.auctionType === 'buy_now') {
+            badges.push({
+                label: 'Buy Now',
+                icon: ShoppingCart,
+                color: 'bg-blue-100 text-blue-700 border-blue-200'
+            });
+        }
+
+        if (auction.auctionType === 'giveaway') {
+            badges.push({
+                label: 'Giveaway',
+                icon: HandHelping,
+                color: 'bg-blue-100 text-blue-700 border-blue-200'
             });
         }
 
@@ -87,15 +103,35 @@ function AuctionListItem({ auction }) {
 
     // Format auction time remaining
     const formatTimeRemaining = () => {
-        if (!auctionTime || auctionTime.completed) return 'Auction Ended';
-
-        if (auctionTime.days > 0) {
-            return `${auctionTime.days}d ${auctionTime.hours}h ${auctionTime.minutes}m`;
-        } else if (auctionTime.hours > 0) {
-            return `${auctionTime.hours}h ${auctionTime.minutes}m`;
-        } else {
-            return `${auctionTime.minutes}m ${auctionTime.seconds}s`;
+        if (!auctionTime) return 'Loading...';
+        
+        if (auction.auctionType === 'buy_now' || auction.auctionType === 'giveaway') {
+            return auction.winner ? 'Claimed' : 'Available';
         }
+        
+        if (auctionTime.status === 'ended' || auction.status === 'ended' || auction.status === 'sold') {
+            return 'Ended';
+        }
+        
+        if (auctionTime.status === 'approved') {
+            return 'Starting Soon';
+        }
+        
+        if (auctionTime.status === 'draft') {
+            return 'Pending';
+        }
+        
+        if (auctionTime.status === 'counting-down') {
+            if (auctionTime.days > 0) {
+                return `${auctionTime.days}d ${auctionTime.hours}h`;
+            } else if (auctionTime.hours > 0) {
+                return `${auctionTime.hours}h ${auctionTime.minutes}m`;
+            } else {
+                return `${auctionTime.minutes}m ${auctionTime.seconds}s`;
+            }
+        }
+        
+        return 'Ended';
     };
 
     // Calculate pending offers
@@ -103,8 +139,22 @@ function AuctionListItem({ auction }) {
 
     if (!auctionTime) return null;
 
+    // Determine button text based on auction type
+    const getButtonText = () => {
+        if (!isAuctionActive) return 'View Details';
+        if (auction.auctionType === 'buy_now') return 'Buy Now';
+        if (auction.auctionType === 'giveaway') return 'Claim Now';
+        return 'Place Bid';
+    };
+
+    // Determine button icon
+    const getButtonIcon = () => {
+        if (auction.auctionType === 'buy_now') return <ShoppingCart size={16} className="text-white" />;
+        if (auction.auctionType === 'giveaway') return <HandGrab size={16} className="text-white" />;
+        return <Gavel size={16} className="text-white" />;
+    };
+
     return (
-        // Change the main container styling to be more compact
         <div
             className="bg-white border border-gray-200 p-3 hover:bg-gray-50 transition-colors duration-150 cursor-pointer group"
             onClick={() => navigate(`/auction/${auction._id}`)}
@@ -112,17 +162,44 @@ function AuctionListItem({ auction }) {
             {/* Mobile: Stack, Desktop: Row */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 {/* Image - Mobile: larger, Desktop: compact */}
-                <div className="sm:w-20 sm:h-16 w-full h-40 sm:flex-shrink-0">
+                <div className="sm:w-20 sm:h-16 w-full h-40 sm:flex-shrink-0 relative">
                     <img
                         src={auction.photos?.[0]?.url || heroImg}
                         alt={auction.title}
                         className="w-full h-full object-cover rounded sm:rounded"
                     />
+                    
+                    {/* Status Badges - Only show first 2 on mobile */}
+                    <div className="absolute top-2 left-2 flex flex-wrap gap-1 sm:hidden">
+                        {statusBadges.slice(0, 2).map((badge, index) => {
+                            const IconComponent = badge.icon;
+                            return (
+                                <span
+                                    key={index}
+                                    className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${badge.color}`}
+                                >
+                                    <IconComponent size={8} />
+                                    <span className="truncate max-w-[60px]">{badge.label}</span>
+                                </span>
+                            );
+                        })}
+                        {statusBadges.length > 2 && (
+                            <span className="bg-gray-800/70 text-white px-1.5 py-0.5 rounded-full text-[10px]">
+                                +{statusBadges.length - 2}
+                            </span>
+                        )}
+                    </div>
+                    
+                    {/* Views counter */}
+                    <div className="absolute bottom-2 right-2 bg-black/70 text-white px-1.5 py-0.5 rounded-full text-[10px] flex items-center gap-1 sm:hidden">
+                        <Eye size={10} />
+                        {auction.views?.toLocaleString() || 0}
+                    </div>
                 </div>
 
                 {/* Content - Mobile: full width, Desktop: flex-1 */}
                 <div className="flex-1 min-w-0 w-full sm:w-auto">
-                    {/* Mobile: Stack info, Desktop: inline */}
+                    {/* Title and Category */}
                     <div className="mb-2 sm:mb-1">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                             <Link
@@ -133,16 +210,20 @@ function AuctionListItem({ auction }) {
                                 {auction.title}
                             </Link>
                             <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded inline-block w-fit">
-                                {auction.category}
+                                {auction.categories?.[1] || auction.categories?.[0] || 'General'}
                             </span>
                         </div>
                     </div>
 
-                    {/* Mobile: Grid of info, Desktop: single line */}
+                    {/* Info Grid - Desktop: inline, Mobile: grid */}
                     <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-4 text-xs text-gray-600">
                         <div className="flex items-center gap-1">
+                            <MapPin size={12} />
+                            <span className="truncate">{auction.location || 'Location N/A'}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
                             <File size={12} />
-                            <span className="truncate">{auction?.specifications?.registration || 'N/A'}</span>
+                            <span className="truncate">{auction?.specifications?.registration || auction?.specifications?.year || 'N/A'}</span>
                         </div>
                         <div className="flex items-center gap-1">
                             <Gauge size={12} />
@@ -150,49 +231,80 @@ function AuctionListItem({ auction }) {
                         </div>
                         <div className="flex items-center gap-1 col-span-2 sm:col-auto">
                             <Users size={12} />
-                            <span>{pendingOffers} offers • {auction.watchlistCount || 0} watchers</span>
+                            <span>
+                                {auction.auctionType === 'buy_now' || auction.auctionType === 'giveaway' 
+                                    ? `${pendingOffers} offers` 
+                                    : `${auction.bidCount || 0} bids`} • {auction.watchlistCount || 0} watching
+                            </span>
                         </div>
+                    </div>
+                    
+                    {/* Desktop-only badges */}
+                    <div className="hidden sm:flex items-center gap-2 mt-2">
+                        {statusBadges.slice(0, 3).map((badge, index) => {
+                            const IconComponent = badge.icon;
+                            return (
+                                <span
+                                    key={index}
+                                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${badge.color}`}
+                                >
+                                    <IconComponent size={12} />
+                                    {badge.label}
+                                </span>
+                            );
+                        })}
                     </div>
                 </div>
 
                 {/* Mobile: Right side info - stack below, Desktop: inline */}
                 <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-3 sm:gap-1 w-full sm:w-auto">
+                    {/* Price */}
                     <div className="text-sm font-bold text-green-600">
-                        £{(auction.currentPrice || auction.startPrice)?.toLocaleString()}
+                        £{(auction.auctionType === 'buy_now' && auction.buyNowPrice) 
+                            ? auction.buyNowPrice.toLocaleString() 
+                            : (auction.currentPrice || auction.startPrice)?.toLocaleString()}
+                        {auction.auctionType === 'buy_now' && auction.buyNowPrice && 
+                            <span className="text-xs font-normal text-gray-500 ml-1">Buy Now</span>
+                        }
                     </div>
+                    
+                    {/* Timer/Status */}
                     <div className="flex items-center gap-1 text-xs text-gray-500">
                         <Clock size={12} />
-                        {!auctionTime?.completed ? (
-                            <span>
-                                {auctionTime?.days > 0 ? `${auctionTime.days}d` :
-                                    auctionTime?.hours > 0 ? `${auctionTime.hours}h` :
-                                        `${auctionTime?.minutes}m`}
-                            </span>
-                        ) : (
-                            <span>Ended</span>
-                        )}
+                        <span className={auctionTime?.status === 'ended' ? 'text-red-500' : ''}>
+                            {formatTimeRemaining()}
+                        </span>
+                    </div>
+                    
+                    {/* Views - Desktop only */}
+                    <div className="hidden sm:flex items-center gap-1 text-xs text-gray-500">
+                        <Eye size={12} />
+                        <span>{auction.views?.toLocaleString() || 0} views</span>
                     </div>
                 </div>
 
-                {/* Mobile: Actions inline with price/time, Desktop: separate */}
+                {/* Actions */}
                 <div className="flex sm:flex-col items-center sm:items-end gap-2 w-full sm:w-auto">
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/auction/${auction._id}`);
                         }}
-                        className="px-4 py-2 sm:px-3 sm:py-1.5 bg-[#edcd1f] text-black text-sm sm:text-xs font-medium rounded hover:bg-[#edcd1f]/90 flex-1 sm:flex-none"
+                        className="px-4 py-2 sm:px-3 sm:py-1.5 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-white text-sm sm:text-xs font-medium rounded hover:bg-gradient-to-r hover:from-amber-500 hover:via-amber-600 hover:to-amber-700 flex-1 sm:flex-none flex items-center justify-center gap-1"
                     >
-                        {!isAuctionActive ? 'View Details' : 'Place Bid'}
+                        {getButtonIcon()}
+                        {getButtonText()}
                     </button>
                     <button
                         onClick={handleWatchlist}
-                        className={`p-2 sm:p-1.5 rounded ${isWatchlisted
-                            ? 'text-red-500 bg-red-50'
-                            : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
-                            }`}
+                        className={`p-2 sm:p-1.5 rounded transition-colors ${
+                            isWatchlisted
+                                ? 'text-red-500 bg-red-50 hover:bg-red-100'
+                                : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
+                        }`}
+                        title={isWatchlisted ? 'Remove from watchlist' : 'Add to watchlist'}
                     >
-                        <Heart size={20} sm:size={16} fill={isWatchlisted ? 'currentColor' : 'none'} />
+                        <Heart size={20} className="sm:w-4 sm:h-4" fill={isWatchlisted ? 'currentColor' : 'none'} />
                     </button>
                 </div>
             </div>

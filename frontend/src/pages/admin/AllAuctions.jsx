@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AdminContainer, AdminHeader, AdminSidebar, LoadingSpinner, PaymentStatusDropdown } from "../../components";
-import { Search, Filter, Gavel, Clock, Eye, Edit, Shield, TrendingUp, User, Award, MoreVertical, Trash2, AlertTriangle, CheckCircle, Star, Crown, Plus, FileText, PoundSterling, RefreshCcw } from "lucide-react";
+import { Search, Filter, Gavel, Clock, Eye, Edit, Shield, TrendingUp, User, Award, MoreVertical, Trash2, AlertTriangle, CheckCircle, Star, Crown, Plus, FileText, Banknote, RefreshCcw } from "lucide-react";
 import { about } from "../../assets";
 import toast from "react-hot-toast";
 import axiosInstance from "../../utils/axiosInstance";
@@ -280,7 +280,7 @@ function AllAuctions() {
             <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                 Reserve
             </span>
-        ) : auctionType === 'reserve' ? (
+        ) : auctionType === 'standard' ? (
             <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                 Standard
             </span>
@@ -292,20 +292,19 @@ function AllAuctions() {
     };
 
     const formatCurrency = (amount) => {
-        if (!amount) return '£0';
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('nb-NO', {
             style: 'currency',
-            currency: 'GBP',
+            currency: 'NOK',
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         }).format(amount);
     };
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
+        return new Date(dateString).toLocaleDateString('nb-NO', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
     };
 
@@ -358,7 +357,7 @@ function AllAuctions() {
                                 </div>
                                 <Link
                                     to="/admin/auctions/create"
-                                    className="bg-[#edcd1f] text-black hover:bg-[#edcd1f]/90 px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+                                    className="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
                                 >
                                     <Plus size={18} />
                                     Create Auction
@@ -370,23 +369,23 @@ function AllAuctions() {
                     {/* Stats Overview */}
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
                         <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
+                            <div className="text-2xl font-bold text-gray-900">{stats.total?.toLocaleString('nb-NO')}</div>
                             <div className="text-sm text-gray-500">Total Auctions</div>
                         </div>
                         <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                            <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+                            <div className="text-2xl font-bold text-green-600">{stats.active?.toLocaleString('nb-NO')}</div>
                             <div className="text-sm text-gray-500">Active</div>
                         </div>
                         <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                            <div className="text-2xl font-bold text-amber-600">{stats.pending}</div>
+                            <div className="text-2xl font-bold text-amber-600">{stats.pending?.toLocaleString('nb-NO')}</div>
                             <div className="text-sm text-gray-500">Pending</div>
                         </div>
                         {/* <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                            <div className="text-2xl font-bold text-purple-600">{stats.featured}</div>
+                            <div className="text-2xl font-bold text-purple-600">{stats.featured?.toLocaleString('nb-NO')}</div>
                             <div className="text-sm text-gray-500">Featured</div>
                         </div> */}
                         <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                            <div className="text-2xl font-bold text-blue-600">{stats.sold}</div>
+                            <div className="text-2xl font-bold text-blue-600">{stats.sold?.toLocaleString('nb-NO')}</div>
                             <div className="text-sm text-gray-500">Sold</div>
                         </div>
                     </div>
@@ -1105,7 +1104,7 @@ function AllAuctions() {
                                                 to={`/admin/offers`}
                                                 className="flex-1 bg-[#1e2d3b]/90 text-white py-2 px-4 rounded-lg hover:bg-[#1e2d3b] transition-colors flex items-center justify-center gap-2"
                                             >
-                                                <PoundSterling size={18} />
+                                                <Banknote size={18} />
                                                 View Offers ({selectedAuction.offers.filter(o => o.status === 'pending').length})
                                             </Link>
                                         )}

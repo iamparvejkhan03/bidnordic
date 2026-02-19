@@ -62,113 +62,13 @@ class AgendaService {
       }
     });
 
-    // Job to end an auction at its end time
-    // this.agenda.define("end auction", async (job) => {
-    //   const { auctionId } = job.attrs.data;
-
-    //   try {
-    //     const auction = await Auction.findById(auctionId).populate(
-    //       "seller",
-    //       "email phone username firstName"
-    //     );
-
-    //     if (!auction) {
-    //       console.log(`❌ Agenda: Auction ${auctionId} not found`);
-    //       return;
-    //     }
-
-    //     // Only process if auction is still active and end date has passed
-    //     if (auction.status === "active" && new Date() >= auction.endDate) {
-    //       // CRITICAL CHECK: Skip if auction already has a winner (means offer was accepted or buy now used)
-    //       if (auction.winner) {
-    //         console.log(
-    //           `ℹ️ Agenda: Auction ${auctionId} already has a winner, skipping automated ending`
-    //         );
-    //         return;
-    //       }
-
-    //       // CRITICAL CHECK: Skip if auction status is already sold or similar sold statuses
-    //       const soldStatuses = ["sold", "sold_buy_now"];
-    //       if (soldStatuses.includes(auction.status)) {
-    //         console.log(
-    //           `ℹ️ Agenda: Auction ${auctionId} is already in sold status (${auction.status}), skipping`
-    //         );
-    //         return;
-    //       }
-
-    //       // Check if any offer is accepted (this should already be caught by winner check, but being extra safe)
-    //       const hasAcceptedOffer =
-    //         auction.offers &&
-    //         auction.offers.some(
-    //           (offer) =>
-    //             offer.status === "accepted" || offer.status === "completed"
-    //         );
-
-    //       if (hasAcceptedOffer) {
-    //         console.log(
-    //           `ℹ️ Agenda: Auction ${auctionId} has accepted offer, skipping automated ending`
-    //         );
-    //         return;
-    //       }
-
-    //       // Only end auction if it truly expired without any sales
-    //       console.log(`✅ Agenda: Ending auction ${auctionId} (no winner)`);
-
-    //       // Update auction status to ended
-    //       auction.status = "ended";
-    //       auction.endDate = new Date(); // Set actual end time
-
-    //       // Reject any pending offers
-    //       if (auction.offers && auction.offers.length > 0) {
-    //         auction.offers.forEach((offer) => {
-    //           if (offer.status === "pending") {
-    //             offer.status = "expired";
-    //             offer.sellerResponse =
-    //               "Offer expired - auction ended without a winner";
-    //           }
-    //         });
-    //       }
-
-    //       await auction.save();
-
-    //       // Send seller email (auction ended without sale)
-    //       await sendAuctionEndedSellerEmail(auction);
-
-    //       // Send admin email
-    //       const adminUsers = await User.find({ userType: "admin" });
-    //       for (const admin of adminUsers) {
-    //         await auctionEndedAdminEmail(admin.email, auction);
-    //       }
-
-    //       console.log(
-    //         `✅ Agenda: Sent emails for ended auction ${auctionId} (no winner)`
-    //       );
-    //     } else if (
-    //       auction.status === "active" &&
-    //       new Date() < auction.endDate
-    //     ) {
-    //       // Auction was extended, reschedule the job
-    //       await this.scheduleAuctionEnd(auctionId, auction.endDate);
-    //       console.log(
-    //         `🔄 Agenda: Rescheduled auction ${auctionId} to ${auction.endDate}`
-    //       );
-    //     } else {
-    //       console.log(
-    //         `ℹ️ Agenda: Auction ${auctionId} status is ${auction.status}, skipping`
-    //       );
-    //     }
-    //   } catch (error) {
-    //     console.error("Agenda job error (end auction):", error);
-    //   }
-    // });
-    
     this.agenda.define("end auction", async (job) => {
       const { auctionId } = job.attrs.data;
 
       try {
         let auction = await Auction.findById(auctionId).populate(
           "seller",
-          "email phone username firstName"
+          "email phone username firstName",
         );
         // Don't populate winner initially since it might be null
 
@@ -177,12 +77,24 @@ class AgendaService {
           return;
         }
 
+        // NEW: Skip ending for giveaways - they should only end when claimed
+        // Skip ending for always-available auctions (buy_now and giveaway)
+        if (
+          auction.auctionType === "buy_now" ||
+          auction.auctionType === "giveaway"
+        ) {
+          console.log(
+            `🛒 Auction ${auctionId} is ${auction.auctionType} - skipping auto-end (waiting for purchase)`,
+          );
+          return;
+        }
+
         // Only process if auction is still active and end date has passed
         if (auction.status === "active" && new Date() >= auction.endDate) {
           // CRITICAL CHECK: Skip if auction already has a winner (means offer was accepted or buy now used)
           if (auction.winner) {
             console.log(
-              `ℹ️ Agenda: Auction ${auctionId} already has a winner, skipping automated ending`
+              `ℹ️ Agenda: Auction ${auctionId} already has a winner, skipping automated ending`,
             );
             return;
           }
@@ -191,7 +103,7 @@ class AgendaService {
           const soldStatuses = ["sold", "sold_buy_now"];
           if (soldStatuses.includes(auction.status)) {
             console.log(
-              `ℹ️ Agenda: Auction ${auctionId} is already in sold status (${auction.status}), skipping`
+              `ℹ️ Agenda: Auction ${auctionId} is already in sold status (${auction.status}), skipping`,
             );
             return;
           }
@@ -201,12 +113,12 @@ class AgendaService {
             auction.offers &&
             auction.offers.some(
               (offer) =>
-                offer.status === "accepted" || offer.status === "completed"
+                offer.status === "accepted" || offer.status === "completed",
             );
 
           if (hasAcceptedOffer) {
             console.log(
-              `ℹ️ Agenda: Auction ${auctionId} has accepted offer, skipping automated ending`
+              `ℹ️ Agenda: Auction ${auctionId} has accepted offer, skipping automated ending`,
             );
             return;
           }
@@ -228,7 +140,7 @@ class AgendaService {
             console.log(
               `✅ Agenda: Auction ${auctionId} was SOLD to ${
                 auction.winner ? auction.winner.username : "unknown"
-              }`
+              }`,
             );
 
             // Send auction won email to buyer
@@ -237,13 +149,13 @@ class AgendaService {
             // Send admin email for sold auction
             const adminUsers = await User.find({ userType: "admin" });
             for (const admin of adminUsers) {
-              await auctionWonAdminEmail(admin.email, auction);
+              await auctionWonAdminEmail(admin.email, auction, auction.winner);
             }
 
             console.log(`✅ Agenda: Sent SOLD emails for auction ${auctionId}`);
           } else {
             console.log(
-              `✅ Agenda: Auction ${auctionId} ended without sale (status: ${result.newStatus})`
+              `✅ Agenda: Auction ${auctionId} ended without sale (status: ${result.newStatus})`,
             );
 
             // Send seller email (auction ended without sale)
@@ -256,7 +168,7 @@ class AgendaService {
             }
 
             console.log(
-              `✅ Agenda: Sent ENDED emails for auction ${auctionId}`
+              `✅ Agenda: Sent ENDED emails for auction ${auctionId}`,
             );
           }
         } else if (
@@ -266,11 +178,11 @@ class AgendaService {
           // Auction was extended, reschedule the job
           await this.scheduleAuctionEnd(auctionId, auction.endDate);
           console.log(
-            `🔄 Agenda: Rescheduled auction ${auctionId} to ${auction.endDate}`
+            `🔄 Agenda: Rescheduled auction ${auctionId} to ${auction.endDate}`,
           );
         } else {
           console.log(
-            `ℹ️ Agenda: Auction ${auctionId} status is ${auction.status}, skipping`
+            `ℹ️ Agenda: Auction ${auctionId} status is ${auction.status}, skipping`,
           );
         }
       } catch (error) {
@@ -287,7 +199,7 @@ class AgendaService {
         const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60 * 1000);
         const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
         const twentyFourHoursFromNow = new Date(
-          now.getTime() + 24 * 60 * 60 * 1000
+          now.getTime() + 24 * 60 * 60 * 1000,
         );
 
         // Find auctions ending within our thresholds that haven't had notifications sent yet
@@ -349,7 +261,7 @@ class AgendaService {
           // Find ALL users who should receive notifications (excluding auction seller, admins, and opted-out users)
           const allUsers = await User.find({
             _id: { $ne: auction.seller._id }, // Exclude auction owner
-            userType: { $ne: "admin" }, // Exclude admin users
+            userType: { $nin: ["admin", "seller", "broker"] }, // Exclude admin, seller, and broker users
             "preferences.bidAlerts": { $ne: false }, // Exclude users who opted out
             isActive: true, // Only active users
           }).select("email username preferences userType");
@@ -361,15 +273,15 @@ class AgendaService {
                 user.email,
                 user.username,
                 auction,
-                timeLabel
+                timeLabel,
               );
               console.log(
-                `✅ Sent ${timeLabel} notification to ${user.email} (${user.userType}) for auction ${auction.title}`
+                `✅ Sent ${timeLabel} notification to ${user.email} (${user.userType}) for auction ${auction.title}`,
               );
             } catch (error) {
               console.error(
                 `Failed to send ending soon email to ${user.email}:`,
-                error
+                error,
               );
             }
           }
@@ -383,12 +295,12 @@ class AgendaService {
           });
 
           console.log(
-            `📧 Sent ${timeLabel} notifications for auction "${auction.title}" to ${allUsers.length} users`
+            `📧 Sent ${timeLabel} notifications for auction "${auction.title}" to ${allUsers.length} users`,
           );
         }
 
         console.log(
-          `📧 Completed ending soon notifications for ${endingSoonAuctions.length} auctions`
+          `📧 Completed ending soon notifications for ${endingSoonAuctions.length} auctions`,
         );
       } catch (error) {
         console.error("Agenda job error (ending soon notifications):", error);

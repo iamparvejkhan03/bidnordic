@@ -5,7 +5,7 @@ import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import {
     FileText,
-    PoundSterling,
+    Banknote,
     Settings,
     CheckCircle,
     ArrowLeft,
@@ -22,7 +22,9 @@ import {
     Trophy,
     Move,
     Car,
-    Calendar
+    Calendar,
+    AlertCircle,
+    Zap
 } from "lucide-react";
 import { RTE, AdminContainer, AdminHeader, AdminSidebar } from '../../components';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -133,13 +135,13 @@ const DraggablePhoto = ({ photo, index, movePhoto, removePhoto, caption, onCapti
             </div>
 
             {/* Add caption input */}
-            <input
+            {/* <input
                 type="text"
                 placeholder="Add caption..."
                 value={caption || ''}
                 onChange={(e) => onCaptionChange(index, e.target.value)}
                 className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-black"
-            />
+            /> */}
         </div>
     );
 };
@@ -182,7 +184,7 @@ const DocumentGallery = ({ existingDocs, newDocs, removeDoc, existingCaptions, n
                     <div className="space-y-2">
                         {existingDocs.map((doc, index) => (
                             <div key={`existing-doc-${index}`} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                                <div className="flex-1">
+                                {/* <div className="flex-1">
                                     <span className="text-sm truncate">{doc.filename || doc.originalName}</span>
                                     <input
                                         type="text"
@@ -191,7 +193,7 @@ const DocumentGallery = ({ existingDocs, newDocs, removeDoc, existingCaptions, n
                                         onChange={(e) => onCaptionChange('existing', index, e.target.value)}
                                         className="w-full mt-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-black"
                                     />
-                                </div>
+                                </div> */}
                                 <button
                                     type="button"
                                     onClick={() => removeDoc(index, true)}
@@ -277,26 +279,194 @@ const UploadProgressModal = ({ isOpen, fileCount, isEdit = false }) => {
     );
 };
 
-// Category-specific field configurations
-const categoryFields = {
-    'ALL': [
-        { name: 'registration', label: 'Registration Number', type: 'text', required: false, placeholder: 'e.g., AB12 CDE' },
-        { name: 'miles', label: 'Miles', type: 'number', required: false, min: 0, placeholder: 'e.g., 15000' },
-        { name: 'year', label: 'Year', type: 'number', required: true, min: 1900, max: new Date().getFullYear() + 1 },
-        { name: 'bodyType', label: 'Body Type', type: 'select', required: false, options: ['Hatchback', 'Saloon', 'SUV', 'Estate', 'Coupe', 'Convertible', 'MPV'] },
-        { name: 'transmission', label: 'Transmission', type: 'select', required: false, options: ['Manual', 'Automatic', 'Dual-Clutch', 'CVT', 'Semi-Automatic'] },
-        { name: 'fuelType', label: 'Fuel Type', type: 'select', required: false, options: ['Gasoline', 'Diesel', 'Hybrid', 'Electric'] },
-        { name: 'colour', label: 'Colour', type: 'text', required: false, placeholder: 'e.g., Red, Blue, Black' },
-        { name: 'keys', label: 'Keys', type: 'number', required: false, min: 1, max: 4 },
-        { name: 'motExpiry', label: 'MOT Expiry Date', type: 'date', required: false },
-        { name: 'serviceHistory', label: 'Service History', type: 'select', required: false, options: ['Full Service', 'Part Service', 'No History'] },
-        { name: 'insuranceCategory', label: 'Insurance Category', type: 'select', required: false, options: ['No Cat', 'CAT D', 'CAT S', 'CAT N'] },
-        { name: 'v5Status', label: 'V5 Status', type: 'select', required: false, options: ['V5 Present', 'Scanned Copy', 'Applied For', 'Not Available'] },
-        { name: 'previousOwners', label: 'Previous Owners', type: 'number', required: false, min: 0 },
-        { name: 'vatStatus', label: 'VAT Status', type: 'select', required: false, options: ['Marginal', 'Qualifying', 'Commercial'] },
-        { name: 'capClean', label: 'CAP Clean (£)', type: 'number', required: false, min: 0, placeholder: 'e.g., 15500' },
-        { name: 'vendor', label: 'Vendor', type: 'text', required: false, placeholder: 'e.g., City Motors' },
-    ]
+// Dynamic Field Renderer Component - Copy this from your CreateAuction page
+const DynamicField = ({ field, register, errors, watch, setValue }) => {
+    const fieldName = `specifications.${field.name}`;
+    const error = errors.specifications?.[field.name];
+
+    const fieldLabel = field.label || field.name || 'Field';
+    const fieldPlaceholder = field.placeholder || `Enter ${fieldLabel.toLowerCase()}`;
+
+    const inputClasses = `w-full p-3 border ${error ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-black focus:border-transparent`;
+    const unitText = field.unit ? ` (${field.unit})` : '';
+
+    const InheritanceBadge = field.source === 'inherited' ? (
+        <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+            Inherited from {field.sourceCategory?.name}
+        </span>
+    ) : null;
+
+    switch (field.fieldType) {
+        case 'textarea':
+            return (
+                <div className="space-y-2">
+                    <div className="flex items-center">
+                        <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
+                            {fieldLabel} {field.required && <span className="text-red-500">*</span>}
+                            {unitText}
+                        </label>
+                        {InheritanceBadge}
+                    </div>
+                    <textarea
+                        {...register(fieldName, {
+                            required: field.required ? `${fieldLabel} is required` : false,
+                            minLength: field.validation?.minLength ? {
+                                value: field.validation.minLength,
+                                message: `Minimum ${field.validation.minLength} characters`
+                            } : undefined,
+                            maxLength: field.validation?.maxLength ? {
+                                value: field.validation.maxLength,
+                                message: `Maximum ${field.validation.maxLength} characters`
+                            } : undefined,
+                            pattern: field.validation?.pattern ? {
+                                value: new RegExp(field.validation.pattern),
+                                message: field.validation.message || `Invalid format for ${fieldLabel}`
+                            } : undefined
+                        })}
+                        id={field.name}
+                        rows={3}
+                        placeholder={fieldPlaceholder}
+                        className={inputClasses}
+                    />
+                    {error && <p className="text-red-500 text-sm">{error.message}</p>}
+                </div>
+            );
+
+        case 'select':
+            return (
+                <div className="space-y-2">
+                    <div className="flex items-center">
+                        <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
+                            {fieldLabel} {field.required && <span className="text-red-500">*</span>}
+                            {unitText}
+                        </label>
+                        {InheritanceBadge}
+                    </div>
+                    <select
+                        {...register(fieldName, {
+                            required: field.required ? `${fieldLabel} is required` : false
+                        })}
+                        id={field.name}
+                        className={inputClasses}
+                    >
+                        <option value="">Select {fieldLabel}</option>
+                        {field.options?.map(option => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
+                    {error && <p className="text-red-500 text-sm">{error.message}</p>}
+                </div>
+            );
+
+        case 'number':
+            return (
+                <div className="space-y-2">
+                    <div className="flex items-center">
+                        <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
+                            {fieldLabel} {field.required && <span className="text-red-500">*</span>}
+                            {unitText}
+                        </label>
+                        {InheritanceBadge}
+                    </div>
+                    <input
+                        {...register(fieldName, {
+                            required: field.required ? `${fieldLabel} is required` : false,
+                            min: field.validation?.min ? {
+                                value: parseFloat(field.validation.min),
+                                message: `Minimum value is ${field.validation.min}${field.unit ? ` ${field.unit}` : ''}`
+                            } : undefined,
+                            max: field.validation?.max ? {
+                                value: parseFloat(field.validation.max),
+                                message: `Maximum value is ${field.validation.max}${field.unit ? ` ${field.unit}` : ''}`
+                            } : undefined
+                        })}
+                        id={field.name}
+                        type="number"
+                        step="any"
+                        placeholder={fieldPlaceholder}
+                        className={inputClasses}
+                    />
+                    {error && <p className="text-red-500 text-sm">{error.message}</p>}
+                </div>
+            );
+
+        case 'date':
+            return (
+                <div className="space-y-2">
+                    <div className="flex items-center">
+                        <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
+                            {fieldLabel} {field.required && <span className="text-red-500">*</span>}
+                        </label>
+                        {InheritanceBadge}
+                    </div>
+                    <input
+                        {...register(fieldName, {
+                            required: field.required ? `${fieldLabel} is required` : false
+                        })}
+                        id={field.name}
+                        type="date"
+                        className={inputClasses}
+                    />
+                    {error && <p className="text-red-500 text-sm">{error.message}</p>}
+                </div>
+            );
+
+        case 'boolean':
+            return (
+                <div className="space-y-2">
+                    <div className="flex items-center">
+                        <input
+                            {...register(fieldName)}
+                            id={field.name}
+                            type="checkbox"
+                            className="h-4 w-4 text-black rounded focus:ring-black border-gray-300"
+                        />
+                        <label htmlFor={field.name} className="ml-2 block text-sm text-gray-700">
+                            {fieldLabel} {field.required && <span className="text-red-500">*</span>}
+                        </label>
+                        {InheritanceBadge}
+                    </div>
+                    {error && <p className="text-red-500 text-sm">{error.message}</p>}
+                </div>
+            );
+
+        default: // text
+            return (
+                <div className="space-y-2">
+                    <div className="flex items-center">
+                        <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
+                            {fieldLabel} {field.required && <span className="text-red-500">*</span>}
+                            {unitText}
+                        </label>
+                        {InheritanceBadge}
+                    </div>
+                    <input
+                        {...register(fieldName, {
+                            required: field.required ? `${fieldLabel} is required` : false,
+                            minLength: field.validation?.minLength ? {
+                                value: field.validation.minLength,
+                                message: `Minimum ${field.validation.minLength} characters`
+                            } : undefined,
+                            maxLength: field.validation?.maxLength ? {
+                                value: field.validation.maxLength,
+                                message: `Maximum ${field.validation.maxLength} characters`
+                            } : undefined,
+                            pattern: field.validation?.pattern ? {
+                                value: new RegExp(field.validation.pattern),
+                                message: field.validation.message || `Invalid format for ${fieldLabel}`
+                            } : undefined
+                        })}
+                        id={field.name}
+                        type={field.fieldType === 'text' ? 'text' : field.fieldType}
+                        placeholder={fieldPlaceholder}
+                        className={inputClasses}
+                    />
+                    {error && <p className="text-red-500 text-sm">{error.message}</p>}
+                </div>
+            );
+    }
 };
 
 const EditAuction = () => {
@@ -313,8 +483,14 @@ const EditAuction = () => {
     const [uploadedServiceRecords, setUploadedServiceRecords] = useState([]);
     const [removedServiceRecords, setRemovedServiceRecords] = useState([]);
     const [allServiceRecords, setAllServiceRecords] = useState([]);
-    const [loadingCategories, setLoadingCategories] = useState(false);
     const [categories, setCategories] = useState([]);
+    // Category state - Add these
+    const [parentCategories, setParentCategories] = useState([]);
+    const [subCategories, setSubCategories] = useState([]);
+    const [selectedParent, setSelectedParent] = useState(null);
+    const [categoryFields, setCategoryFields] = useState([]);
+    const [loadingCategories, setLoadingCategories] = useState(false);
+    const [loadingFields, setLoadingFields] = useState(false);
 
     // Calculate if there are new files to upload
     const newPhotos = allPhotos.filter(photo => !photo.isExisting);
@@ -329,16 +505,6 @@ const EditAuction = () => {
 
     const { auctionId } = useParams();
     const navigate = useNavigate();
-
-    const categoryIcons = {
-        'Sports': Trophy,
-        'Convertible': Car,
-        'Electric': Cog,
-        'Hatchback': Car,
-        'Sedan': Car,
-        'SUV': Car,
-        'Classic': Calendar
-    };
 
     const {
         register,
@@ -365,51 +531,62 @@ const EditAuction = () => {
     const endDate = watch('endDate');
     const selectedCategory = watch('category');
 
-    // Get category-specific fields
-    const getCategoryFields = () => {
-        return categoryFields['ALL'] || [];
-    };
-
-    // Fetch categories on component mount
-    useEffect(() => {
-        fetchCategories();
-    }, []);
-
-    const fetchCategories = async () => {
+    // Fetch parent categories
+    const fetchParentCategories = async () => {
         try {
             setLoadingCategories(true);
-            const response = await axiosInstance.get('/api/v1/admin/categories/public/active');
-
-            if (response.data.success) {
-                // Filter out "Explore" category and get active categories
-                const apiCategories = response.data.data.filter(cat =>
-                    !cat.isExplore && cat.name && cat.slug
-                );
-
-                // Map to the format we need
-                const formattedCategories = apiCategories.map(cat => ({
-                    name: cat.name,
-                    slug: cat.slug,
-                    id: cat.slug // Use slug as identifier
-                }));
-
-                setCategories(formattedCategories);
-
-                // If there's only one category, pre-select it
-                if (formattedCategories.length === 1) {
-                    setValue('category', formattedCategories[0].slug);
-                }
-            } else {
-                // Fallback to static categories if API fails
-                setCategories(getStaticCategories());
+            const { data } = await axiosInstance.get('/api/v1/categories/public/parents');
+            if (data.success) {
+                setParentCategories(data.data);
             }
-        } catch (err) {
-            console.error('Error fetching categories:', err);
-            // Fallback to static categories
-            setCategories(getStaticCategories());
+        } catch (error) {
+            console.error('Error fetching parent categories:', error);
         } finally {
             setLoadingCategories(false);
         }
+    };
+
+    // Fetch subcategories
+    const fetchSubCategories = async (parentSlug) => {
+        try {
+            setLoadingCategories(true);
+            const { data } = await axiosInstance.get(`/api/v1/categories/public/${parentSlug}/children`);
+            if (data.success) {
+                setSubCategories(data.data.subcategories);
+                setSelectedParent(data.data.parent);
+            }
+        } catch (error) {
+            console.error('Error fetching subcategories:', error);
+            setSubCategories([]);
+        } finally {
+            setLoadingCategories(false);
+        }
+    };
+
+    // Fetch category fields
+    const fetchCategoryFields = async (slug) => {
+        try {
+            setLoadingFields(true);
+            const { data } = await axiosInstance.get(`/api/v1/categories/public/by-slug/${slug}/fields`);
+            if (data.success) {
+                setCategoryFields(data.data.fields || []);
+            }
+        } catch (error) {
+            console.error('Error fetching category fields:', error);
+            setCategoryFields([]);
+        } finally {
+            setLoadingFields(false);
+        }
+    };
+
+    // Fetch parent categories on mount
+    useEffect(() => {
+        fetchParentCategories();
+    }, []);
+
+    // Get category-specific fields
+    const getCategoryFields = () => {
+        return categoryFields['ALL'] || [];
     };
 
     // Static categories fallback (optional)
@@ -493,73 +670,114 @@ const EditAuction = () => {
                     const specificationsObj = mapToObject(auction.specifications);
                     setInitialSpecifications(specificationsObj);
 
+                    // Handle categories - extract parent and subcategory
+                    const categories = auction.categories || [];
+                    let parentSlug = null;
+                    let subCategorySlug = null;
+
+                    // Since we always store [parentSlug, subCategorySlug] in that order
+                    if (categories.length >= 2) {
+                        // First is parent, second is subcategory
+                        parentSlug = categories[0];
+                        subCategorySlug = categories[1];
+                    } else if (categories.length === 1) {
+                        // If only one category, it's the subcategory
+                        subCategorySlug = categories[0];
+                        // We need to find its parent
+                        try {
+                            const fieldsRes = await axiosInstance.get(`/api/v1/categories/public/by-slug/${subCategorySlug}/fields`);
+                            if (fieldsRes.data.success && fieldsRes.data.data.category) {
+                                const categoryData = fieldsRes.data.data.category;
+                                if (categoryData.level === 1 && categoryData.parentCategory) {
+                                    parentSlug = categoryData.parentCategory.slug;
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Error fetching parent info:', e);
+                        }
+                    }
+
+                    // Set the form values
+                    setValue('parentCategory', parentSlug || '');
+                    setValue('category', subCategorySlug || '');
+
+                    // If parent category exists, fetch its subcategories
+                    if (parentSlug) {
+                        await fetchSubCategories(parentSlug);
+                    }
+
+                    // If subcategory exists, fetch its fields
+                    if (subCategorySlug) {
+                        await fetchCategoryFields(subCategorySlug);
+                    }
+
                     // Set basic fields
                     const formData = {
                         title: auction.title,
-                        subTitle: auction.subTitle || '',
-                        categories: auction.categories || auction.category || [],
+                        parentCategory: parentSlug || '',
+                        category: subCategorySlug || '',
                         features: auction.features || '',
                         description: auction.description,
                         location: auction.location,
                         video: auction.videoLink,
                         startDate: formatDateForInput(auction.startDate),
-                        endDate: '',
+                        endDate: formatDateForInput(auction.endDate),
                         startPrice: auction.startPrice,
                         bidIncrement: auction.bidIncrement,
                         auctionType: auction.auctionType,
                         reservePrice: auction.reservePrice,
-                        buyNowPrice: auction.buyNowPrice, // Add this
-                        allowOffers: auction.allowOffers // Add this
+                        buyNowPrice: auction.buyNowPrice,
+                        allowOffers: auction.allowOffers
                     };
+
                     reset(formData);
 
-                    setTimeout(() => {
-                        Object.entries(specificationsObj).forEach(([key, value]) => {
-                            setValue(`specifications.${key}`, value, {
-                                shouldValidate: true,
-                                shouldDirty: false,
-                                shouldTouch: false
-                            });
-                        });
-                    }, 100);
+                    // If parent category exists, fetch its subcategories
+                    if (parentSlug) {
+                        await fetchSubCategories(parentSlug);
+                    }
 
-                    // Initialize allPhotos with existing photos marked as existing
+                    // If subcategory exists, fetch its fields
+                    if (subCategorySlug) {
+                        await fetchCategoryFields(subCategorySlug);
+
+                        // Set specification values after fields are loaded
+                        setTimeout(() => {
+                            Object.entries(specificationsObj).forEach(([key, value]) => {
+                                setValue(`specifications.${key}`, value, {
+                                    shouldValidate: true,
+                                    shouldDirty: false,
+                                    shouldTouch: false
+                                });
+                            });
+                        }, 100);
+                    }
+
+                    // Initialize photos, documents, service records...
                     const existingPhotosWithFlag = (auction.photos || []).map(photo => ({
                         ...photo,
                         isExisting: true,
-                        id: photo.publicId || photo._id
+                        id: photo.publicId || photo._id,
+                        url: photo.url
                     }));
                     setAllPhotos(existingPhotosWithFlag);
 
                     setExistingDocuments(auction.documents || []);
 
-                    // setExistingServiceRecords(auction.ServiceRecords || []);
-                    // Replace existing logbook initialization with:
-                    const existingServiceRecordsWithFlag = (auction.serviceRecords || []).map(serviceRecord => ({
-                        ...serviceRecord,
+                    const existingServiceRecordsWithFlag = (auction.serviceRecords || []).map(record => ({
+                        ...record,
                         isExisting: true,
-                        id: serviceRecord.publicId || serviceRecord._id
+                        id: record.publicId || record._id,
+                        url: record.url
                     }));
                     setAllServiceRecords(existingServiceRecordsWithFlag);
-
-                    // Initialize photo captions
-                    const initialPhotoCaptions = (auction.photos || []).map(photo => photo.caption || '');
-                    setPhotoCaptions(initialPhotoCaptions);
-
-                    // Initialize document captions
-                    const initialDocCaptions = (auction.documents || []).map(doc => doc.caption || '');
-                    setDocumentCaptions(initialDocCaptions);
-
-                    // Initialize service record captions
-                    const initialServiceRecordCaptions = (auction.serviceRecords || []).map(record => record.caption || '');
-                    setServiceRecordCaptions(initialServiceRecordCaptions);
 
                     toast.success('Auction data loaded successfully');
                 }
             } catch (error) {
                 console.error('Error:', error);
                 toast.error('Failed to load auction data');
-                navigate('/admin/auctions');
+                navigate('/admin/auctions/all');
             } finally {
                 setIsLoading(false);
             }
@@ -568,141 +786,24 @@ const EditAuction = () => {
         if (auctionId) fetchAuctionData();
     }, [auctionId, reset, setValue, navigate]);
 
-    const renderCategoryFields = () => {
-        const allFields = getCategoryFields();
-
-        // Categorize fields for display
-        const vehicleInfoFields = [
-            'registration', 'miles', 'year', 'bodyType', 'transmission', 'fuelType', 'colour'
-        ].map(name => allFields.find(f => f.name === name)).filter(Boolean);
-
-        const extraInfoFields = [
-            'keys', 'motExpiry', 'serviceHistory', 'insuranceCategory',
-            'v5Status', 'previousOwners', 'vatStatus', 'capClean', 'vendor'
-        ].map(name => allFields.find(f => f.name === name)).filter(Boolean);
-
-        return (
-            <div className="space-y-8 mb-6">
-                {/* Vehicle Information Section */}
-                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                    <label className="text-sm font-medium text-secondary mb-4 flex items-center">
-                        <Car size={20} className="mr-2" />
-                        Vehicle Information *
-                    </label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {vehicleInfoFields.map((field) => (
-                            <div key={field.name} className="space-y-2">
-                                <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
-                                    {field.label} {field.required && <span className="text-red-500">*</span>}
-                                </label>
-                                {renderField(field)}
-                                {errors.specifications?.[field.name] && (
-                                    <p className="text-red-500 text-sm">{errors.specifications[field.name].message}</p>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Extra Information Section */}
-                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                    <label className="text-sm font-medium text-secondary mb-4 flex items-center">
-                        <Settings size={20} className="mr-2" />
-                        Extra Information
-                    </label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {extraInfoFields.map((field) => (
-                            <div key={field.name} className="space-y-2">
-                                <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
-                                    {field.label}
-                                </label>
-                                {renderField(field)}
-                                {errors.specifications?.[field.name] && (
-                                    <p className="text-red-500 text-sm">{errors.specifications[field.name].message}</p>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    // Add this helper function (ADD this after renderCategoryFields)
-    const renderField = (field) => {
-        if (field.type === 'select') {
-            return (
-                <select
-                    {...register(`specifications.${field.name}`, {
-                        required: field.required ? `${field.label} is required` : false
-                    })}
-                    id={field.name}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-                >
-                    <option value="">Select {field.label}</option>
-                    {field.options.map(option => (
-                        <option key={option} value={option}>{option}</option>
-                    ))}
-                </select>
-            );
+    // Fetch subcategories when parent is selected
+    useEffect(() => {
+        const parentSlug = watch('parentCategory');
+        if (parentSlug) {
+            fetchSubCategories(parentSlug);
+            // Clear previously selected subcategory
+            setValue('category', '');
+            setCategoryFields([]);
         }
+    }, [watch('parentCategory')]);
 
-        if (field.type === 'date') {
-            return (
-                <input
-                    {...register(`specifications.${field.name}`, {
-                        required: field.required ? `${field.label} is required` : false,
-                        validate: (value) => {
-                            if (!value) return true;
-                            const date = new Date(value);
-                            return !isNaN(date.getTime()) || 'Invalid date';
-                        }
-                    })}
-                    id={field.name}
-                    type="date"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-                />
-            );
+    // Fetch fields when subcategory is selected
+    useEffect(() => {
+        const subCategorySlug = watch('category');
+        if (subCategorySlug) {
+            fetchCategoryFields(subCategorySlug);
         }
-
-        if (field.type === 'number') {
-            return (
-                <input
-                    {...register(`specifications.${field.name}`, {
-                        required: field.required ? `${field.label} is required` : false,
-                        min: field.min ? {
-                            value: field.min,
-                            message: `Must be at least ${field.min}`
-                        } : undefined,
-                        max: field.max ? {
-                            value: field.max,
-                            message: `Must be at most ${field.max}`
-                        } : undefined,
-                        valueAsNumber: true
-                    })}
-                    id={field.name}
-                    type="number"
-                    placeholder={field.placeholder}
-                    min={field.min}
-                    max={field.max}
-                    step="any"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-                />
-            );
-        }
-
-        return (
-            <input
-                {...register(`specifications.${field.name}`, {
-                    required: field.required ? `${field.label} is required` : false
-                })}
-                id={field.name}
-                type={field.type}
-                placeholder={field.placeholder}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-            />
-        );
-    };
+    }, [watch('category')]);
 
     const nextStep = async () => {
         let isValid = true;
@@ -979,22 +1080,21 @@ const EditAuction = () => {
 
             // Append all text fields
             formDataToSend.append('title', formData.title);
-            formDataToSend.append('subTitle', formData.subTitle || '');
-            // formDataToSend.append('category', formData.category);
-            if (formData.categories) {
-                if (Array.isArray(formData.categories)) {
-                    formData.categories.forEach(cat => {
-                        formDataToSend.append('categories', cat);
-                    });
-                } else {
-                    formDataToSend.append('categories', formData.categories);
-                }
+
+            // Categories handling
+            const categoriesToStore = [];
+            if (formData.parentCategory) {
+                categoriesToStore.push(formData.parentCategory);
             }
+            if (formData.category) {
+                categoriesToStore.push(formData.category);
+            }
+            formDataToSend.append('categories', JSON.stringify(categoriesToStore));
+
             formDataToSend.append('features', formData.features || '');
             formDataToSend.append('description', formData.description);
             formDataToSend.append('location', formData.location || '');
             formDataToSend.append('videoLink', formData.video || '');
-            formDataToSend.append('startPrice', formData.startPrice);
             formDataToSend.append('auctionType', formData.auctionType);
             formDataToSend.append('allowOffers', formData.allowOffers || false);
             formDataToSend.append('startDate', new Date(formData.startDate).toISOString());
@@ -1006,9 +1106,50 @@ const EditAuction = () => {
                 formDataToSend.append('specifications', JSON.stringify(currentSpecifications));
             }
 
+            // ===== PRICING HANDLING =====
+            if (formData.auctionType === 'giveaway' || formData.auctionType === 'buy_now') {
+                // For giveaways and buy now, set startPrice to 0
+                formDataToSend.append('startPrice', 0);
+
+                // For buy now, still need to send buyNowPrice
+                if (formData.auctionType === 'buy_now' && formData.buyNowPrice) {
+                    formDataToSend.append('buyNowPrice', formData.buyNowPrice);
+                }
+
+                // Optional bid increment for buy now auctions (if you want to allow both bidding and buy now)
+                if (formData.auctionType === 'buy_now' && formData.bidIncrement) {
+                    formDataToSend.append('bidIncrement', formData.bidIncrement);
+                }
+            } else {
+                // Regular timed auctions (standard/reserve)
+                if (formData.startPrice) {
+                    formDataToSend.append('startPrice', formData.startPrice);
+                }
+
+                // Bid increment for standard/reserve
+                if (formData.auctionType === 'standard' || formData.auctionType === 'reserve') {
+                    if (formData.bidIncrement) {
+                        formDataToSend.append('bidIncrement', formData.bidIncrement);
+                    }
+                }
+
+                // Reserve price for reserve auctions
+                if (formData.auctionType === 'reserve' && formData.reservePrice) {
+                    formDataToSend.append('reservePrice', formData.reservePrice);
+                }
+            }
+
             // Add removed photos and documents
             if (removedPhotos.length > 0) {
                 formDataToSend.append('removedPhotos', JSON.stringify(removedPhotos));
+            }
+
+            if (removedDocuments.length > 0) {
+                formDataToSend.append('removedDocuments', JSON.stringify(removedDocuments));
+            }
+
+            if (removedServiceRecords.length > 0) {
+                formDataToSend.append('removedServiceRecords', JSON.stringify(removedServiceRecords));
             }
 
             // Send the complete photo order
@@ -1058,36 +1199,6 @@ const EditAuction = () => {
                     formDataToSend.append('serviceRecords', record.file);
                 }
             });
-
-            if (formData.auctionType === 'standard' || formData.auctionType === 'reserve') {
-                formDataToSend.append('bidIncrement', formData.bidIncrement);
-            }
-
-            // Append reserve price if applicable
-            if (formData.auctionType === 'reserve' && formData.reservePrice) {
-                formDataToSend.append('reservePrice', formData.reservePrice);
-            }
-
-            // Append buy now price if applicable
-            if (formData.auctionType === 'buy_now' && formData.buyNowPrice) {
-                formDataToSend.append('buyNowPrice', formData.buyNowPrice);
-            }
-
-            if (removedDocuments.length > 0) {
-                formDataToSend.append('removedDocuments', JSON.stringify(removedDocuments));
-            }
-
-            if (removedServiceRecords.length > 0) {
-                formDataToSend.append('removedServiceRecords', JSON.stringify(removedServiceRecords));
-            }
-
-            // Remove or fix the debug logging
-            // console.log('FormData entries:');
-            // for (let pair of formDataToSend.entries()) {
-            //     const value = pair[1];
-            //     const isFile = value && typeof value === 'object' && value.name;
-            //     console.log(pair[0] + ': ' + (isFile ? '[FILE]' : value));
-            // }
 
             // Use admin-specific endpoint
             const { data } = await axiosInstance.put(
@@ -1161,7 +1272,7 @@ const EditAuction = () => {
                         <div className="pt-16 md:py-7">
                             <div className="flex items-center gap-3 mb-5">
                                 <button
-                                    onClick={() => navigate('/admin/auctions')}
+                                    onClick={() => navigate('/admin/auctions/all')}
                                     className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                 >
                                     <ArrowLeft size={20} />
@@ -1198,7 +1309,7 @@ const EditAuction = () => {
                                     <div>
                                         <h2 className="text-xl font-semibold mb-6 flex items-center">
                                             <FileText size={20} className="mr-2" />
-                                            Vehicle Information
+                                            Item Information
                                         </h2>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -1214,120 +1325,120 @@ const EditAuction = () => {
                                                 {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>}
                                             </div>
 
-                                            <div>
-                                                <label htmlFor="subTitle" className="block text-sm font-medium text-secondary mb-1">Sub Title</label>
-                                                <input
-                                                    {...register('subTitle')}
-                                                    id="subTitle"
-                                                    type="text"
-                                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-                                                    placeholder="e.g., Sunroof, Automatic, Heated Seats"
-                                                />
-                                                {errors.subTitle && <p className="text-red-500 text-sm mt-1">{errors.subTitle.message}</p>}
-                                            </div>
-
-                                            <div>
-                                                <label htmlFor="categories" className="block text-sm font-medium text-secondary mb-1">
-                                                    Categories *
-                                                </label>
-                                                <select
-                                                    {...register('categories', {
-                                                        required: 'At least one category is required',
-                                                        validate: value => {
-                                                            if (!value || (Array.isArray(value) && value.length === 0)) {
-                                                                return 'Please select at least one category';
-                                                            }
-                                                            return true;
-                                                        }
-                                                    })}
-                                                    id="categories"
-                                                    multiple
-                                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-                                                    disabled={loadingCategories}
-                                                    size={Math.min(6, categories.length + 1)}
-                                                    value={watch('categories') || []} // Add this line
-                                                    onChange={(e) => {
-                                                        const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-                                                        setValue('categories', selectedOptions, { shouldValidate: true });
-                                                    }}
-                                                >
-                                                    <option value="" disabled>Select categories (hold Ctrl/Cmd to select multiple)</option>
-                                                    {categories.map(cat => (
-                                                        <option key={cat.slug} value={cat.slug}>
-                                                            {cat.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                {errors.categories && <p className="text-red-500 text-sm mt-1">{errors.categories.message}</p>}
-
-                                                {/* Show selected categories as badges */}
-                                                {watch('categories')?.length > 0 && (
-                                                    <div className="mt-2 flex flex-wrap gap-2">
-                                                        {watch('categories').map((catSlug, index) => {
-                                                            const cat = categories.find(c => c.slug === catSlug);
-                                                            return cat ? (
-                                                                <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                                                                    {cat.name}
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            const updated = watch('categories').filter(c => c !== catSlug);
-                                                                            setValue('categories', updated, { shouldValidate: true });
-                                                                        }}
-                                                                        className="ml-1 text-red-500 hover:text-red-700"
-                                                                    >
-                                                                        ×
-                                                                    </button>
-                                                                </span>
-                                                            ) : null;
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label htmlFor="parentCategory" className="block text-sm font-medium text-secondary mb-1">
+                                                        Category *
+                                                    </label>
+                                                    <select
+                                                        {...register('parentCategory', {
+                                                            required: 'Please select a category'
                                                         })}
-                                                    </div>
-                                                )}
+                                                        id="parentCategory"
+                                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                                                        disabled={loadingCategories}
+                                                    >
+                                                        <option value="">Select a category</option>
+                                                        {parentCategories.map(cat => (
+                                                            <option key={cat._id} value={cat.slug}>
+                                                                {cat.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    {errors.parentCategory && (
+                                                        <p className="text-red-500 text-sm mt-1">{errors.parentCategory.message}</p>
+                                                    )}
+                                                </div>
+
+                                                <div>
+                                                    <label htmlFor="category" className="block text-sm font-medium text-secondary mb-1">
+                                                        Subcategory *
+                                                    </label>
+                                                    <select
+                                                        {...register('category', {
+                                                            required: 'Please select a subcategory'
+                                                        })}
+                                                        id="category"
+                                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                                                        disabled={!watch('parentCategory') || loadingCategories}
+                                                    >
+                                                        <option value="">Select a subcategory</option>
+                                                        {subCategories.map(sub => (
+                                                            <option key={sub._id} value={sub.slug}>
+                                                                {sub.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    {errors.category && (
+                                                        <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
 
-                                        {/* Category-specific fields */}
-                                        {renderCategoryFields()}
-
-                                        {/* Avionics Section - Only for Aircraft */}
-                                        {/* {selectedCategory && (
-                                            <div className="bg-white p-4 rounded-lg shadow-sm">
-                                                <h4 className="font-medium mb-3">Vehicle Specifications</h4>
-                                                <div className="space-y-4">
-                                                    <div className="border-b pb-3">
-                                                        <h5 className="font-medium text-sm mb-2">Vehicle Information</h5>
-                                                        <div className="grid grid-cols-2 gap-3">
-                                                            {['registration', 'miles', 'year', 'bodyType', 'transmission', 'fuelType', 'colour'].map((fieldName) => {
-                                                                const field = getCategoryFields().find(f => f.name === fieldName);
-                                                                const value = watch(`specifications.${fieldName}`);
-                                                                return value ? (
-                                                                    <div key={fieldName}>
-                                                                        <p className="text-xs text-secondary">{field?.label}</p>
-                                                                        <p className="font-medium">{value}</p>
-                                                                    </div>
-                                                                ) : null;
-                                                            }).filter(Boolean)}
-                                                        </div>
-                                                    </div>
-
-                                                    <div>
-                                                        <h5 className="font-medium text-sm mb-2">Extra Information</h5>
-                                                        <div className="grid grid-cols-2 gap-3">
-                                                            {['keys', 'motExpiry', 'serviceHistory', 'insuranceCategory', 'v5Status', 'previousOwners', 'vatStatus', 'capClean', 'vendor'].map((fieldName) => {
-                                                                const field = getCategoryFields().find(f => f.name === fieldName);
-                                                                const value = watch(`specifications.${fieldName}`);
-                                                                return value ? (
-                                                                    <div key={fieldName}>
-                                                                        <p className="text-xs text-secondary">{field?.label}</p>
-                                                                        <p className="font-medium">{fieldName === 'motExpiry' ? new Date(value).toLocaleDateString('en-GB') : value}</p>
-                                                                    </div>
-                                                                ) : null;
-                                                            }).filter(Boolean)}
-                                                        </div>
-                                                    </div>
+                                        {/* Dynamic Fields for Selected Subcategory */}
+                                        {watch('category') && (
+                                            <div className="mb-6">
+                                                <div className="mb-4 pb-2 border-b border-gray-200">
+                                                    <h3 className="text-lg font-medium text-gray-800">
+                                                        {selectedParent?.name} - {subCategories.find(s => s.slug === watch('category'))?.name || 'Category'} Specifications
+                                                    </h3>
+                                                    <p className="text-sm text-gray-500 mt-1">
+                                                        Please provide the following details about your item
+                                                    </p>
                                                 </div>
+                                                {loadingFields ? (
+                                                    <div className="flex justify-center items-center py-12">
+                                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+                                                        <span className="ml-3 text-gray-600">Loading fields...</span>
+                                                    </div>
+                                                ) : categoryFields.length === 0 ? (
+                                                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+                                                        <AlertCircle size={40} className="mx-auto text-gray-400 mb-3" />
+                                                        <h3 className="text-lg font-medium text-gray-700 mb-2">No Custom Fields</h3>
+                                                        <p className="text-gray-500">
+                                                            This category doesn't have any specific fields configured.
+                                                        </p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-8">
+                                                        {Object.entries(
+                                                            categoryFields.reduce((acc, field) => {
+                                                                const group = field.group || 'General';
+                                                                if (!acc[group]) acc[group] = [];
+                                                                acc[group].push(field);
+                                                                return acc;
+                                                            }, {})
+                                                        ).map(([groupName, fields]) => (
+                                                            <div key={groupName} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                                                <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                                                                    <h3 className="font-medium text-gray-700">{groupName}</h3>
+                                                                </div>
+                                                                <div className="p-4">
+                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                        {fields
+                                                                            .sort((a, b) => a.order - b.order)
+                                                                            .map((field) => {
+                                                                                const uniqueKey = `${field.source || 'own'}-${field._id || field.name}-${watch('category')}`;
+                                                                                return (
+                                                                                    <DynamicField
+                                                                                        key={uniqueKey}
+                                                                                        field={field}
+                                                                                        register={register}
+                                                                                        errors={errors}
+                                                                                        watch={watch}
+                                                                                        setValue={setValue}
+                                                                                    />
+                                                                                );
+                                                                            })}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
-                                        )} */}
+                                        )}
 
                                         <div className="mb-6">
                                             <label htmlFor="description" className="block text-sm font-medium text-secondary mb-1">Description *</label>
@@ -1582,17 +1693,18 @@ const EditAuction = () => {
                                 {step === 2 && (
                                     <div>
                                         <h2 className="text-xl font-semibold mb-6 flex items-center">
-                                            <PoundSterling size={20} className="mr-2" />
+                                            <Banknote size={20} className="mr-2" />
                                             Pricing & Bidding
                                         </h2>
 
                                         <div className="mb-6">
                                             <label className="block text-sm font-medium text-secondary mb-1">Auction Type *</label>
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4"> {/* Changed from grid-cols-3 to grid-cols-4 */}
                                                 {[
                                                     { value: 'standard', label: 'Standard Auction' },
                                                     { value: 'reserve', label: 'Reserve Price Auction' },
                                                     { value: 'buy_now', label: 'Buy Now Auction' },
+                                                    { value: 'giveaway', label: 'Free Giveaway' }, // ADD THIS LINE
                                                 ].map((type) => (
                                                     <label key={type.value} className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
                                                         <input
@@ -1608,134 +1720,162 @@ const EditAuction = () => {
                                             {errors.auctionType && <p className="text-red-500 text-sm mt-1">{errors.auctionType.message}</p>}
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                            <div>
-                                                <label htmlFor="startPrice" className="block text-sm font-medium text-secondary mb-1">Start Price *</label>
-                                                <div className="relative">
-                                                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">£</span>
-                                                    <input
-                                                        {...register('startPrice', {
-                                                            required: 'Start price is required',
-                                                            min: { value: 0, message: 'Price must be positive' }
-                                                        })}
-                                                        id="startPrice"
-                                                        type="number"
-                                                        step="0.01"
-                                                        min="0"
-                                                        className="w-full pl-8 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-                                                        placeholder="0.00"
-                                                    />
-                                                </div>
-                                                {errors.startPrice && <p className="text-red-500 text-sm mt-1">{errors.startPrice.message}</p>}
-                                            </div>
-
-                                            {(auctionType === 'standard' || auctionType === 'reserve') && (
-                                                <div>
-                                                    <label htmlFor="bidIncrement" className="block text-sm font-medium text-secondary mb-1">Bid Increment *</label>
-                                                    <div className="relative">
-                                                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">£</span>
-                                                        <input
-                                                            {...register('bidIncrement', {
-                                                                required: 'Bid increment is required',
-                                                                min: { value: 0, message: 'Increment must be positive' }
-                                                            })}
-                                                            id="bidIncrement"
-                                                            type="number"
-                                                            step="0.01"
-                                                            min="0"
-                                                            className="w-full pl-8 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-                                                            placeholder="0.00"
-                                                        />
-                                                    </div>
-                                                    {errors.bidIncrement && <p className="text-red-500 text-sm mt-1">{errors.bidIncrement.message}</p>}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {auctionType === 'reserve' && (
-                                            <div className="mb-6">
-                                                <label htmlFor="reservePrice" className="block text-sm font-medium text-secondary mb-1">Reserve Price *</label>
-                                                <div className="relative">
-                                                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">£</span>
-                                                    <input
-                                                        {...register('reservePrice', {
-                                                            required: auctionType === 'reserve' ? 'Reserve price is required' : false,
-                                                            min: { value: 0, message: 'Price must be positive' },
-                                                            validate: value => {
-                                                                const startPrice = parseFloat(watch('startPrice') || 0);
-                                                                const reservePrice = parseFloat(value);
-                                                                return reservePrice >= startPrice || 'Reserve price must be greater than or equal to start price';
-                                                            }
-                                                        })}
-                                                        id="reservePrice"
-                                                        type="number"
-                                                        step="0.01"
-                                                        min="0"
-                                                        className="w-full pl-8 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-                                                        placeholder="0.00"
-                                                    />
-                                                </div>
-                                                {errors.reservePrice && <p className="text-red-500 text-sm mt-1">{errors.reservePrice.message}</p>}
-                                                <p className="text-sm text-secondary mt-1">Item will not sell if bids don't reach this price</p>
+                                        {/* Show immediate start message for buy_now and giveaway */}
+                                        {(watch('auctionType') === 'buy_now' || watch('auctionType') === 'giveaway') && (
+                                            <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+                                                <p className="text-green-700 flex items-center gap-2">
+                                                    <Zap size={18} />
+                                                    <span>This auction will start immediately upon creation.</span>
+                                                </p>
                                             </div>
                                         )}
 
-                                        {/* Buy Now Price (for buy_now auction type) */}
-                                        {auctionType === 'buy_now' && (
+                                        {/* Only show pricing fields if NOT giveaway */}
+                                        {watch('auctionType') !== 'giveaway' && (
                                             <>
-                                                <div className="mb-4">
-                                                    <label htmlFor="buyNowPrice" className="block text-sm font-medium text-secondary mb-1">
-                                                        Buy Now Price *
-                                                    </label>
-                                                    <div className="relative">
-                                                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">£</span>
-                                                        <input
-                                                            {...register('buyNowPrice', {
-                                                                required: auctionType === 'buy_now' ? 'Buy Now price is required' : false,
-                                                                min: { value: 0, message: 'Price must be positive' },
-                                                                validate: value => {
-                                                                    const startPrice = parseFloat(watch('startPrice') || 0);
-                                                                    const buyNowPrice = parseFloat(value);
-                                                                    return buyNowPrice >= startPrice || 'Buy Now price must be greater than or equal to start price';
-                                                                }
-                                                            })}
-                                                            id="buyNowPrice"
-                                                            type="number"
-                                                            step="0.01"
-                                                            min="0"
-                                                            className="w-full pl-8 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-                                                            placeholder="0.00"
-                                                        />
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                                    {(watch('auctionType') === 'standard' || watch('auctionType') === 'reserve') && (
+                                                        <div>
+                                                            <label htmlFor="startPrice" className="block text-sm font-medium text-secondary mb-1">Start Price *</label>
+                                                            <div className="relative">
+                                                                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">£</span>
+                                                                <input
+                                                                    {...register('startPrice', {
+                                                                        required: watch('auctionType') !== 'giveaway' ? 'Start price is required' : false,
+                                                                        min: { value: 0, message: 'Price must be positive' }
+                                                                    })}
+                                                                    id="startPrice"
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    min="0"
+                                                                    className="w-full pl-8 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                                                                    placeholder="0.00"
+                                                                />
+                                                            </div>
+                                                            {errors.startPrice && <p className="text-red-500 text-sm mt-1">{errors.startPrice.message}</p>}
+                                                        </div>)}
+
+                                                    {(watch('auctionType') === 'standard' || watch('auctionType') === 'reserve') && (
+                                                        <div>
+                                                            <label htmlFor="bidIncrement" className="block text-sm font-medium text-secondary mb-1">Bid Increment *</label>
+                                                            <div className="relative">
+                                                                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">£</span>
+                                                                <input
+                                                                    {...register('bidIncrement', {
+                                                                        required: (watch('auctionType') === 'standard' || watch('auctionType') === 'reserve') ? 'Bid increment is required' : false,
+                                                                        min: { value: 0, message: 'Increment must be positive' }
+                                                                    })}
+                                                                    id="bidIncrement"
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    min="0"
+                                                                    className="w-full pl-8 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                                                                    placeholder="0.00"
+                                                                />
+                                                            </div>
+                                                            {errors.bidIncrement && <p className="text-red-500 text-sm mt-1">{errors.bidIncrement.message}</p>}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {watch('auctionType') === 'reserve' && (
+                                                    <div className="mb-6">
+                                                        <label htmlFor="reservePrice" className="block text-sm font-medium text-secondary mb-1">Reserve Price *</label>
+                                                        <div className="relative">
+                                                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">£</span>
+                                                            <input
+                                                                {...register('reservePrice', {
+                                                                    required: watch('auctionType') === 'reserve' ? 'Reserve price is required' : false,
+                                                                    min: { value: 0, message: 'Price must be positive' },
+                                                                    validate: value => {
+                                                                        const startPrice = parseFloat(watch('startPrice') || 0);
+                                                                        const reservePrice = parseFloat(value);
+                                                                        return reservePrice >= startPrice || 'Reserve price must be greater than or equal to start price';
+                                                                    }
+                                                                })}
+                                                                id="reservePrice"
+                                                                type="number"
+                                                                step="0.01"
+                                                                min="0"
+                                                                className="w-full pl-8 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                                                                placeholder="0.00"
+                                                            />
+                                                        </div>
+                                                        {errors.reservePrice && <p className="text-red-500 text-sm mt-1">{errors.reservePrice.message}</p>}
+                                                        <p className="text-sm text-secondary mt-1">Item will not sell if bids don't reach this price</p>
                                                     </div>
-                                                    {errors.buyNowPrice && <p className="text-red-500 text-sm mt-1">{errors.buyNowPrice.message}</p>}
-                                                    <p className="text-sm text-secondary mt-1">
-                                                        Buyers can purchase immediately at this price, ending the auction
-                                                    </p>
+                                                )}
+
+                                                {watch('auctionType') === 'buy_now' && (
+                                                    <div className="mb-4">
+                                                        <label htmlFor="buyNowPrice" className="block text-sm font-medium text-secondary mb-1">
+                                                            Buy Now Price *
+                                                        </label>
+                                                        <div className="relative">
+                                                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">£</span>
+                                                            <input
+                                                                {...register('buyNowPrice', {
+                                                                    required: watch('auctionType') === 'buy_now' ? 'Buy Now price is required' : false,
+                                                                    min: { value: 0, message: 'Price must be positive' },
+                                                                    validate: value => {
+                                                                        const startPrice = parseFloat(watch('startPrice') || 0);
+                                                                        const buyNowPrice = parseFloat(value);
+                                                                        return buyNowPrice >= startPrice || 'Buy Now price must be greater than or equal to start price';
+                                                                    }
+                                                                })}
+                                                                id="buyNowPrice"
+                                                                type="number"
+                                                                step="0.01"
+                                                                min="0"
+                                                                className="w-full pl-8 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                                                                placeholder="0.00"
+                                                            />
+                                                        </div>
+                                                        {errors.buyNowPrice && <p className="text-red-500 text-sm mt-1">{errors.buyNowPrice.message}</p>}
+                                                        <p className="text-sm text-secondary mt-1">
+                                                            Buyers can purchase immediately at this price, ending the auction
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                {/* Allow Offers Toggle */}
+                                                <div className="mb-6">
+                                                    <label className="flex items-center cursor-pointer">
+                                                        <div className="relative">
+                                                            <input
+                                                                type="checkbox"
+                                                                {...register('allowOffers')}
+                                                                id="allowOffers"
+                                                                className="sr-only"
+                                                            />
+                                                            <div className={`block w-14 h-8 rounded-full ${watch('allowOffers') ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                                                            <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition ${watch('allowOffers') ? 'transform translate-x-6' : ''}`}></div>
+                                                        </div>
+                                                        <div className="ml-3">
+                                                            <span className="font-medium text-secondary">Allow Offers</span>
+                                                            <p className="text-sm text-secondary mt-1">
+                                                                Enable buyers to make purchase offers during the auction
+                                                            </p>
+                                                        </div>
+                                                    </label>
                                                 </div>
                                             </>
                                         )}
 
-                                        {/* Allow Offers Toggle */}
-                                        <div className="mb-6">
-                                            <label className="flex items-center cursor-pointer">
-                                                <div className="relative">
-                                                    <input
-                                                        type="checkbox"
-                                                        {...register('allowOffers')}
-                                                        id="allowOffers"
-                                                        className="sr-only"
-                                                    />
-                                                    <div className={`block w-14 h-8 rounded-full ${watch('allowOffers') ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                                                    <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition ${watch('allowOffers') ? 'transform translate-x-6' : ''}`}></div>
-                                                </div>
-                                                <div className="ml-3">
-                                                    <span className="font-medium text-secondary">Allow Offers</span>
-                                                    <p className="text-sm text-secondary mt-1">
-                                                        Enable buyers to make purchase offers during the auction
-                                                    </p>
-                                                </div>
-                                            </label>
-                                        </div>
+                                        {/* Show giveaway info */}
+                                        {watch('auctionType') === 'giveaway' && (
+                                            <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-6">
+                                                <h3 className="text-lg font-semibold text-green-700 mb-2 flex items-center gap-2">
+                                                    <span>🎁 Free Giveaway</span>
+                                                </h3>
+                                                <p className="text-green-600 mb-2">
+                                                    This item will be given away for free. The first user who clicks "Claim" will win it immediately.
+                                                </p>
+                                                <p className="text-sm text-green-500">
+                                                    No pricing needed. The auction will end as soon as someone claims it.
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
@@ -1751,21 +1891,15 @@ const EditAuction = () => {
                                             <h3 className="font-medium text-lg mb-4 border-b pb-2">Auction Summary</h3>
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                {/* Vehicle Details */}
+                                                {/* Item Details */}
                                                 <div className="space-y-4">
                                                     <div className="bg-white p-4 rounded-lg shadow-sm">
-                                                        <h4 className="font-medium mb-3">Vehicle Details</h4>
+                                                        <h4 className="font-medium mb-3">Item Details</h4>
                                                         <div className="space-y-2">
                                                             <div>
-                                                                <p className="text-xs text-secondary">Vehicle Name</p>
+                                                                <p className="text-xs text-secondary">Item Name</p>
                                                                 <p className="font-medium">{watch('title') || 'Not provided'}</p>
                                                             </div>
-                                                            {watch('subTitle') && (
-                                                                <div>
-                                                                    <p className="text-xs text-secondary">Sub Title</p>
-                                                                    <p className="font-medium">{watch('subTitle')}</p>
-                                                                </div>
-                                                            )}
                                                             <div>
                                                                 <p className="text-xs text-secondary">Category</p>
                                                                 <div className="flex flex-wrap gap-2">
@@ -1785,9 +1919,9 @@ const EditAuction = () => {
 
                                                     {selectedCategory && (
                                                         <div className="space-y-4">
-                                                            {/* Vehicle Information Review */}
+                                                            {/* Item Information Review */}
                                                             <div className="bg-white p-4 rounded-lg shadow-sm">
-                                                                <h4 className="font-medium mb-3">Vehicle Information</h4>
+                                                                <h4 className="font-medium mb-3">Item Information</h4>
                                                                 <div className="grid grid-cols-2 gap-4">
                                                                     {['registration', 'miles', 'year', 'bodyType', 'transmission', 'fuelType', 'colour'].map((fieldName) => {
                                                                         const field = getCategoryFields().find(f => f.name === fieldName);
@@ -1812,7 +1946,7 @@ const EditAuction = () => {
                                                                         return value ? (
                                                                             <div key={fieldName}>
                                                                                 <p className="text-xs text-secondary">{field?.label}</p>
-                                                                                <p className="font-medium">{fieldName === 'motExpiry' ? new Date(value).toLocaleDateString('en-GB') : value}</p>
+                                                                                <p className="font-medium">{fieldName === 'motExpiry' ? new Date(value).toLocaleDateString('nb-NO') : value}</p>
                                                                             </div>
                                                                         ) : null;
                                                                     }).filter(Boolean)}
@@ -1833,6 +1967,7 @@ const EditAuction = () => {
                                                                     {watch('auctionType') === 'standard' && 'Standard Auction'}
                                                                     {watch('auctionType') === 'reserve' && 'Reserve Price Auction'}
                                                                     {watch('auctionType') === 'buy_now' && 'Buy Now Auction'}
+                                                                    {watch('auctionType') === 'giveaway' && 'Free Giveaway'}
                                                                 </p>
                                                             </div>
                                                             {watch('allowOffers') && (
@@ -1959,7 +2094,7 @@ const EditAuction = () => {
                                                     className="mt-1 mr-2"
                                                 />
                                                 <span className="text-sm font-medium text-secondary">
-                                                    I agree to the terms and conditions and confirm that I have the right to sell this vehicle
+                                                    I agree to the terms and conditions and confirm that I have the right to sell this Item
                                                 </span>
                                             </label>
                                             {errors.termsAgreed && <p className="text-red-500 text-sm mt-1">{errors.termsAgreed.message}</p>}
@@ -1989,7 +2124,7 @@ const EditAuction = () => {
                                                 e.preventDefault();
                                                 nextStep();
                                             }}
-                                            className="flex items-center px-6 py-2 bg-[#edcd1f] text-black rounded-lg hover:bg-[#edcd1f]/90 transition-colors"
+                                            className="flex items-center px-6 py-2 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 rounded-lg transition-colors"
                                         >
                                             Next
                                             <ArrowRight size={18} className="ml-2" />
@@ -1998,7 +2133,7 @@ const EditAuction = () => {
                                         <button
                                             type="submit"
                                             disabled={isSubmitting}
-                                            className="flex items-center px-6 py-2 bg-[#edcd1f] text-black rounded-lg hover:bg-[#edcd1f]/90 transition-colors disabled:opacity-50"
+                                            className="flex items-center px-6 py-2 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white hover:from-orange-500 hover:via-orange-600 hover:to-orange-700 rounded-lg transition-colors disabled:opacity-50"
                                         >
                                             <Gavel size={18} className="mr-2" />
                                             {isSubmitting ? 'Updating Auction...' : 'Update Auction'}
