@@ -138,7 +138,7 @@ function SingleAuction() {
         }
 
         if (!bidAmount || (parseFloat(bidAmount) <= auction.currentPrice && auction.bidCount > 0)) {
-            toast.error(`Bid must be higher than current price: £${auction.currentPrice}`);
+            toast.error(`Bid must be higher than current price: ${auction.currentPrice} kr`);
             return;
         }
 
@@ -269,7 +269,7 @@ function SingleAuction() {
         }
 
         if (parseFloat(offerAmount) < auction.startPrice) {
-            toast.error(`Offer must be at least £${auction.startPrice}`);
+            toast.error(`Offer must be at least ${auction.startPrice} kr`);
             return;
         }
 
@@ -622,14 +622,14 @@ function SingleAuction() {
                                 <div className="flex flex-col gap-2">
                                     <p className="font-light">{auction.bidCount > 0 ? 'Current Bid' : 'Start Bidding At'}</p>
                                     <p className="flex items-center gap-1 text-3xl sm:text-4xl font-medium">
-                                        <span>£ </span>
                                         <span> {auction.currentPrice.toLocaleString()}</span>
+                                        <span> kr</span>
                                     </p>
                                 </div>
 
                                 <p className="flex w-full justify-between border-b pb-2">
                                     <span className="text-secondary">Starting Bid</span>
-                                    <span className="font-medium">£ {auction.startPrice.toLocaleString()}</span>
+                                    <span className="font-medium">{auction.startPrice.toLocaleString()} kr</span>
                                 </p>
 
                                 <p className="flex w-full justify-between border-b pb-2">
@@ -648,8 +648,8 @@ function SingleAuction() {
                                         <>
                                             <p className="font-light">Sold For</p>
                                             <p className="flex items-center gap-1 text-3xl sm:text-4xl font-medium">
-                                                <span>£ </span>
                                                 <span>{auction.finalPrice?.toLocaleString() || auction.currentPrice?.toLocaleString()}</span>
+                                                <span> kr</span>
                                             </p>
                                         </>
                                     ) : (
@@ -658,8 +658,8 @@ function SingleAuction() {
                                             <>
                                                 <p className="font-light">Offer Starting At</p>
                                                 <p className="flex items-center gap-1 text-3xl sm:text-4xl font-medium">
-                                                    <span>£ </span>
                                                     <span>{auction.startPrice.toLocaleString()}</span>
+                                                    <span> kr</span>
                                                 </p>
                                             </>
                                         ) : (
@@ -685,7 +685,7 @@ function SingleAuction() {
                         (auction.auctionType === 'reserve' || auction.auctionType === 'standard') && (
                             <p className="flex w-full justify-between border-b pb-2">
                                 <span className="text-secondary">Min. Bid Increment</span>
-                                <span className="font-medium">£{auction?.bidIncrement?.toLocaleString()}</span>
+                                <span className="font-medium">{auction?.bidIncrement?.toLocaleString()} kr</span>
                             </p>
                         )
                     }
@@ -702,7 +702,7 @@ function SingleAuction() {
                             <div className="flex justify-between items-center">
                                 <div>
                                     <p className="text-secondary text-sm">Buy Now Price</p>
-                                    <p className="text-2xl font-bold text-green-600">£{auction.buyNowPrice.toLocaleString()}</p>
+                                    <p className="text-2xl font-bold text-green-600">{auction.buyNowPrice.toLocaleString()} kr</p>
                                 </div>
                                 <Zap className="text-green-500" size={24} />
                             </div>
@@ -782,7 +782,7 @@ function SingleAuction() {
                                                 value={bidAmount}
                                                 onChange={(e) => setBidAmount(e.target.value)}
                                                 className="py-3 px-5 w-full rounded-lg focus:outline-2 focus:outline-primary"
-                                                placeholder={`Bid £${auction.bidCount > 0 ? minBidAmount : auction.startPrice} or higher`}
+                                                placeholder={`Bid ${auction.bidCount > 0 ? minBidAmount : auction.startPrice} kr or higher`}
                                                 min={minBidAmount}
                                             />
                                             <button
@@ -825,7 +825,7 @@ function SingleAuction() {
                                                 ) : (
                                                     <>
                                                         <Zap />
-                                                        <span>Buy Now £{auction.buyNowPrice.toLocaleString()}</span>
+                                                        <span>Buy Now {auction.buyNowPrice.toLocaleString()} kr</span>
                                                     </>
                                                 )}
                                             </button>

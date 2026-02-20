@@ -98,25 +98,25 @@ const features = [
 
 function About() {
     return (
-        <section className="pt-24 md:pt-32 max-w-full text-gray-600">
+        <section className="pt-16 md:pt-16 max-w-full text-gray-600">
             <div className="bg-white">
                 {/* <Container> */}
-                    <section className="relative overflow-hidden bg-gradient-to-b from-white to-gray-50 py-14">
+                    <section className="relative overflow-hidden bg-gradient-to-b from-white to-gray-50 pt-14 pb-5">
 
                         {/* floating soft glow */}
                         <div className="absolute -top-32 -left-32 w-80 h-80 bg-orange-200 opacity-30 rounded-full blur-3xl animate-pulse"></div>
                         <div className="absolute top-32 -right-32 w-80 h-80 bg-orange-300 opacity-30 rounded-full blur-3xl animate-pulse"></div>
 
-                        <div className="max-w-7xl mx-auto text-center px-6">
+                        <div className="max-w-full mx-auto text-center px-6 py-8">
 
                             {/* headline */}
-                            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 leading-tight">
+                            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
                                 Built on Trust — <br />
                                 <span className="text-orange-500">Across Every Bid & Every Deal</span>
                             </h1>
 
                             {/* description */}
-                            <p className="mt-6 text-lg text-gray-600 max-w-2xl mx-auto">
+                            <p className="mt-6 text-lg text-gray-600 max-w-3xl mx-auto">
                                 BidNordic brings together buyers and sellers from across the Nordics in a marketplace built on confidence. With transparency, fair pricing, and secure transactions at our core, we help industry professionals trade smarter.
                             </p>
 

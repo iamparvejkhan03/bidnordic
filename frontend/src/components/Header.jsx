@@ -1,8 +1,8 @@
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { closeMenu, darkLogo, logo, menuIcon } from "../assets";
 import Container from "./Container";
-import { ChevronRight, LayoutDashboard, LogIn, Search, ChevronDown, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ChevronRight, LayoutDashboard, LogIn, Search, ChevronDown, X, Gavel, Clock, DollarSign, Gift } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { usePopUp } from "../contexts/PopUpContextProvider";
 import axiosInstance from "../utils/axiosInstance";
@@ -24,37 +24,30 @@ const navLinks = [
         name: 'FAQs',
         href: '/faqs'
     },
-    {
-        name: 'Auctions',
-        href: '/auctions'
-    },
 ];
 
-const popularBrands = [
-    { name: "John Deere", count: 8466 },
-    { name: "Claas", count: 4433 },
-    { name: "New Holland", count: 3318 },
-    { name: "Fendt", count: 2955 },
-    { name: "Massey Ferguson", count: 2066 },
-    { name: "Deutz-fahr", count: 1941 },
-    { name: "Kuhn", count: 1648 },
-    { name: "Case IH", count: 1601 },
+const auctionTypes = [
+    { name: "Standard Auction", slug: "standard", icon: Gavel },
+    { name: "Reserve Auction", slug: "reserve", icon: Clock },
+    { name: "Buy Now", slug: "buy_now", icon: DollarSign },
+    { name: "Free Giveaway", slug: "giveaway", icon: Gift }
 ];
-
 
 function Header() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+    const [isAuctionTypesOpen, setIsAuctionTypesOpen] = useState(false);
     const [categories, setCategories] = useState([]);
     const [hoveredCategory, setHoveredCategory] = useState(null);
     const [loading, setLoading] = useState(false);
     const { pathname } = useLocation();
     const navigate = useNavigate();
     const { user } = useAuth();
-    const { openPopup } = usePopUp();
+    const auctionTypesRef = useRef(null);
 
     const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(false);
+    const [mobileAuctionTypesOpen, setMobileAuctionTypesOpen] = useState(false);
     const [activeMobileCategory, setActiveMobileCategory] = useState(null);
 
     useEffect(() => {
@@ -63,16 +56,28 @@ function Header() {
         }
     }, [categories]);
 
+    // Add click outside handler
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (auctionTypesRef.current && !auctionTypesRef.current.contains(event.target)) {
+                setIsAuctionTypesOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
     // Fetch categories when popup opens
     useEffect(() => {
         const fetchCategories = async () => {
             if (isCategoriesOpen || mobileCategoriesOpen) {
                 try {
                     setLoading(true);
-                    // Fetch parent categories
                     const { data } = await axiosInstance.get('/api/v1/categories/public/parents');
                     if (data.success) {
-                        // For each parent, fetch its subcategories
                         const categoriesWithChildren = await Promise.all(
                             data.data.map(async (parent) => {
                                 try {
@@ -95,7 +100,6 @@ function Header() {
                     }
                 } catch (error) {
                     console.error('Error fetching categories:', error);
-                    // Fallback data based on your image
                     setCategories([]);
                 } finally {
                     setLoading(false);
@@ -124,6 +128,15 @@ function Header() {
         return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
     };
 
+    // Handle auction type selection
+    const handleAuctionTypeSelect = (slug) => {
+        const searchParams = new URLSearchParams(location.search);
+        searchParams.set('auctionType', slug);
+        navigate(`/auctions?${searchParams.toString()}`);
+        setIsAuctionTypesOpen(false);
+        setMobileAuctionTypesOpen(false);
+    };
+
     return (
         <header className={`${isScrolled ? 'fixed bg-white bg-opacity-100 shadow-lg shadow-primary/5' : 'absolute bg-opacity-0'} w-full transition-all duration-150 z-50`}>
             <Container className={`flex items-center justify-between py-4`}>
@@ -134,9 +147,6 @@ function Header() {
                 {/* Navlinks for larger screens */}
                 <nav className="hidden lg:block">
                     <ul className="flex items-center gap-7">
-                        {/* <li>
-                            <Search onClick={() => openPopup('searchForm')} size={24} className={`${isScrolled ? 'text-black' : 'text-white'} cursor-pointer`} />
-                        </li> */}
                         {
                             navLinks.map(link => (
                                 <li key={link.name}>
@@ -146,6 +156,50 @@ function Header() {
                                 </li>
                             ))
                         }
+
+                        {/* Auction Types Dropdown - Simple */}
+                        <li
+                            ref={auctionTypesRef}
+                            className={`${isScrolled ? 'text-black' : 'text-white'} relative`}
+                        >
+                            <button
+                                onClick={() => setIsAuctionTypesOpen(!isAuctionTypesOpen)}
+                                className="auction-types-trigger flex gap-1 items-center cursor-pointer hover:underline"
+                            >
+                                <span>Auctions</span>
+                                <ChevronDown size={16} className={`transition-transform ${isAuctionTypesOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {isAuctionTypesOpen && (
+                                <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50">
+                                    {auctionTypes.map((type) => {
+                                        const Icon = type.icon;
+                                        return (
+                                            <button
+                                                key={type.slug}
+                                                onClick={() => handleAuctionTypeSelect(type.slug)}
+                                                className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-orange-50 transition-colors text-gray-700"
+                                            >
+                                                <Icon size={18} className="text-orange-500" />
+                                                <span>{type.name}</span>
+                                            </button>
+                                        );
+                                    })}
+                                    <div className="border-t border-gray-100">
+                                        <Link
+                                            to="/auctions"
+                                            onClick={() => setIsAuctionTypesOpen(false)}
+                                            className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-orange-50 transition-colors text-orange-500 font-medium"
+                                        >
+                                            <ChevronRight size={18} />
+                                            <span>View All Auctions</span>
+                                        </Link>
+                                    </div>
+                                </div>
+                            )}
+                        </li>
+
+                        {/* Categories Dropdown */}
                         <li className={`${isScrolled ? 'text-black' : 'text-white'} relative`}>
                             <button
                                 onClick={() => setIsCategoriesOpen(!isCategoriesOpen)}
@@ -157,18 +211,13 @@ function Header() {
 
                             {isCategoriesOpen && (
                                 <div className="fixed inset-0 z-40 flex justify-center items-start pt-24 px-4">
-
-                                    {/* backdrop */}
                                     <div
                                         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                                         onClick={() => setIsCategoriesOpen(false)}
                                     />
 
-                                    {/* MENU PANEL */}
                                     <div className="relative w-full max-w-6xl bg-white shadow-2xl rounded-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
-
                                         <div className="flex h-[75vh]">
-
                                             {/* LEFT SIDEBAR */}
                                             <div className="w-1/4 overflow-y-auto py-4 border-r bg-orange-50">
                                                 {categories.map((cat) => (
@@ -194,18 +243,10 @@ function Header() {
                                                     .filter((cat) => cat.slug === hoveredCategory)
                                                     .map((activeCat) => (
                                                         <div key={activeCat.slug}>
-
-                                                            {/* Category Title */}
-                                                            <p
-                                                                className="text-2xl font-bold text-black"
-                                                            >
+                                                            <p className="text-2xl font-bold text-black">
                                                                 {activeCat.name}
-                                                                {/* <span className="text-gray-500 text-lg ml-2">
-                                                                    ({formatNumber(activeCat.auctionCount)})
-                                                                </span> */}
                                                             </p>
 
-                                                            {/* Close Button */}
                                                             <button
                                                                 onClick={() => setIsCategoriesOpen(false)}
                                                                 className="absolute top-5 right-5 text-gray-500 hover:text-black transition"
@@ -213,7 +254,6 @@ function Header() {
                                                                 <X size={24} />
                                                             </button>
 
-                                                            {/* Subcategories */}
                                                             <div className="grid grid-cols-2 md:grid-cols-3 gap-x-12 gap-y-4 mt-8">
                                                                 {activeCat.children?.map((sub) => (
                                                                     <Link
@@ -223,9 +263,6 @@ function Header() {
                                                                         className="flex gap-1 text-black text-lg font-medium hover:underline"
                                                                     >
                                                                         {sub.name}
-                                                                        {/* <span className="text-gray-500 text-base">
-                                                                            ({formatNumber(sub.auctionCount)})
-                                                                        </span> */}
                                                                     </Link>
                                                                 ))}
                                                             </div>
@@ -236,9 +273,8 @@ function Header() {
                                     </div>
                                 </div>
                             )}
-
-
                         </li>
+
                         <li>
                             {
                                 user
@@ -261,6 +297,21 @@ function Header() {
                                 </li>
                             ))
                         }
+
+                        {/* Mobile Auction Types */}
+                        <li className="relative mx-5 py-2 mb-2">
+                            <button
+                                onClick={() => {
+                                    setMobileAuctionTypesOpen(true);
+                                    setIsMenuOpen(false);
+                                }}
+                                className="flex items-center gap-1"
+                            >
+                                Auction Types
+                                <ChevronRight size={16} />
+                            </button>
+                        </li>
+
                         <li className="relative mx-5 py-2 mb-2">
                             <button
                                 onClick={() => {
@@ -283,9 +334,58 @@ function Header() {
                                     <button className="flex items-center gap-2 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white px-5 py-2 rounded-md cursor-pointer" onClick={() => { navigate('/login'); setIsMenuOpen(false) }}><LogIn size={20} /> Log In</button>
                             }
                         </li>
-
                     </ul>
                 </nav>
+
+                {/* MOBILE AUCTION TYPES DRAWER */}
+                <div
+                    className={`fixed inset-0 bg-white z-[100] transform transition-transform duration-300 ${mobileAuctionTypesOpen ? "translate-x-0" : "translate-x-full"
+                        }`}
+                >
+                    <div className="h-full overflow-y-auto">
+                        <div className="flex items-center justify-between p-5 border-b">
+                            <h2 className="text-xl font-bold">Auction Types</h2>
+                            <X
+                                className="cursor-pointer"
+                                onClick={() => setMobileAuctionTypesOpen(false)}
+                            />
+                        </div>
+
+                        <div className="p-5 space-y-3">
+                            {auctionTypes.map((type) => {
+                                const Icon = type.icon;
+                                return (
+                                    <div
+                                        key={type.slug}
+                                        onClick={() => {
+                                            handleAuctionTypeSelect(type.slug);
+                                            setMobileAuctionTypesOpen(false);
+                                        }}
+                                        className="flex items-center gap-4 p-4 border rounded-xl hover:border-orange-500 cursor-pointer"
+                                    >
+                                        <div className={`p-2 rounded-lg bg-gray-100 ${type.color}`}>
+                                            <Icon size={20} />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-semibold">{type.name}</h3>
+                                            <p className="text-sm text-gray-500">{type.description}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                            <div className="pt-4 mt-2 border-t border-gray-200">
+                                <Link
+                                    to="/auctions"
+                                    onClick={() => setMobileAuctionTypesOpen(false)}
+                                    className="flex items-center gap-2 text-orange-500 font-medium"
+                                >
+                                    View all auctions <ChevronRight size={16} />
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 {/* MOBILE CATEGORIES DRAWER */}
                 <div
@@ -340,9 +440,6 @@ function Header() {
                             <div className="p-5">
                                 <h2 className="text-[22px] font-bold">
                                     {activeMobileCategory.name}
-                                    <span className="text-gray-500 ml-2">
-                                        ({formatNumber(activeMobileCategory.auctionCount)})
-                                    </span>
                                 </h2>
 
                                 <div className="mt-6 space-y-2">
@@ -357,9 +454,6 @@ function Header() {
                                             className="flex justify-start gap-1 items-center text-lg font-medium"
                                         >
                                             <span>{sub.name}</span>
-                                            <span className="text-gray-500">
-                                                ({formatNumber(sub.auctionCount)})
-                                            </span>
                                         </Link>
                                     ))}
                                 </div>
@@ -368,9 +462,7 @@ function Header() {
                     )}
                 </div>
 
-
                 <div className="lg:hidden z-50 flex items-center gap-5">
-                    {/* <Search className={`${isMenuOpen || isScrolled ? 'text-black' : 'text-white'}`} onClick={() => openPopup('searchForm')} /> */}
                     {
                         isMenuOpen ? (<img onClick={() => setIsMenuOpen(!isMenuOpen)} src={closeMenu} alt="menu icon" className={`h-7 cursor-pointer invert-25 z-50 ${isScrolled}`} />) : (<img onClick={() => setIsMenuOpen(!isMenuOpen)} src={menuIcon} alt="menu icon" className={`h-5 cursor-pointer ${isScrolled && 'invert'} z-50`} />)
                     }

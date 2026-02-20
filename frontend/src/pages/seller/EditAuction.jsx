@@ -1738,7 +1738,7 @@ const EditAuction = () => {
                                                         <div>
                                                             <label htmlFor="startPrice" className="block text-sm font-medium text-secondary mb-1">Start Price *</label>
                                                             <div className="relative">
-                                                                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">£</span>
+                                                                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">kr</span>
                                                                 <input
                                                                     {...register('startPrice', {
                                                                         required: watch('auctionType') !== 'giveaway' ? 'Start price is required' : false,
@@ -1759,7 +1759,7 @@ const EditAuction = () => {
                                                         <div>
                                                             <label htmlFor="bidIncrement" className="block text-sm font-medium text-secondary mb-1">Bid Increment *</label>
                                                             <div className="relative">
-                                                                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">£</span>
+                                                                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">kr</span>
                                                                 <input
                                                                     {...register('bidIncrement', {
                                                                         required: (watch('auctionType') === 'standard' || watch('auctionType') === 'reserve') ? 'Bid increment is required' : false,
@@ -1782,7 +1782,7 @@ const EditAuction = () => {
                                                     <div className="mb-6">
                                                         <label htmlFor="reservePrice" className="block text-sm font-medium text-secondary mb-1">Reserve Price *</label>
                                                         <div className="relative">
-                                                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">£</span>
+                                                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">kr</span>
                                                             <input
                                                                 {...register('reservePrice', {
                                                                     required: watch('auctionType') === 'reserve' ? 'Reserve price is required' : false,
@@ -1812,7 +1812,7 @@ const EditAuction = () => {
                                                             Buy Now Price *
                                                         </label>
                                                         <div className="relative">
-                                                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">£</span>
+                                                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600">kr</span>
                                                             <input
                                                                 {...register('buyNowPrice', {
                                                                     required: watch('auctionType') === 'buy_now' ? 'Buy Now price is required' : false,
@@ -2043,28 +2043,28 @@ const EditAuction = () => {
                                                             {(watch('auctionType') === 'standard' || watch('auctionType') === 'reserve' || watch('auctionType') === 'buy_now') && (
                                                                 <div>
                                                                     <p className="text-xs text-secondary">Start Price</p>
-                                                                    <p className="font-medium">£{watch('startPrice') || '0.00'}</p>
+                                                                    <p className="font-medium">{watch('startPrice') || '0.00'} kr</p>
                                                                 </div>
                                                             )}
 
                                                             {(watch('auctionType') === 'standard' || watch('auctionType') === 'reserve') && (
                                                                 <div>
                                                                     <p className="text-xs text-secondary">Bid Increment</p>
-                                                                    <p className="font-medium">£{watch('bidIncrement') || '0.00'}</p>
+                                                                    <p className="font-medium">{watch('bidIncrement') || '0.00'} kr</p>
                                                                 </div>
                                                             )}
 
                                                             {watch('auctionType') === 'reserve' && (
                                                                 <div>
                                                                     <p className="text-xs text-secondary">Reserve Price</p>
-                                                                    <p className="font-medium text-green-600">£{watch('reservePrice') || '0.00'}</p>
+                                                                    <p className="font-medium text-green-600">{watch('reservePrice') || '0.00'} kr</p>
                                                                 </div>
                                                             )}
 
                                                             {watch('auctionType') === 'buy_now' && (
                                                                 <div>
                                                                     <p className="text-xs text-secondary">Buy Now Price</p>
-                                                                    <p className="font-medium text-blue-600">£{watch('buyNowPrice') || '0.00'}</p>
+                                                                    <p className="font-medium text-blue-600">{watch('buyNowPrice') || '0.00'} kr</p>
                                                                 </div>
                                                             )}
                                                         </div>

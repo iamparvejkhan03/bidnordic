@@ -26,7 +26,7 @@ function Contact() {
             name: "",
             email: "",
             phone: "",
-            userType: "buyer",
+            userType: "bidder",
             message: "",
         },
     });
@@ -73,17 +73,17 @@ function Contact() {
             <section className="relative my-16 rounded-2xl overflow-hidden shadow-xl">
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600" />
 
-                <div className="relative grid grid-cols-1 lg:grid-cols-2 p-6 md:p-12 items-center">
+                <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-y-8 p-6 md:p-12 items-center">
                     {/* LEFT INFO */}
                     <div className="text-white max-w-md">
-                        <h2 className="text-3xl font-bold mb-6">Contact Us</h2>
+                        <h2 className="text-3xl md:text-4xl font-bold mb-6">Contact Us</h2>
 
-                        <p className="text-white/90 mb-8">
+                        <p className="text-white/90 mb-8 text-base">
                             Not sure what you need? The team will be happy to listen to your
                             ideas and provide valuable advice to help you start your project.
                         </p>
 
-                        <div className="space-y-4 text-sm">
+                        <div className="space-y-4 text-base">
                             <div className="flex items-center gap-3">
                                 <Mail size={18} />
                                 <Link to={`mailto:${otherData?.email}`} className="hover:underline">{otherData.email}</Link>
@@ -157,7 +157,7 @@ function Contact() {
                                 </label>
 
                                 <div className="flex gap-6">
-                                    {["buyer", "seller"].map((type) => (
+                                    {["bidder", "seller", "broker"].map((type) => (
                                         <label
                                             key={type}
                                             className="flex items-center gap-2 cursor-pointer"

@@ -300,7 +300,7 @@ function SoldAuctions() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div>
+                                        {/* <div>
                                             <button
                                                 onClick={() => openUserModal(selectedAuction.winner)}
                                                 className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center"
@@ -308,7 +308,7 @@ function SoldAuctions() {
                                                 <User size={16} className="mr-2" />
                                                 Contact Winner
                                             </button>
-                                        </div>
+                                        </div> */}
                                     </div>
                                 </div>
                             </div>
@@ -406,7 +406,7 @@ function SoldAuctions() {
                                     </div>
 
                                     <div className="space-y-4">
-                                        {selectedUser.email && (
+                                        {/* {selectedUser.email && (
                                             <div className="flex items-center">
                                                 <Mail size={18} className="text-gray-500 mr-3" />
                                                 <div className="flex-1">
@@ -436,7 +436,7 @@ function SoldAuctions() {
                                                     <div className="font-medium">{selectedUser.company}</div>
                                                 </div>
                                             </div>
-                                        )}
+                                        )} */}
                                         {/* {selectedUser.address && (
                                             <div className="flex items-center">
                                                 <MapPin size={18} className="text-gray-500 mr-3" />
@@ -448,7 +448,7 @@ function SoldAuctions() {
                                         )} */}
                                     </div>
 
-                                    <div className="mt-6 pt-4 border-t border-gray-200">
+                                    {/* <div className="mt-6 pt-4 border-t border-gray-200">
                                         <h4 className="font-medium mb-3">Contact Options</h4>
                                         <div className="flex flex-col sm:flex-row gap-3">
                                             {selectedUser.email && (
@@ -470,7 +470,7 @@ function SoldAuctions() {
                                                 </a>
                                             )}
                                         </div>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                         </div>

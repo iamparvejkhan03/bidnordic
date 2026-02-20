@@ -227,23 +227,6 @@ function WonAuctions() {
                                 </div>
                             </div>
                         </div>
-
-                        <div className="bg-gradient-to-br from-purple-500 to-pink-600 text-white rounded-xl p-6 shadow-lg transform hover:scale-105 transition-transform duration-200">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-purple-100 text-sm">Avg. Value Gain</p>
-                                    <p className="text-3xl font-bold mt-1">
-                                        {((1 - statistics.averageSavings) * 100).toFixed(1)}%
-                                    </p>
-                                    <p className="text-purple-200 text-xs mt-1">
-                                        Over Starting Price
-                                    </p>
-                                </div>
-                                <div className="p-3 bg-white/20 rounded-full">
-                                    <TrendingUp size={24} />
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     {/* Filters and Search */}
@@ -455,7 +438,7 @@ function WonAuctions() {
                                         Reach out to {selectedAuction.seller.name}
                                     </p>
                                 </div>
-                                <div className="p-6 space-y-4">
+                                {/* <div className="p-6 space-y-4">
                                     <Link to={`mailto:${selectedAuction.seller.email}`} className="w-full flex items-center gap-3 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                                         <Mail size={20} className="text-blue-600" />
                                         <span>Send Email ({selectedAuction.seller.email})</span>
@@ -464,7 +447,7 @@ function WonAuctions() {
                                         <Phone size={20} className="text-purple-600" />
                                         <span>Call ({selectedAuction.seller.phone})</span>
                                     </Link>
-                                </div>
+                                </div> */}
                                 <div className="p-4 border-t border-gray-200 flex gap-3">
                                     <button
                                         onClick={() => setShowContactModal(false)}

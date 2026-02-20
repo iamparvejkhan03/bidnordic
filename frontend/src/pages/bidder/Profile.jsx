@@ -456,30 +456,8 @@ function Profile() {
                                 {/* Address Section */}
                                 {activeSection === "address" && (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        <div className="space-y-1">
-                                            <label className="block text-sm font-medium text-secondary">Dealership Name</label>
-                                            <input
-                                                type="text"
-                                                value={userData.address?.dealershipName || ''}
-                                                onChange={(e) => handleInputChange('address.dealershipName', e.target.value)}
-                                                disabled={!isEditing}
-                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent disabled:bg-gray-100"
-                                                placeholder="Dealership name (optional)"
-                                            />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="block text-sm font-medium text-secondary">Building Name/No</label>
-                                            <input
-                                                type="text"
-                                                value={userData.address?.buildingNameNo || ''}
-                                                onChange={(e) => handleInputChange('address.buildingNameNo', e.target.value)}
-                                                disabled={!isEditing}
-                                                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent disabled:bg-gray-100"
-                                                placeholder="Building name or number"
-                                            />
-                                        </div>
                                         <div className="md:col-span-2 space-y-1">
-                                            <label className="block text-sm font-medium text-secondary">Street</label>
+                                            <label className="block text-sm font-medium text-secondary">Street Address</label>
                                             <input
                                                 type="text"
                                                 value={userData.address?.street || ''}
@@ -501,14 +479,14 @@ function Profile() {
                                             />
                                         </div>
                                         <div className="space-y-1">
-                                            <label className="block text-sm font-medium text-secondary">County</label>
+                                            <label className="block text-sm font-medium text-secondary">State</label>
                                             <input
                                                 type="text"
-                                                value={userData.address?.county || ''}
-                                                onChange={(e) => handleInputChange('address.county', e.target.value)}
+                                                value={userData.address?.state || ''}
+                                                onChange={(e) => handleInputChange('address.state', e.target.value)}
                                                 disabled={!isEditing}
                                                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent disabled:bg-gray-100"
-                                                placeholder="County"
+                                                placeholder="State"
                                             />
                                         </div>
                                         <div className="space-y-1">
@@ -535,104 +513,6 @@ function Profile() {
                                         </div>
                                     </div>
                                 )}
-
-                                {/* Preferences Section */}
-                                {/* {activeSection === "preferences" && (
-                                    <div className="space-y-6">
-                                        <div className="space-y-4">
-                                            <h4 className="font-semibold text-lg">Notification Preferences</h4>
-                                            <div className="space-y-3">
-                                                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                                                    <div className="flex items-center gap-3">
-                                                        <Bell size={20} className="text-blue-500" />
-                                                        <div>
-                                                            <p className="font-medium">Bid Alerts</p>
-                                                            <p className="text-sm text-gray-500">Get notified when new auctions match your interests</p>
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => togglePreference('bidAlerts')}
-                                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                                            userData.preferences?.bidAlerts ? 'bg-blue-600' : 'bg-gray-200'
-                                                        }`}
-                                                    >
-                                                        <span
-                                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                                                userData.preferences?.bidAlerts ? 'translate-x-6' : 'translate-x-1'
-                                                            }`}
-                                                        />
-                                                    </button>
-                                                </div>
-
-                                                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                                                    <div className="flex items-center gap-3">
-                                                        <Bell size={20} className="text-red-500" />
-                                                        <div>
-                                                            <p className="font-medium">Outbid Notifications</p>
-                                                            <p className="text-sm text-gray-500">Get notified when someone outbids you</p>
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => togglePreference('outbidNotifications')}
-                                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                                            userData.preferences?.outbidNotifications ? 'bg-blue-600' : 'bg-gray-200'
-                                                        }`}
-                                                    >
-                                                        <span
-                                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                                                userData.preferences?.outbidNotifications ? 'translate-x-6' : 'translate-x-1'
-                                                            }`}
-                                                        />
-                                                    </button>
-                                                </div>
-
-                                                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                                                    <div className="flex items-center gap-3">
-                                                        <Newspaper size={20} className="text-green-500" />
-                                                        <div>
-                                                            <p className="font-medium">Newsletter</p>
-                                                            <p className="text-sm text-gray-500">Receive weekly updates and featured auctions</p>
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => togglePreference('newsletter')}
-                                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                                            userData.preferences?.newsletter ? 'bg-blue-600' : 'bg-gray-200'
-                                                        }`}
-                                                    >
-                                                        <span
-                                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                                                userData.preferences?.newsletter ? 'translate-x-6' : 'translate-x-1'
-                                                            }`}
-                                                        />
-                                                    </button>
-                                                </div>
-
-                                                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                                                    <div className="flex items-center gap-3">
-                                                        <Phone size={20} className="text-purple-500" />
-                                                        <div>
-                                                            <p className="font-medium">SMS Updates</p>
-                                                            <p className="text-sm text-gray-500">Receive important updates via SMS</p>
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => togglePreference('smsUpdates')}
-                                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                                            userData.preferences?.smsUpdates ? 'bg-blue-600' : 'bg-gray-200'
-                                                        }`}
-                                                    >
-                                                        <span
-                                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                                                userData.preferences?.smsUpdates ? 'translate-x-6' : 'translate-x-1'
-                                                            }`}
-                                                        />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )} */}
 
                                 {/* Security Section */}
                                 {activeSection === "security" && (
@@ -682,7 +562,7 @@ function Profile() {
                                             <p className="font-semibold text-lg">{stats.successRate?.toLocaleString('nb-NO') || 0}%</p>
                                         </div>
                                     </div>
-                                    {/* Additional bidder stats */}?.toLocaleString('nb-NO')
+                                    {/* Additional bidder stats */}
                                     {/* <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-center">
                                         <div className="p-3 rounded-lg mr-4 bg-purple-100">
                                             <Clock size={20} className="text-purple-600" />

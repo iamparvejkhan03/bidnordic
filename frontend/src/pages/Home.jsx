@@ -213,7 +213,7 @@ function Home() {
                             </div>
 
                             {/* Add this view mode toggle */}
-                            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
+                            <div className="hidden md:flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
                                 <button
                                     onClick={() => setViewMode("grid")}
                                     className={`p-2 rounded transition-colors ${viewMode === "grid" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}

@@ -437,10 +437,10 @@ function WatchlistItem({ item, onRemove }) {
                         {/* Bid Information */}
                         <div className="lg:text-right">
                             <div className="text-2xl font-bold text-green-600 mb-1">
-                                £{item.currentBid.toLocaleString('nb-NO')}
+                                {item.currentBid.toLocaleString('nb-NO')} kr
                             </div>
                             <div className="text-sm text-gray-500 mb-3">
-                                Starting: £{item.startingBid.toLocaleString('nb-NO')}
+                                Starting: {item.startingBid.toLocaleString('nb-NO')} kr
                             </div>
                             <div className={`flex items-center justify-center lg:justify-end text-sm font-medium ${getTimeLeftColor(item.timeLeft)}`}>
                                 <Clock size={14} className="mr-1" />

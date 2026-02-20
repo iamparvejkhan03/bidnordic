@@ -119,7 +119,7 @@ const MobileBidStickyBar = ({
               {isGiveaway ? (
                 <span className="flex items-center gap-1 text-green-600">FREE 🎁</span>
               ) : (
-                `£${currentBid?.toLocaleString() || 0}`
+                `${currentBid?.toLocaleString() || 0} kr`
               )}
             </p>
           </div>
@@ -184,7 +184,7 @@ const MobileBidStickyBar = ({
               className="bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-md cursor-pointer flex items-center gap-2 text-sm font-medium w-full justify-center"
             >
               <Zap size={18} />
-              <span>Buy Now £{buyNowPrice?.toLocaleString()}</span>
+              <span>Buy Now {buyNowPrice?.toLocaleString()} kr</span>
             </button>
           )}
 

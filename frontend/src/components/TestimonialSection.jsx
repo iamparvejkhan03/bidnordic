@@ -12,7 +12,7 @@ const testimonials = [
     review:
       "BidNordic has transformed how we buy machinery. Smooth auctions, clear communication, and great prices. Highly recommended.",
     image: "/avatars/1.jpg",
-    date: "May 15, 2026"
+    date: "May 15, 2025"
   },
   {
     name: "Anna Lindgren",
@@ -20,7 +20,7 @@ const testimonials = [
     review:
       "We've sold several excavators through BidNordic. Professional service and seamless transactions from start to finish. We'll definitely be back.",
     image: "/avatars/2.jpg",
-    date: "June 3, 2026"
+    date: "June 3, 2025"
   },
   {
     name: "Lars Nilsson",
@@ -28,7 +28,7 @@ const testimonials = [
     review:
       "Great selection of quality machines. We recently bought a tractor and the process was simple from start to finish. Trustworthy and reliable.",
     image: "/avatars/3.jpg",
-    date: "April 22, 2026"
+    date: "April 22, 2025"
   },
   {
     name: "Maria Svensson",
@@ -36,7 +36,7 @@ const testimonials = [
     review:
       "Finally a platform that understands the Nordic market. Great support, transparent bidding, and fast delivery. Top marks!",
     image: "/avatars/4.jpg",
-    date: "July 8, 2026"
+    date: "July 8, 2025"
   },
   {
     name: "Anders Petersen",
@@ -44,7 +44,7 @@ const testimonials = [
     review:
       "We use BidNordic for all our surplus equipment. The platform is intuitive, the buyers are serious, and the payouts are fast. Couldn't ask for more.",
     image: "/avatars/5.jpg",
-    date: "May 28, 2026"
+    date: "May 28, 2025"
   },
   {
     name: "Karin Lundström",
@@ -52,7 +52,7 @@ const testimonials = [
     review:
       "As a rental company, we need reliable partners. BidNordic has helped us refresh our fleet efficiently. Great results every time.",
     image: "/avatars/6.jpg",
-    date: "June 17, 2026"
+    date: "June 17, 2025"
   },
 ];
 

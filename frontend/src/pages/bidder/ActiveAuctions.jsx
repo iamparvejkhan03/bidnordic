@@ -16,7 +16,7 @@ function ActiveAuctions() {
     const [searchTerm, setSearchTerm] = useState("");
     const [categoryFilter, setCategoryFilter] = useState("all");
     const [sortBy, setSortBy] = useState("newest");
-    const [viewMode, setViewMode] = useState("list"); // "grid" or "list"
+    const [viewMode, setViewMode] = useState("grid"); // "grid" or "list"
     const { stats } = useStats();
 
     const handleLoadMore = () => {

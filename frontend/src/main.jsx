@@ -28,6 +28,7 @@ const SellerDashboard = lazy(() => import('./pages/seller/Dashboard'));
 const CreateAuctionSeller = lazy(() => import('./pages/seller/CreateAuction'));
 const EditAuctionSeller = lazy(() => import('./pages/seller/EditAuction'));
 const SellerAllAuctions = lazy(() => import('./pages/seller/AllAuctions'));
+const SellerAllOffers = lazy(() => import('./pages/seller/AllOffers'));
 const SoldAuctionsSeller = lazy(() => import('./pages/seller/SoldAuctions'));
 const BidHistorySeller = lazy(() => import('./pages/seller/BidHistory'));
 const SellerProfile = lazy(() => import('./pages/seller/Profile'));
@@ -40,6 +41,7 @@ const BrokerDashboard = lazy(() => import('./pages/broker/Dashboard'));
 const CreateAuctionBroker = lazy(() => import('./pages/broker/CreateAuction'));
 const EditAuctionBroker = lazy(() => import('./pages/broker/EditAuction'));
 const BrokerAllAuctions = lazy(() => import('./pages/broker/AllAuctions'));
+const BrokerAllOffers = lazy(() => import('./pages/broker/AllOffers'));
 const SoldAuctionsBroker = lazy(() => import('./pages/broker/SoldAuctions'));
 const BidHistoryBroker = lazy(() => import('./pages/broker/BidHistory'));
 const BrokerProfile = lazy(() => import('./pages/broker/Profile'));
@@ -150,6 +152,15 @@ createRoot(document.getElementById('root')).render(
                                     </Suspense>
                                 }
                             />
+                            {/* Seller All Offers */}
+                            <Route
+                                path='/seller/offers/all'
+                                element={
+                                    <Suspense fallback={<LoadingSpinner height={'750px'} />}>
+                                        <SellerAllOffers />
+                                    </Suspense>
+                                }
+                            />
                             {/* Seller Won Auctions */}
                             <Route
                                 path='/seller/auctions/sold'
@@ -234,6 +245,15 @@ createRoot(document.getElementById('root')).render(
                                 element={
                                     <Suspense fallback={<LoadingSpinner height={'750px'} />}>
                                         <BrokerAllAuctions />
+                                    </Suspense>
+                                }
+                            />
+                            {/* Broker All Offers */}
+                            <Route
+                                path='/broker/offers/all'
+                                element={
+                                    <Suspense fallback={<LoadingSpinner height={'750px'} />}>
+                                        <BrokerAllOffers />
                                     </Suspense>
                                 }
                             />

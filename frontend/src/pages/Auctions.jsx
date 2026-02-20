@@ -263,7 +263,7 @@ const FiltersSection = ({
 
                 {/* Price Range */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Price Range (£)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Price Range (kr)</label>
                     <div className="flex gap-2">
                         <input
                             type="number"
@@ -390,45 +390,57 @@ function Auctions() {
     const [loadingCategories, setLoadingCategories] = useState(false);
 
     // Read URL parameters on page load
-useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const categoryParam = searchParams.get('category');
-    const subcategoryParam = searchParams.get('subcategory');
-    const statusParam = searchParams.get('status');
+    useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const categoryParam = searchParams.get('category');
+        const subcategoryParam = searchParams.get('subcategory');
+        const statusParam = searchParams.get('status');
+        const auctionTypeParam = searchParams.get('auctionType'); // Add this line
+        const allowOffersParam = searchParams.get('allowOffers'); // Add this line
 
-    const newFilters = { ...uiFilters };
-    
-    // Build categories array from URL params
-    if (categoryParam || subcategoryParam) {
-        const categorySlugs = [];
-        
-        if (categoryParam) {
-            categorySlugs.push(categoryParam);
-            setSelectedParent(categoryParam);
+        const newFilters = { ...uiFilters };
+
+        // Build categories array from URL params
+        if (categoryParam || subcategoryParam) {
+            const categorySlugs = [];
+
+            if (categoryParam) {
+                categorySlugs.push(categoryParam);
+                setSelectedParent(categoryParam);
+            }
+
+            if (subcategoryParam) {
+                categorySlugs.push(subcategoryParam);
+                newFilters.category = subcategoryParam;
+            }
+
+            newFilters.categories = categorySlugs;
         }
-        
-        if (subcategoryParam) {
-            categorySlugs.push(subcategoryParam);
-            newFilters.category = subcategoryParam;
+
+        // Set auction type from URL if exists
+        if (auctionTypeParam) {
+            newFilters.auctionType = auctionTypeParam;
         }
-        
-        newFilters.categories = categorySlugs;
-    }
-    
-    // IMPORTANT: Only set status from URL if it exists, otherwise keep 'active'
-    if (statusParam) {
-        newFilters.status = statusParam;
-    } else {
-        newFilters.status = 'active'; // Default to active
-    }
 
-    setUiFilters(newFilters);
+        // Set allow offers from URL if exists
+        if (allowOffersParam) {
+            newFilters.allowOffers = allowOffersParam;
+        }
 
-    // Only update API filters if we have parameters
-    if (categoryParam || subcategoryParam || statusParam) {
-        updateFilters(newFilters);
-    }
-}, [location.search]);
+        // IMPORTANT: Only set status from URL if it exists, otherwise keep 'active'
+        if (statusParam) {
+            newFilters.status = statusParam;
+        } else {
+            newFilters.status = 'active'; // Default to active
+        }
+
+        setUiFilters(newFilters);
+
+        // Only update API filters if we have parameters
+        if (categoryParam || subcategoryParam || statusParam || auctionTypeParam || allowOffersParam) {
+            updateFilters(newFilters);
+        }
+    }, [location.search]);
 
     // Fetch parent categories on mount
     useEffect(() => {
@@ -536,6 +548,16 @@ useEffect(() => {
 
         setUiFilters(newFilters);
 
+        // Update URL with the new filter
+        const searchParams = new URLSearchParams(location.search);
+        if (value) {
+            searchParams.set(name, value);
+        } else {
+            searchParams.delete(name);
+        }
+        const newUrl = `${location.pathname}?${searchParams.toString()}`;
+        window.history.replaceState(null, '', newUrl);
+
         // Use debounce for text inputs, immediate for others
         if (['search', 'location', 'make', 'model'].includes(name)) {
             debouncedUpdateFilters(newFilters);
@@ -578,6 +600,8 @@ useEffect(() => {
         setUiFilters(resetFilters);
         updateFilters(resetFilters);
         setShowMobileFilters(false);
+        // Reset URL
+        window.history.replaceState(null, '', location.pathname);
     };
 
     const handleLoadMore = () => {
@@ -609,6 +633,13 @@ useEffect(() => {
         };
         setUiFilters(newFilters);
         updateFilters(newFilters);
+
+        // Update URL with new sort parameters while preserving other filters
+        const searchParams = new URLSearchParams(location.search);
+        searchParams.set('sortBy', sortBy);
+        searchParams.set('sortOrder', sortOrder);
+        const newUrl = `${location.pathname}?${searchParams.toString()}`;
+        window.history.replaceState(null, '', newUrl);
     };
 
     return (
@@ -679,7 +710,7 @@ useEffect(() => {
 
                                 <div className="flex items-center gap-3">
                                     {/* Add view mode toggle */}
-                                    <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
+                                    <div className="hidden md:flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
                                         <button
                                             onClick={() => setViewMode("grid")}
                                             className={`p-2 rounded transition-colors ${viewMode === "grid" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
@@ -835,21 +866,21 @@ useEffect(() => {
                         <div className="absolute left-0 top-0 h-full w-4/5 max-w-sm bg-white overflow-y-auto p-6">
                             <FiltersSection
                                 uiFilters={uiFilters}
-                setUiFilters={setUiFilters}  // Add this line
-                categories={categories}
-                loadingCategories={loadingCategories}
-                handleFilterChange={handleFilterChange}
-                handleRangeChange={handleRangeChange}
-                resetFilters={resetFilters}
-                toggleFilterSection={toggleFilterSection}
-                activeFilterSections={activeFilterSections}
-                setShowMobileFilters={setShowMobileFilters}
-                parentCategories={parentCategories}
-                subCategories={subCategories}
-                selectedParent={selectedParent}
-                setSelectedParent={setSelectedParent}
-                updateFilters={updateFilters}  // Add this line
-                location={location}  // Add this line
+                                setUiFilters={setUiFilters}  // Add this line
+                                categories={categories}
+                                loadingCategories={loadingCategories}
+                                handleFilterChange={handleFilterChange}
+                                handleRangeChange={handleRangeChange}
+                                resetFilters={resetFilters}
+                                toggleFilterSection={toggleFilterSection}
+                                activeFilterSections={activeFilterSections}
+                                setShowMobileFilters={setShowMobileFilters}
+                                parentCategories={parentCategories}
+                                subCategories={subCategories}
+                                selectedParent={selectedParent}
+                                setSelectedParent={setSelectedParent}
+                                updateFilters={updateFilters}  // Add this line
+                                location={location}  // Add this line
                             />
                         </div>
                     </div>

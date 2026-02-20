@@ -104,9 +104,9 @@ const MakeOfferModal = ({
                             />
                         </div>
 
-                        {/* <p className="text-sm text-gray-500 mt-1">
+                        {auction?.startPrice && auction?.startPrice > 0 && <p className="text-sm text-gray-500 mt-1">
                             Minimum offer: {formatNOK(auction?.startPrice)}
-                        </p> */}
+                        </p>}
                     </div>
 
                     {/* Fee Breakdown */}

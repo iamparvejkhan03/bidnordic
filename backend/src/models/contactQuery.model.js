@@ -19,7 +19,7 @@ const contactQuerySchema = new Schema({
     },
     userType: {
         type: String,
-        enum: ['bidder', 'seller'],
+        enum: ['bidder', 'seller', 'broker'],
         required: true
     },
     message: {

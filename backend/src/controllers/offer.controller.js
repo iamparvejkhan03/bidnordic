@@ -1643,3 +1643,136 @@ export const reactivateOffer = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Get seller offer statistics
+ * @route   GET /api/v1/offers/seller/stats
+ * @access  Private (Seller only)
+ */
+export const getSellerOfferStats = async (req, res) => {
+  try {
+    const sellerId = req.user._id;
+
+    // Find all auctions where user is seller
+    const auctions = await Auction.find({ 
+      seller: sellerId,
+      "offers.0": { $exists: true } // Only auctions with offers
+    });
+
+    // Flatten all offers
+    let allOffers = [];
+    auctions.forEach(auction => {
+      auction.offers.forEach(offer => {
+        allOffers.push({
+          ...offer.toObject(),
+          auctionId: auction._id,
+          auctionTitle: auction.title,
+          auctionStatus: auction.status
+        });
+      });
+    });
+
+    // Calculate statistics
+    const stats = {
+      totalOffers: allOffers.length,
+      pending: allOffers.filter(o => o.status === 'pending').length,
+      accepted: allOffers.filter(o => o.status === 'accepted').length,
+      rejected: allOffers.filter(o => o.status === 'rejected').length,
+      countered: allOffers.filter(o => o.status === 'countered').length,
+      expired: allOffers.filter(o => o.status === 'expired').length,
+      withdrawn: allOffers.filter(o => o.status === 'withdrawn').length,
+      
+      // Total value calculations
+      totalValue: allOffers.reduce((sum, offer) => sum + offer.amount, 0),
+      acceptedValue: allOffers
+        .filter(o => o.status === 'accepted')
+        .reduce((sum, offer) => sum + offer.amount, 0),
+      pendingValue: allOffers
+        .filter(o => o.status === 'pending')
+        .reduce((sum, offer) => sum + offer.amount, 0),
+      
+      // Average offer amount
+      avgOfferAmount: allOffers.length > 0 
+        ? Math.round(allOffers.reduce((sum, offer) => sum + offer.amount, 0) / allOffers.length) 
+        : 0,
+      
+      // Success rate (accepted vs total responded)
+      successRate: (() => {
+        const responded = allOffers.filter(o => 
+          ['accepted', 'rejected'].includes(o.status)
+        ).length;
+        const accepted = allOffers.filter(o => o.status === 'accepted').length;
+        return responded > 0 ? Math.round((accepted / responded) * 100) : 0;
+      })(),
+
+      // Auctions with offers count
+      auctionsWithOffers: auctions.length,
+
+      // By auction (for detailed breakdown)
+      byAuction: auctions.map(auction => ({
+        auctionId: auction._id,
+        auctionTitle: auction.title,
+        auctionStatus: auction.status,
+        totalOffers: auction.offers.length,
+        pending: auction.offers.filter(o => o.status === 'pending').length,
+        accepted: auction.offers.filter(o => o.status === 'accepted').length,
+        rejected: auction.offers.filter(o => o.status === 'rejected').length,
+        countered: auction.offers.filter(o => o.status === 'countered').length,
+        totalValue: auction.offers.reduce((sum, offer) => sum + offer.amount, 0),
+        highestOffer: auction.offers.length > 0 
+          ? Math.max(...auction.offers.map(o => o.amount)) 
+          : 0
+      })),
+
+      // Time-based stats (last 30 days)
+      last30Days: (() => {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const recentOffers = allOffers.filter(o => new Date(o.createdAt) >= thirtyDaysAgo);
+        
+        return {
+          total: recentOffers.length,
+          pending: recentOffers.filter(o => o.status === 'pending').length,
+          accepted: recentOffers.filter(o => o.status === 'accepted').length,
+          totalValue: recentOffers.reduce((sum, offer) => sum + offer.amount, 0)
+        };
+      })(),
+
+      // Category breakdown
+      byCategory: (() => {
+        const categoryMap = {};
+        auctions.forEach(auction => {
+          if (!categoryMap[auction.category]) {
+            categoryMap[auction.category] = {
+              category: auction.category,
+              totalOffers: 0,
+              totalValue: 0,
+              accepted: 0
+            };
+          }
+          auction.offers.forEach(offer => {
+            categoryMap[auction.category].totalOffers++;
+            categoryMap[auction.category].totalValue += offer.amount;
+            if (offer.status === 'accepted') {
+              categoryMap[auction.category].accepted++;
+            }
+          });
+        });
+        return Object.values(categoryMap);
+      })()
+    };
+
+    res.status(200).json({
+      success: true,
+      data: stats
+    });
+
+  } catch (error) {
+    console.error('Get seller offer stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch offer statistics'
+    });
+  }
+};

@@ -96,7 +96,7 @@ function Dashboard() {
         //     currency: " kr"
         // },
         // {
-        //     title: "Avg. Offer £",
+        //     title: "Avg. Offer kr",
         //     value: stats?.avgOfferAmount?.toLocaleString('nb-NO'),
         //     change: "Bid Amount / No. of Bids",
         //     icon: <Banknote size={24} />,

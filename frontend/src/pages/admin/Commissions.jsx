@@ -82,7 +82,7 @@ const Commissions = () => {
     // Get display value with symbol
     const getDisplayValue = () => {
         const value = commission.commissionValue || 0;
-        return commission.commissionType === 'fixed' ? `£${value}` : `${value}%`;
+        return commission.commissionType === 'fixed' ? `${value} kr` : `${value}%`;
     };
 
     return (
@@ -176,7 +176,7 @@ const Commissions = () => {
                                     {/* Commission Value Input */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            {commission.commissionType === 'fixed' ? 'Amount (£)' : 'Percentage (%)'}
+                                            {commission.commissionType === 'fixed' ? 'Amount (kr)' : 'Percentage (%)'}
                                         </label>
                                         <div className="relative">
                                             <input
@@ -189,7 +189,7 @@ const Commissions = () => {
                                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent text-lg"
                                             />
                                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">
-                                                {commission.commissionType === 'fixed' ? '£' : '%'}
+                                                {commission.commissionType === 'fixed' ? 'kr' : '%'}
                                             </span>
                                         </div>
                                         {commission.commissionType === 'percentage' && (
@@ -243,7 +243,7 @@ const Commissions = () => {
                                     <div>
                                         <h3 className="text-lg font-semibold text-blue-800 mb-2">About Commission Settings</h3>
                                         <div className="space-y-2 text-sm text-blue-700">
-                                            <p>• <span className="font-medium">Fixed commission (£):</span> A fixed amount charged per transaction regardless of the sale price</p>
+                                            <p>• <span className="font-medium">Fixed commission (kr):</span> A fixed amount charged per transaction regardless of the sale price</p>
                                             <p>• <span className="font-medium">Percentage commission (%):</span> A percentage of the final sale price (cannot exceed 100%)</p>
                                             <p>• This is a <span className="font-medium">global setting</span> that applies to all auction categories</p>
                                             <p>• Changes take effect immediately for all new auctions</p>

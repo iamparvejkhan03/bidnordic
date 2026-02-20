@@ -40,7 +40,7 @@ function Hero() {
 
     return (
         <section className="relative min-h-screen bg-slate-900 overflow-hidden">
-        {/* <section className="relative min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden"> */}
+            {/* <section className="relative min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden"> */}
             {/* Industrial Background Pattern */}
             <div className="absolute inset-0 opacity-10">
                 <div className="absolute inset-0" style={{
@@ -65,10 +65,10 @@ function Hero() {
             </div>
 
             <Container>
-                <div className="relative z-10 pt-32 pb-20 lg:pt-40 lg:pb-32">
+                <div className="relative z-10 pt-28 pb-16 lg:pt-36 lg:pb-24">
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
                         {/* Left Column - Main Content */}
-                        <div className="space-y-8">
+                        <div className="space-y-5 md:space-y-8">
                             {/* Premium Badge */}
                             <div className="inline-flex items-center gap-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
                                 <div className="flex -space-x-2">
@@ -85,7 +85,7 @@ function Hero() {
 
                             {/* Dynamic Headline */}
                             <div className="space-y-4">
-                                <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight">
+                                <h1 className="text-[40px] lg:text-6xl font-bold text-white leading-tight">
                                     <span className="block">Your Next</span>
                                     <span className="relative inline-block mt-2">
                                         <span className="relative z-10 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 text-transparent bg-clip-text">
@@ -151,10 +151,14 @@ function Hero() {
                         {/* Right Column - Visual Showcase */}
                         <div className="relative hidden lg:block">
                             {/* Main Equipment Image Placeholder */}
-                            <div className="relative aspect-square rounded-3xl overflow-hidden">
+                            <div className="relative w-full max-w-xl mx-auto aspect-square rounded-3xl overflow-hidden">
                                 <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-orange-600/20" />
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <img src={heroImg} className="brightness-75" alt="" />
+                                    <img
+                                        src={heroImg}
+                                        className="w-full h-full object-cover brightness-75"
+                                        alt=""
+                                    />
                                 </div>
 
                                 {/* Floating Stats Cards */}

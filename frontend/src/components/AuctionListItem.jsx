@@ -260,9 +260,9 @@ function AuctionListItem({ auction }) {
                 <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-3 sm:gap-1 w-full sm:w-auto">
                     {/* Price */}
                     <div className="text-sm font-bold text-green-600">
-                        £{(auction.auctionType === 'buy_now' && auction.buyNowPrice) 
+                        {(auction.auctionType === 'buy_now' && auction.buyNowPrice) 
                             ? auction.buyNowPrice.toLocaleString() 
-                            : (auction.currentPrice || auction.startPrice)?.toLocaleString()}
+                            : (auction.currentPrice || auction.startPrice)?.toLocaleString()} kr
                         {auction.auctionType === 'buy_now' && auction.buyNowPrice && 
                             <span className="text-xs font-normal text-gray-500 ml-1">Buy Now</span>
                         }

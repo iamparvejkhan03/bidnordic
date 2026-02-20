@@ -227,7 +227,7 @@ function AuctionCard({ auction }) {
                     <div className="text-center p-2 bg-gray-50 rounded-lg">
                         <div className="text-xs text-gray-600 mb-1">{auction.status === 'sold' ? 'Final Price' : 'Starting Price'}</div>
                         <div className="font-bold text-lg text-green-600">
-                            £{(auction.currentPrice || auction.startPrice).toLocaleString()}
+                            {(auction.currentPrice || auction.startPrice).toLocaleString()} kr
                         </div>
                     </div>
 
@@ -261,7 +261,7 @@ function AuctionCard({ auction }) {
                             <div className="text-center p-2 bg-gray-50 rounded-lg">
                                 <div className="text-xs text-gray-600 mb-1">Buy Now</div>
                                 <div className="font-bold text-lg text-primary flex items-center justify-center gap-1">
-                                    £{auction?.buyNowPrice?.toLocaleString()}
+                                    {auction?.buyNowPrice?.toLocaleString()} kr
                                 </div>
                             </div>
                         )
@@ -285,7 +285,7 @@ function AuctionCard({ auction }) {
                 {/* Bid Increment */}
                 <div className="text-xs text-gray-500 text-center flex items-center justify-around">
                     <div>
-                        Bid increment: £{auction.bidIncrement?.toLocaleString()}
+                        Bid increment: {auction.bidIncrement?.toLocaleString()} kr
                     </div>
                     <div className="text-xs text-gray-500 text-center">
                         {auction.watchlistCount || 0} user{auction.watchlistCount !== 1 ? 's' : ''} watching
@@ -296,7 +296,7 @@ function AuctionCard({ auction }) {
                     {
                         auction.auctionType === 'buy_now' && (
                             <div>
-                                Buy Now: £{auction?.buyNowPrice?.toLocaleString()}
+                                Buy Now: {auction?.buyNowPrice?.toLocaleString()} kr
                             </div>
                         )
                     }
