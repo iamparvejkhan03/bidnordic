@@ -44,7 +44,7 @@ function HowItWorks() {
                 </h2>
             </div>
 
-            <div className="relative max-w-6xl px-10 mx-auto grid md:grid-cols-3 gap-12 text-center">
+            <div className="relative max-w-full px-10 mx-auto grid md:grid-cols-3 gap-12 text-center">
 
                 <svg
                     className="hidden md:block absolute z-40 opacity-25 top-16 left-[20%] pointer-events-none"

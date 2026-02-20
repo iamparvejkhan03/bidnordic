@@ -166,72 +166,74 @@ function Home() {
 
             {/* Dynamic Auctions section */}
             <Container className="mb-14 flex flex-col">
-                <div className="flex items-center justify-between flex-wrap gap-y-3">
-                    <h2 className="text-3xl md:text-4xl font-bold text-primary order-1">{tabTitles[activeTab]}</h2>
-                    <p className="text-sm md:text-base text-gray-500 order-2 md:order-3">
-                        {tabDescriptions[activeTab]}
-                    </p>
-                    <div className="flex items-center  flex-wrap gap-5 order-2 mb-3">
-                        <div className="flex space-x-2 bg-white p-1 border border-gray-500/50 rounded-md text-sm">
-                            <div className="flex items-center">
-                                <input
-                                    type="radio"
-                                    name="options"
-                                    id="active"
-                                    className="hidden peer"
-                                    checked={activeTab === 'active'}
-                                    onChange={() => handleTabChange('active')}
-                                />
-                                <label htmlFor="active" className="cursor-pointer rounded py-2 px-4 sm:px-8 text-[#1e2d3b] transition-colors duration-200 peer-checked:bg-gradient-to-r peer-checked:from-amber-400 peer-checked:via-amber-500 peer-checked:to-amber-600 peer-checked:text-white">
-                                    Live
-                                </label>
+                <div className="gap-y-3">
+                    <div className="flex items-center justify-between flex-wrap gap-y-3">
+                        <h2 className="text-3xl md:text-4xl font-bold text-primary order-1">{tabTitles[activeTab]}</h2>
+                        <div className="flex items-center  flex-wrap gap-5 order-2 mb-3">
+                            <div className="flex space-x-2 bg-white p-1 border border-gray-500/50 rounded-md text-sm">
+                                <div className="flex items-center">
+                                    <input
+                                        type="radio"
+                                        name="options"
+                                        id="active"
+                                        className="hidden peer"
+                                        checked={activeTab === 'active'}
+                                        onChange={() => handleTabChange('active')}
+                                    />
+                                    <label htmlFor="active" className="cursor-pointer rounded py-2 px-4 sm:px-8 text-[#1e2d3b] transition-colors duration-200 peer-checked:bg-gradient-to-r peer-checked:from-amber-400 peer-checked:via-amber-500 peer-checked:to-amber-600 peer-checked:text-white">
+                                        Live
+                                    </label>
+                                </div>
+                                <div className="flex items-center">
+                                    <input
+                                        type="radio"
+                                        name="options"
+                                        id="sold"
+                                        className="hidden peer"
+                                        checked={activeTab === 'sold'}
+                                        onChange={() => handleTabChange('sold')}
+                                    />
+                                    <label htmlFor="sold" className="cursor-pointer rounded py-2 px-4 sm:px-8 text-gray-500 transition-colors duration-200 peer-checked:bg-gradient-to-r peer-checked:from-amber-400 peer-checked:via-amber-500 peer-checked:to-amber-600 peer-checked:text-white">
+                                        Closed
+                                    </label>
+                                </div>
+                                <div className="flex items-center">
+                                    <input
+                                        type="radio"
+                                        name="options"
+                                        id="approved"
+                                        className="hidden peer"
+                                        checked={activeTab === 'approved'}
+                                        onChange={() => handleTabChange('approved')}
+                                    />
+                                    <label htmlFor="approved" className="cursor-pointer rounded py-2 px-4 sm:px-8 text-gray-500 transition-colors duration-200 peer-checked:bg-gradient-to-r peer-checked:from-amber-400 peer-checked:via-amber-500 peer-checked:to-amber-600 peer-checked:text-white">
+                                        Upcoming
+                                    </label>
+                                </div>
                             </div>
-                            <div className="flex items-center">
-                                <input
-                                    type="radio"
-                                    name="options"
-                                    id="sold"
-                                    className="hidden peer"
-                                    checked={activeTab === 'sold'}
-                                    onChange={() => handleTabChange('sold')}
-                                />
-                                <label htmlFor="sold" className="cursor-pointer rounded py-2 px-4 sm:px-8 text-gray-500 transition-colors duration-200 peer-checked:bg-gradient-to-r peer-checked:from-amber-400 peer-checked:via-amber-500 peer-checked:to-amber-600 peer-checked:text-white">
-                                    Closed
-                                </label>
-                            </div>
-                            <div className="flex items-center">
-                                <input
-                                    type="radio"
-                                    name="options"
-                                    id="approved"
-                                    className="hidden peer"
-                                    checked={activeTab === 'approved'}
-                                    onChange={() => handleTabChange('approved')}
-                                />
-                                <label htmlFor="approved" className="cursor-pointer rounded py-2 px-4 sm:px-8 text-gray-500 transition-colors duration-200 peer-checked:bg-gradient-to-r peer-checked:from-amber-400 peer-checked:via-amber-500 peer-checked:to-amber-600 peer-checked:text-white">
-                                    Upcoming
-                                </label>
-                            </div>
-                        </div>
 
-                        {/* Add this view mode toggle */}
-                        <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
-                            <button
-                                onClick={() => setViewMode("grid")}
-                                className={`p-2 rounded transition-colors ${viewMode === "grid" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
-                                title="Grid View"
-                            >
-                                <Grid size={18} className={viewMode === "grid" ? "text-orange-600" : "text-gray-500"} />
-                            </button>
-                            <button
-                                onClick={() => setViewMode("list")}
-                                className={`p-2 rounded transition-colors ${viewMode === "list" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
-                                title="List View"
-                            >
-                                <List size={18} className={viewMode === "list" ? "text-orange-600" : "text-gray-500"} />
-                            </button>
+                            {/* Add this view mode toggle */}
+                            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
+                                <button
+                                    onClick={() => setViewMode("grid")}
+                                    className={`p-2 rounded transition-colors ${viewMode === "grid" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
+                                    title="Grid View"
+                                >
+                                    <Grid size={18} className={viewMode === "grid" ? "text-orange-600" : "text-gray-500"} />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode("list")}
+                                    className={`p-2 rounded transition-colors ${viewMode === "list" ? "bg-white shadow-sm" : "hover:bg-gray-200"}`}
+                                    title="List View"
+                                >
+                                    <List size={18} className={viewMode === "list" ? "text-orange-600" : "text-gray-500"} />
+                                </button>
+                            </div>
                         </div>
                     </div>
+                    <p className="text-sm md:text-base text-gray-500 order-2 md:order-3">
+                    {tabDescriptions[activeTab]}
+                </p>
                 </div>
 
                 {loading ? (

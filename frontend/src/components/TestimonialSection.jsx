@@ -84,7 +84,7 @@ export default function TestimonialSection() {
 
   return (
     <section className="my-14 bg-gray-50">
-      <div className="w-full max-w-6xl mx-auto">
+      <div className="w-full max-w-full mx-auto">
         {/* Header */}
         <div className="text-left">
 
