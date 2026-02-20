@@ -150,8 +150,12 @@ function Home() {
                     <div className="flex gap-8 w-full my-14 mr-8">
                         {
                             trustedBrands.map(brand => (
-                                <div key={brand.alt} className="flex items-center justify-center border rounded-lg shadow hover:shadow-lg transition-all border-slate-200 p-4 md:p-5">
-                                    <img src={brand.src} alt={brand.alt} className="h-6 sm:h-6 md:h-7 lg:h-8 xl:h-9" />
+                                <div key={brand.alt} className="flex items-center justify-center border rounded-lg shadow hover:shadow-lg transition-all border-slate-200 p-4 md:p-5 bg-white">
+                                    <img
+                                        src={brand.src}
+                                        alt={brand.alt}
+                                        className="h-6 sm:h-6 md:h-7 lg:h-8 xl:h-9 mix-blend-multiply"
+                                    />
                                 </div>
                             ))
                         }
@@ -232,8 +236,8 @@ function Home() {
                         </div>
                     </div>
                     <p className="text-sm md:text-base text-gray-500 order-2 md:order-3">
-                    {tabDescriptions[activeTab]}
-                </p>
+                        {tabDescriptions[activeTab]}
+                    </p>
                 </div>
 
                 {loading ? (

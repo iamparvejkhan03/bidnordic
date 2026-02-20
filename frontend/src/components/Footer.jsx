@@ -151,7 +151,7 @@ function Footer() {
                                     className="text-white hover:text-orange-500 transition-colors" 
                                     to={`tel:${otherData.phone}`}
                                 >
-                                    +46 (1)61 883 2737
+                                    +47 (1)61 883 2737
                                 </Link>
                             </li>
                             <li className="flex items-center gap-2">

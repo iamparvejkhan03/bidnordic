@@ -307,7 +307,7 @@ function Header() {
                                 }}
                                 className="flex items-center gap-1"
                             >
-                                Auction Types
+                                Auctions
                                 <ChevronRight size={16} />
                             </button>
                         </li>
@@ -344,7 +344,7 @@ function Header() {
                 >
                     <div className="h-full overflow-y-auto">
                         <div className="flex items-center justify-between p-5 border-b">
-                            <h2 className="text-xl font-bold">Auction Types</h2>
+                            <h2 className="text-xl font-bold">Auctions</h2>
                             <X
                                 className="cursor-pointer"
                                 onClick={() => setMobileAuctionTypesOpen(false)}
